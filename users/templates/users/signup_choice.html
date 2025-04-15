@@ -1,0 +1,8 @@
+<!-- users/templates/users/signup_choice.html -->
+{% extends 'users/base.html' %}
+{% block title %}Choose Signup Type{% endblock %}
+{% block content %}
+    <h2>Sign Up As</h2>
+    <a href="{% url 'users:user_signup' %}" class="choice-btn"><button>User</button></a>
+    <a href="{% url 'users:manpower_signup' %}" class="choice-btn"><button>Manpower</button></a>
+{% endblock %}

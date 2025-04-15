@@ -1,0 +1,20 @@
+<!-- users/templates/users/user_signup.html -->
+{% extends 'users/base.html' %}
+{% block title %}User Signup{% endblock %}
+{% block content %}
+    <h2>User Signup</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <span class="error">{{ field.errors|join:", " }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit">Sign Up</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'users:login' %}">Login</a></p>
+{% endblock %}
