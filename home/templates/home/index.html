@@ -1,303 +1,551 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manpower Booking Service</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
     <style>
-        .service-card, .booking-card {
-            transition: transform 0.2s;
-        }
-        .service-card:hover, .booking-card:hover {
-            transform: translateY(-5px);
-        }
-        .profile-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-        }
-        .navbar-bottom {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-        .hero-section {
-            background: linear-gradient(45deg, #007bff, #00b4d8);
-            color: white;
-        }
+      .service-card,
+      .booking-card {
+        transition: transform 0.2s;
+      }
+      .service-card:hover,
+      .booking-card:hover {
+        transform: translateY(-5px);
+      }
+      .profile-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+      }
+      .navbar-bottom {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 1000;
+      }
+      .hero-section {
+        background: linear-gradient(45deg, #007bff, #00b4d8);
+        color: white;
+      }
+      
+      /* Improved navbar styling */
+      .navbar {
+        transition: all 0.6s ease;
+      }
+      
+      /* Initial navbar state */
+      .navbar-initial {
+        background: linear-gradient(45deg, #0062cc, #0099b3);
+        padding: 15px 0;
+        box-shadow: none;
+      }
+      
+      /* Sticky navbar state */
+      .navbar-sticky {
+        background: linear-gradient(45deg, #0062cc, #0099b3);
+        padding: 10px 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Ensure content starts below navbar */
+      body {
+        /* padding-top: 80px; */
+      }
+      
+      /* Add animation for navbar links */
+      .nav-link {
+        transition: color 0.2s ease, transform 0.2s ease;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+      
+      .nav-link:hover {
+        color: #ffffff !important;
+        transform: translateY(-2px);
+      }
+      
+      /* Add an active state for navbar links */
+      .nav-link.active {
+        border-bottom: 2px solid white;
+      }
+      
+      /* Enhance navbar brand */
+      .navbar-brand {
+        font-weight: 700;
+        color: white !important;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Make navbar toggler white */
+      .navbar-toggler {
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .navbar-toggler-icon {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body class="position-relative">
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="#home">Manpower Booking</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'home_module:home' %}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'home_module:home' %}#search">Search</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'bookings:bookings' %}">Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'users:profile' %}">Profile</a></li>
-                </ul>
-            </div>
+    <nav class="navbar navbar-expand-lg navbar-initial">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'home_module:home' %}">
+          <i class="fas fa-briefcase me-2"></i> Manpower Booking
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a
+                class="nav-link d-flex align-items-center active"
+                href="{% url 'home_module:home' %}"
+              >
+                <i class="fas fa-home me-2"></i> Home
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link d-flex align-items-center"
+                href="{% url 'home_module:home' %}#search"
+              >
+                <i class="fas fa-search me-2"></i> Search
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link d-flex align-items-center"
+                href="{% url 'bookings:bookings' %}"
+              >
+                <i class="fas fa-calendar-check me-2"></i> Bookings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link d-flex align-items-center"
+                href="{% url 'users:profile' %}"
+              >
+                <i class="fas fa-user me-2"></i> Profile
+              </a>
+            </li>
+          </ul>
         </div>
+      </div>
     </nav>
-
     <!-- Main Content -->
-    <div class="container py-5">
-        <!-- Home Section -->
-        <section id="home" class="mb-5">
-            <div class="hero-section text-center py-5 rounded">
-                <h1 class="display-4">Find Trusted Professionals</h1>
-                <p class="lead">Book plumbers, carpenters, electricians, and more with ease.</p>
-                <a href="#search" class="btn btn-light btn-lg mt-3">Get Started</a>
-            </div>
-            <div class="row mt-5">
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-search fa-2x text-primary mb-3"></i>
-                    <h5>Search</h5>
-                    <p>Find professionals by trade or location.</p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-calendar-check fa-2x text-primary mb-3"></i>
-                    <h5>Book</h5>
-                    <p>Schedule services at your convenience.</p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-star fa-2x text-primary mb-3"></i>
-                    <h5>Rate</h5>
-                    <p>Review and rate your experience.</p>
-                </div>
-            </div>
-        </section>
+    <div class="container py-5 position-relative">
+      <!-- Home Section -->
+      <section id="home" class="mb-5">
+        <div class="hero-section text-center py-5 rounded">
+          <h1 class="display-4">Find Trusted Professionals</h1>
+          <p class="lead">
+            Book plumbers, carpenters, electricians, and more with ease.
+          </p>
+          <a href="#search" class="btn btn-light btn-lg mt-3">Get Started</a>
+        </div>
+        <div class="row mt-5">
+          <div class="col-md-4 text-center">
+            <i class="fas fa-search fa-2x text-primary mb-3"></i>
+            <h5>Search</h5>
+            <p>Find professionals by trade or location.</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <i class="fas fa-calendar-check fa-2x text-primary mb-3"></i>
+            <h5>Book</h5>
+            <p>Schedule services at your convenience.</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <i class="fas fa-star fa-2x text-primary mb-3"></i>
+            <h5>Rate</h5>
+            <p>Review and rate your experience.</p>
+          </div>
+        </div>
+      </section>
 
-        <!-- Search Section -->
-        <section id="search" class="mb-5">
-            <h2 class="mb-4">Find Professionals</h2>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" id="searchInput" placeholder="Search plumbers, carpenters..." aria-label="Search">
-                <button class="btn btn-primary" type="button" onclick="searchProfessionals()"><i class="fas fa-search"></i> Search</button>
-            </div>
-            <div class="d-flex flex-wrap gap-2 mb-4">
-                <button class="btn btn-outline-primary category-filter" data-category="Plumber">Plumber</button>
-                <button class="btn btn-outline-primary category-filter" data-category="Carpenter">Carpenter</button>
-                <button class="btn btn-outline-primary category-filter" data-category="Electrician">Electrician</button>
-                <button class="btn btn-outline-primary category-filter" data-category="Painter">Painter</button>
-            </div>
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="professionalsList">
-                <div class="col">
-                    <div class="card service-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://via.placeholder.com/80" class="rounded-circle profile-img me-3" alt="Profile">
-                                <div>
-                                    <h5 class="card-title mb-0">John Doe</h5>
-                                    <p class="text-muted mb-0">Plumber</p>
-                                </div>
-                            </div>
-                            <p class="card-text">
-                                <i class="fas fa-star text-warning"></i> 4.8 (120 reviews)<br>
-                                <i class="fas fa-map-marker-alt"></i> 2 miles away<br>
-                                <i class="fas fa-dollar-sign"></i> $50/hr
-                            </p>
-                            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#profileModal" onclick="showProfile('John Doe', 'Plumber', '4.8', '2 miles away', '$50/hr')">View Profile</button>
-                        </div>
-                    </div>
+      <!-- Search Section -->
+      <section id="search" class="mb-5">
+        <h2 class="mb-4">Find Professionals</h2>
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="searchInput"
+            placeholder="Search plumbers, carpenters..."
+            aria-label="Search"
+          />
+          <button
+            class="btn btn-primary"
+            type="button"
+            onclick="searchProfessionals()"
+          >
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <button
+            class="btn btn-outline-primary category-filter"
+            data-category="Plumber"
+          >
+            Plumber
+          </button>
+          <button
+            class="btn btn-outline-primary category-filter"
+            data-category="Carpenter"
+          >
+            Carpenter
+          </button>
+          <button
+            class="btn btn-outline-primary category-filter"
+            data-category="Electrician"
+          >
+            Electrician
+          </button>
+          <button
+            class="btn btn-outline-primary category-filter"
+            data-category="Painter"
+          >
+            Painter
+          </button>
+        </div>
+        <div
+          class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"
+          id="professionalsList"
+        >
+          <div class="col">
+            <div class="card service-card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <img
+                    src="https://via.placeholder.com/80"
+                    class="rounded-circle profile-img me-3"
+                    alt="Profile"
+                  />
+                  <div>
+                    <h5 class="card-title mb-0">John Doe</h5>
+                    <p class="text-muted mb-0">Plumber</p>
+                  </div>
                 </div>
+                <p class="card-text">
+                  <i class="fas fa-star text-warning"></i> 4.8 (120 reviews)<br />
+                  <i class="fas fa-map-marker-alt"></i> 2 miles away<br />
+                  <i class="fas fa-dollar-sign"></i> $50/hr
+                </p>
+                <button
+                  class="btn btn-primary w-100"
+                  data-bs-toggle="modal"
+                  data-bs-target="#profileModal"
+                  onclick="showProfile('John Doe', 'Plumber', '4.8', '2 miles away', '$50/hr')"
+                >
+                  View Profile
+                </button>
+              </div>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <!-- Bookings Section -->
-        <section id="bookings" class="mb-5">
-            <h2 class="mb-4">Your Bookings</h2>
-            <ul class="nav nav-tabs mb-3">
-                <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#upcoming">Upcoming</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#past">Past</a>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="upcoming">
-                    <div class="card booking-card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Plumbing Service</h5>
-                            <p class="card-text">
-                                Professional: John Doe<br>
-                                Date: April 5, 2025<br>
-                                Status: <span class="badge bg-success">Confirmed</span>
-                            </p>
-                            <button class="btn btn-outline-primary">View Details</button>
-                            <button class="btn btn-outline-danger ms-2" onclick="cancelBooking('Plumbing Service')">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="past">
-                    <div class="card booking-card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Carpentry Work</h5>
-                            <p class="card-text">
-                                Professional: Jane Smith<br>
-                                Date: March 20, 2025<br>
-                                Status: <span class="badge bg-secondary">Completed</span>
-                            </p>
-                            <button class="btn btn-outline-primary">Rate Service</button>
-                        </div>
-                    </div>
-                </div>
+      <!-- Bookings Section -->
+      <section id="bookings" class="mb-5">
+        <h2 class="mb-4">Your Bookings</h2>
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#upcoming"
+              >Upcoming</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#past">Past</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="upcoming">
+            <div class="card booking-card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Plumbing Service</h5>
+                <p class="card-text">
+                  Professional: John Doe<br />
+                  Date: April 5, 2025<br />
+                  Status: <span class="badge bg-success">Confirmed</span>
+                </p>
+                <button class="btn btn-outline-primary">View Details</button>
+                <button
+                  class="btn btn-outline-danger ms-2"
+                  onclick="cancelBooking('Plumbing Service')"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-        </section>
+          </div>
+          <div class="tab-pane fade" id="past">
+            <div class="card booking-card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Carpentry Work</h5>
+                <p class="card-text">
+                  Professional: Jane Smith<br />
+                  Date: March 20, 2025<br />
+                  Status: <span class="badge bg-secondary">Completed</span>
+                </p>
+                <button class="btn btn-outline-primary">Rate Service</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <!-- Profile Section -->
-        <section id="profile" class="mb-5">
-            <h2 class="mb-4">Your Profile</h2>
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle profile-img me-3" alt="User Profile">
-                        <div>
-                            <h4 class="mb-0">Your Name</h4>
-                            <p class="text-muted mb-0">Member since March 2025</p>
-                        </div>
-                    </div>
-                    <form>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" value="you@example.com" disabled>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="phone" value="+1 123-456-7890">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
-                        <button type="button" class="btn btn-danger ms-2" onclick="logout()">Logout</button>
-                    </form>
-                </div>
+      <!-- Profile Section -->
+      <section id="profile" class="mb-5">
+        <h2 class="mb-4">Your Profile</h2>
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <img
+                src="https://via.placeholder.com/100"
+                class="rounded-circle profile-img me-3"
+                alt="User Profile"
+              />
+              <div>
+                <h4 class="mb-0">Your Name</h4>
+                <p class="text-muted mb-0">Member since March 2025</p>
+              </div>
             </div>
-        </section>
+            <form>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  value="you@example.com"
+                  disabled
+                />
+              </div>
+              <div class="mb-3">
+                <label for="phone" class="form-label">Phone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="phone"
+                  value="+1 123-456-7890"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Update Profile
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger ms-2"
+                onclick="logout()"
+              >
+                Logout
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
     </div>
 
     <!-- Profile Modal -->
-    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="profileModalLabel">Professional Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle" alt="Profile">
-                        <h4 class="mt-2" id="modalName"></h4>
-                        <p class="text-muted" id="modalTrade"></p>
-                    </div>
-                    <p>
-                        <strong>Rating:</strong> <span id="modalRating"></span><br>
-                        <strong>Location:</strong> <span id="modalLocation"></span><br>
-                        <strong>Rate:</strong> <span id="modalRate"></span><br>
-                        <strong>Experience:</strong> 8 years<br>
-                        <strong>About:</strong> Experienced professional specializing in residential services.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="bookProfessional()">Book Now</button>
-                </div>
+    <div
+      class="modal fade"
+      id="profileModal"
+      tabindex="-1"
+      aria-labelledby="profileModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="profileModalLabel">
+              Professional Profile
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-3">
+              <img
+                src="https://via.placeholder.com/100"
+                class="rounded-circle"
+                alt="Profile"
+              />
+              <h4 class="mt-2" id="modalName"></h4>
+              <p class="text-muted" id="modalTrade"></p>
             </div>
+            <p>
+              <strong>Rating:</strong> <span id="modalRating"></span><br />
+              <strong>Location:</strong> <span id="modalLocation"></span><br />
+              <strong>Rate:</strong> <span id="modalRate"></span><br />
+              <strong>Experience:</strong> 8 years<br />
+              <strong>About:</strong> Experienced professional specializing in
+              residential services.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="bookProfessional()"
+            >
+              Book Now
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Bottom Navigation for Mobile -->
     <nav class="navbar navbar-light bg-light navbar-bottom d-md-none">
-        <div class="container d-flex justify-content-around">
-            <a class="nav-link text-center" href="#home"><i class="fas fa-home"></i><br>Home</a>
-            <a class="nav-link text-center" href="#search"><i class="fas fa-search"></i><br>Search</a>
-            <a class="nav-link text-center" href="#bookings"><i class="fas fa-calendar"></i><br>Bookings</a>
-            <a class="nav-link text-center" href="#profile"><i class="fas fa-user"></i><br>Profile</a>
-        </div>
+      <div class="container d-flex justify-content-around">
+        <a class="nav-link text-center" href="#home"
+          ><i class="fas fa-home"></i><br />Home</a
+        >
+        <a class="nav-link text-center" href="#search"
+          ><i class="fas fa-search"></i><br />Search</a
+        >
+        <a class="nav-link text-center" href="#bookings"
+          ><i class="fas fa-calendar"></i><br />Bookings</a
+        >
+        <a class="nav-link text-center" href="#profile"
+          ><i class="fas fa-user"></i><br />Profile</a
+        >
+      </div>
     </nav>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Sample data (replace with backend data)
-    const professionals = [
-        { name: "John Doe", trade: "Plumber", rating: "4.8", location: "2 miles away", rate: "$50/hr" },
-        { name: "Jane Smith", trade: "Carpenter", rating: "4.9", location: "3 miles away", rate: "$60/hr" },
-        { name: "Mike Johnson", trade: "Electrician", rating: "4.7", location: "1 mile away", rate: "$55/hr" },
-        { name: "Sarah Williams", trade: "Painter", rating: "4.6", location: "4 miles away", rate: "$45/hr" }
-    ];
+    <script>
+      // Sample data (replace with backend data)
+      const professionals = [
+        {
+          name: "John Doe",
+          trade: "Plumber",
+          rating: "4.8",
+          location: "2 miles away",
+          rate: "$50/hr",
+        },
+        {
+          name: "Jane Smith",
+          trade: "Carpenter",
+          rating: "4.9",
+          location: "3 miles away",
+          rate: "$60/hr",
+        },
+        {
+          name: "Mike Johnson",
+          trade: "Electrician",
+          rating: "4.7",
+          location: "1 mile away",
+          rate: "$55/hr",
+        },
+        {
+          name: "Sarah Williams",
+          trade: "Painter",
+          rating: "4.6",
+          location: "4 miles away",
+          rate: "$45/hr",
+        },
+      ];
 
-    let activeFilters = new Set();
+      let activeFilters = new Set();
 
-    // Search functionality
-    function searchProfessionals() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
+      // Search functionality
+      function searchProfessionals() {
+        const query = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
         filterAndDisplay(query);
-    }
+      }
 
-    // Category filter toggle
-    document.querySelectorAll('.category-filter').forEach(button => {
-        button.addEventListener('click', function() {
-            const category = this.getAttribute('data-category');
-            
-            // Toggle active state and filter
-            if (activeFilters.has(category)) {
-                activeFilters.delete(category);
-                this.classList.remove('btn-primary');
-                this.classList.add('btn-outline-primary');
-            } else {
-                activeFilters.add(category);
-                this.classList.remove('btn-outline-primary');
-                this.classList.add('btn-primary');
-            }
+      // Category filter toggle
+      document.querySelectorAll(".category-filter").forEach((button) => {
+        button.addEventListener("click", function () {
+          const category = this.getAttribute("data-category");
 
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            filterAndDisplay(query);
+          // Toggle active state and filter
+          if (activeFilters.has(category)) {
+            activeFilters.delete(category);
+            this.classList.remove("btn-primary");
+            this.classList.add("btn-outline-primary");
+          } else {
+            activeFilters.add(category);
+            this.classList.remove("btn-outline-primary");
+            this.classList.add("btn-primary");
+          }
+
+          const query = document
+            .getElementById("searchInput")
+            .value.toLowerCase();
+          filterAndDisplay(query);
         });
-    });
+      });
 
-    // Filter and display professionals
-    function filterAndDisplay(query = '') {
+      // Filter and display professionals
+      function filterAndDisplay(query = "") {
         let filtered = professionals;
 
         // Apply category filters if any are active
         if (activeFilters.size > 0) {
-            filtered = filtered.filter(pro => activeFilters.has(pro.trade));
+          filtered = filtered.filter((pro) => activeFilters.has(pro.trade));
         }
 
         // Apply search query
         if (query) {
-            filtered = filtered.filter(p => 
-                p.name.toLowerCase().includes(query) || 
-                p.trade.toLowerCase().includes(query)
-            );
+          filtered = filtered.filter(
+            (p) =>
+              p.name.toLowerCase().includes(query) ||
+              p.trade.toLowerCase().includes(query)
+          );
         }
 
         displayProfessionals(filtered);
-    }
+      }
 
-    // Display professionals
-    function displayProfessionals(list) {
-        const container = document.getElementById('professionalsList');
-        container.innerHTML = '';
-        
+      // Display professionals
+      function displayProfessionals(list) {
+        const container = document.getElementById("professionalsList");
+        container.innerHTML = "";
+
         if (list.length === 0) {
-            container.innerHTML = '<p class="text-center w-100">No professionals found matching your criteria.</p>';
-            return;
+          container.innerHTML =
+            '<p class="text-center w-100">No professionals found matching your criteria.</p>';
+          return;
         }
 
-        list.forEach(pro => {
-            const card = `
+        list.forEach((pro) => {
+          const card = `
                 <div class="col">
                     <div class="card service-card h-100">
                         <div class="card-body">
@@ -320,46 +568,96 @@
                         </div>
                     </div>
                 </div>`;
-            container.innerHTML += card;
+          container.innerHTML += card;
         });
-    }
+      }
 
-    // Show profile in modal
-    function showProfile(name, trade, rating, location, rate) {
-        document.getElementById('modalName').textContent = name;
-        document.getElementById('modalTrade').textContent = trade;
-        document.getElementById('modalRating').textContent = rating + ' (120 reviews)';
-        document.getElementById('modalLocation').textContent = location;
-        document.getElementById('modalRate').textContent = rate;
-    }
+      // Show profile in modal
+      function showProfile(name, trade, rating, location, rate) {
+        document.getElementById("modalName").textContent = name;
+        document.getElementById("modalTrade").textContent = trade;
+        document.getElementById("modalRating").textContent =
+          rating + " (120 reviews)";
+        document.getElementById("modalLocation").textContent = location;
+        document.getElementById("modalRate").textContent = rate;
+      }
 
-    // Book professional
-    function bookProfessional() {
-        alert('Booking confirmed for ' + document.getElementById('modalName').textContent);
+      // Book professional
+      function bookProfessional() {
+        alert(
+          "Booking confirmed for " +
+            document.getElementById("modalName").textContent
+        );
         // Add backend booking logic here
-    }
+      }
 
-    // Cancel booking
-    function cancelBooking(service) {
+      // Cancel booking
+      function cancelBooking(service) {
         if (confirm(`Are you sure you want to cancel ${service}?`)) {
-            alert(`${service} has been canceled.`);
-            // Add backend cancel logic here
+          alert(`${service} has been canceled.`);
+          // Add backend cancel logic here
         }
-    }
+      }
 
-    // Logout
-    function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            alert('Logged out successfully.');
-            // Add logout logic here
+      // Logout
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          alert("Logged out successfully.");
+          // Add logout logic here
         }
-    }
+      }
 
-    // Initial load
-    document.addEventListener('DOMContentLoaded', () => filterAndDisplay());
+      // Initial load
+      document.addEventListener("DOMContentLoaded", () => filterAndDisplay());
+
+      // Add event listener for search input
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", searchProfessionals);
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    // Add event listener for search input
-    document.getElementById('searchInput').addEventListener('input', searchProfessionals);
-</script>
-</body>
+    <!-- Scroll behavior script -->
+    <script>
+      // Navbar scroll behavior
+      const navbar = document.querySelector('.navbar');
+      let lastScrollPosition = 0;
+      const scrollThreshold = 100; // Distance to scroll before sticking
+      let hasPassedThreshold = false;
+      
+      window.addEventListener('scroll', function() {
+        const currentScrollPosition = window.pageYOffset;
+        
+        // Check if we've scrolled past the threshold
+        if (currentScrollPosition > scrollThreshold && !hasPassedThreshold) {
+          navbar.classList.remove('navbar-initial');
+          navbar.classList.add('navbar-sticky');
+          navbar.classList.add('fixed-top');
+          hasPassedThreshold = true;
+        } 
+        // If we scroll back up above threshold
+        else if (currentScrollPosition <= scrollThreshold && hasPassedThreshold) {
+          navbar.classList.add('navbar-initial');
+          navbar.classList.remove('navbar-sticky');
+          navbar.classList.remove('fixed-top');
+          hasPassedThreshold = false;
+        }
+        
+        lastScrollPosition = currentScrollPosition;
+      });
+      
+      // Handle active nav links
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          navLinks.forEach(l => l.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+      
+      // Your existing scripts would go here
+    </script>
+  </body>
 </html>
