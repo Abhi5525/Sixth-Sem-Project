@@ -1,0 +1,71 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f7fa;
+}
+.left-section {
+    background-image: url( "/static/images/skillpeople.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: 100vh;
+    color: #1e3a8a;
+    
+}
+.left-section .header-text {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.left-section .highlight {
+    border: 2px solid #f97316;
+    border-radius: 10px;
+    padding: 0 5px;
+    display: inline-block;
+}
+.right-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.form-container {
+    max-width: 400px;
+    width: 100%;
+}
+.form-container h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+.form-container p {
+    color: #6b7280;
+}
+.form-section input {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 5px;
+    width: 100%;
+    margin-top: 2px;
+}
+.form-section label {
+    font-size: 0.9rem;
+    color: #374151;
+}
+.btn-primary {
+    background-color: #1e3a8a;;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 500;
+    width: 100%;
+}
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+.text-link {
+    color: #2563eb;
+    text-decoration: none;
+}
+.text-link:hover {
+    text-decoration: underline;
+}
