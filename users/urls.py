@@ -5,7 +5,7 @@ from .views import CustomLoginView
 
 app_name = 'users'
 urlpatterns = [
-    path('', views.profile, name = 'profile'),
+    path('profile/', views.profile, name = 'profile'),
    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('signup/', views.signup_choice, name='signup'),
     path('signup/user/', views.user_signup, name='user_signup'),

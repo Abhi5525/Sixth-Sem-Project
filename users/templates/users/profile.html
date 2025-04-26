@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Service Platform</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    {%extends 'home/base-navbar.html' %} 
+    {%block styles%}
     <style>
         body {
             background-color: #f8fafc;
@@ -49,8 +42,7 @@
             margin-bottom: 2px;
         }
     </style>
-</head>
-<body>
+    {%endblock%}{%block main-content%}
     <div class="container py-4">
         <!-- Profile Header -->
         <div class="row align-items-center mb-4">
@@ -122,29 +114,8 @@
             </a>
         </div>
     </div>
-
-    <!-- Bottom Navigation -->
-    <nav class="nav-bottom py-2">
-        <div class="container d-flex justify-content-around">
-            <a href="{% url 'home_module:home' %}" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="{% url 'home_module:home' %}#search" class="nav-link">
-                <i class="fas fa-search"></i>
-                <span>Search</span>
-            </a>
-            <a href="{% url 'bookings:bookings' %}" class="nav-link">
-                <i class="fas fa-calendar"></i>
-                <span>Bookings</span>
-            </a>
-            <a href="{% url 'users:profile' %}" class="nav-link active">
-                <i class="fas fa-user"></i>
-                <span>Profile</span>
-            </a>
-        </div>
-    </nav>
-
+    
+    
     <!-- Update Profile Modal -->
     <div class="modal fade" id="updateProfileModal" tabindex="-1" aria-labelledby="updateProfileModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -184,13 +155,12 @@
             </div>
         </div>
     </div>
+    {%endblock%}
 
-    <!-- Bootstrap JS and dependencies -->
+    <!-- Bootstrap JS and dependencies
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script> -->
     <!-- Custom Scripts -->
-    <script src="/static/main.js"></script>
+    <!-- <script src="/static/main.js"></script>
     <script src="/static/auth.js"></script>
-    <script src="/static/profile.js"></script>
-</body>
-</html>
+    <script src="/static/profile.js"></script> -->
