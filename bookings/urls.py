@@ -4,7 +4,7 @@ from bookings import views
 app_name = 'bookings'
 urlpatterns = [
    
-    path('bookings', views.bookings, name = 'bookings'),
+    path('', views.bookings, name = 'bookings'),
 
 
 ]
