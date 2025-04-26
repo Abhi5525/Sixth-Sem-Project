@@ -1,44 +1,42 @@
 {% extends 'users/base.html' %}
-{% block title %}User Signup{% endblock %}
+{% block title %}Professional Signup{% endblock %}
 {% block content %}
 {% load static %}
-
-    <!-- Bootstrap CSS -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
-   
+
     <div class="container-fluid p-0">
         <div class="row g-0 min-vh-100">
             <!-- Left Section -->
             <div class="col-md-6 left-section d-flex flex-column justify-content-center align-items-start p-5">
-                <div>
-                    <!-- <div class="d-flex align-items-center mb-4">
+                <!-- <div>
+                    <div class="d-flex align-items-center mb-4">
                         <svg class="w-6 h-6 text-blue-600 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7m-9 9v-6h6v6m-6-6h6"></path>
                         </svg>
-                        <span class="text-blue-600 fw-semibold fs-5">ProConnect</span>
+                        <span class="text-blue-600 fw-semibold fs-2">ProConnect</span>
                     </div>
                     <h1 class="header-text">
                         Simplify <span class="highlight">Scheduling</span><br>for Professionals<br>and Users
-                    </h1> -->
-                </div>
+                    </h1>
+                </div> -->
             </div>
 
             <!-- Right Section -->
-            <div class="col-md-5 right-section">
+            <div class="col-md-6 right-section">
                 <div class="form-container">
-                    <h2> Signup as User</h2>
-                    <!-- <p class="mb-2">Create your Account </p> -->
+                    <h2> Signup as Professional</h2>
+                    <!-- <p class="mb-4">Create your Account</p> -->
 
-                    <!-- User Signup Form -->
+                    <!-- Professional Signup Form -->
                     <div class="form-section">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             {% for field in form %}
                                 <div class="mb-2">
-                                    <label for="{{ field.id_for_label }}" class="form-label mb-0">{{ field.label }}</label>
+                                    <label for="{{ field.id_for_label }}" class="form-label mb-0" >{{ field.label }}</label>
                                     {{ field }}
                                     {% if field.errors %}
                                         <span class="text-danger d-block mt-1">{{ field.errors|join:", " }}</span>

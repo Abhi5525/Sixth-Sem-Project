@@ -29,7 +29,7 @@ def user_signup(request):
         form = UserSignupForm()
     return render(request, 'users/user_signup.html', {'form': form})
 
-def manpower_signup(request):
+def professional_signup(request):
     if request.method == 'POST':
         form = ManpowerSignupForm(request.POST, request.FILES)
         if form.is_valid():
@@ -48,7 +48,7 @@ def manpower_signup(request):
             return redirect('users:login')
     else:
         form = ManpowerSignupForm()
-    return render(request, 'users/manpower_signup.html', {'form': form})
+    return render(request, 'users/professional_signup.html', {'form': form})
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
