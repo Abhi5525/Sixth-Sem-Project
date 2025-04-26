@@ -16,6 +16,7 @@
     />
     <style>
       .navbar-bottom {
+        background: linear-gradient(135deg, #0062cc, #0068b3, #0081cc, #0099b3);
         position: fixed;
         bottom: 0;
         width: 100%;
@@ -57,12 +58,12 @@
       .nav-link.active {
         border-bottom: 2px solid white;
       }
-      .text-black {
+      /* .text-black {
         color: black !important;
       }
       .text-black:hover {
         color: black !important;
-      }
+      } */
       /* Enhance navbar brand */
       .navbar-brand {
         font-weight: 700;
@@ -120,7 +121,7 @@
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
               <a
-                class="nav-link d-flex align-items-center active"
+                class="nav-link d-flex align-items-center {% if request.path == '/' %}active{% endif %}"
                 href="{% url 'home_module:home' %}"
               >
                 <i class="fas fa-home me-2"></i> Home
@@ -128,7 +129,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link d-flex align-items-center"
+                class="nav-link d-flex align-items-center{% if request.path == '/#search' %}active{% endif %}"
                 href="{% url 'home_module:home' %}#search"
               >
                 <i class="fas fa-search me-2"></i> Search
@@ -136,7 +137,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link d-flex align-items-center"
+                class="nav-link d-flex align-items-center {% if request.path == '/bookings/' %}active{% endif %}"
                 href="{% url 'bookings:bookings' %}"
               >
                 <i class="fas fa-calendar-check me-2"></i> Bookings
@@ -144,7 +145,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link d-flex align-items-center"
+                class="nav-link d-flex align-items-center {% if request.path == '/profile/' %}active{% endif %}"
                 href="{% url 'users:profile' %}"
               >
                 <i class="fas fa-user me-2"></i> Profile
@@ -157,18 +158,26 @@
     <!-- Main Content -->
     <main class="main">{% block main-content %} {% endblock %}</main>
     <!-- Bottom Navigation for Mobile -->
-    <nav class="navbar navbar-black bg-light navbar-bottom">
+    <nav class="navbar navbar-black bg-gradient-blue navbar-bottom">
       <div class="container d-flex justify-content-around">
-        <a class="nav-link text-black text-center" href="#home"
+        <a
+          class="nav-link text-black text-center {% if request.path == '/' %}active{% endif %}"
+          href="{% url 'home_module:home' %}"
           ><i class="fas fa-home"></i><br />Home</a
         >
-        <a class="nav-link text-black text-center" href="#search"
+        <a
+          class="nav-link text-black text-center {% if request.path == '/#search' %}active{% endif %}"
+          href="{% url 'home_module:home'%}#search"
           ><i class="fas fa-search"></i><br />Search</a
         >
-        <a class="nav-link text-black text-center" href="#bookings"
+        <a
+          class="nav-link text-black text-center {% if request.path == '/bookings/' %}active{% endif %}"
+          href="{% url 'bookings:bookings' %}"
           ><i class="fas fa-calendar"></i><br />Bookings</a
         >
-        <a class="nav-link text-black text-center" href="#profile"
+        <a
+          class="nav-link text-black text-center {% if request.path == '/profile/' %}active{% endif %}"
+          href="{% url 'users:profile' %}"
           ><i class="fas fa-user"></i><br />Profile</a
         >
       </div>
