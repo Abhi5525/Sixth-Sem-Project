@@ -69,3 +69,8 @@ body {
 .text-link:hover {
     text-decoration: underline;
 }
+.form-control::placeholder {
+    font-size: 0.80rem; /* Change size */
+    color: #6c757d;     /* Optional: lighter color */
+    opacity: 1;         /* Make sure it's fully visible */
+}
