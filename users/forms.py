@@ -47,18 +47,44 @@ class LoginForm(forms.Form):
         password = cleaned_data.get('password')
         
         if email and password:
-            try:
-                user = User.objects.get(email = email)
-                user = authenticate(username = user.username, password = password)
-                if user is None:
-                    raise forms.ValidationError("Invalid credentials")
-                self.user = user
-            except User.DoesNotExist:
-                raise forms.ValidationError("Invalid Credentials")
+            user = authenticate(email = email, password = password)
+            if user is None:
+                raise forms.ValidationError("Invalid credentials")
+            self.user = user
+            
             
         return cleaned_data
 
 
+class ManpowerSignupForm(UserCreationForm):
+    name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'District'}))
+    local_address = forms.CharField(max_length=100, required=True, label="Local Address", widget=forms.TextInput(attrs={
+        'placeholder': 'e.g. Ward No. 5, Budhanilkantha',
+        'class': 'form-control'
+    }))
+    phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
+    skill = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Skills'}))
+    experience_years = forms.IntegerField(min_value=0, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'experience'}))
+    photo = forms.ImageField(required=False, )
+    citizenship_front = forms.ImageField(required=False)
+    citizenship_back = forms.ImageField(required=False)
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+
+    class Meta:
+        model = User
+        fields = (
+             'email', 'name', 
+            'phone', 'skill', 'district', 'local_address','experience_years',
+            'photo', 'citizenship_front', 'citizenship_back',
+            
+        )
+
+    def clean_phone(self):
+        phone = self.cleaned_data['phone']
+        if not phone.isdigit() or len(phone) < 10:
+            raise forms.ValidationError("Enter a valid phone number (at least 10 digits).")
+        return phone
 
     
 
@@ -139,33 +165,3 @@ class LoginForm(forms.Form):
 #     ('Kanchanpur', 'Kanchanpur'),
 #     ('Kailali', 'Kailali'),
 # ]
-
-# class ManpowerSignupForm(UserCreationForm):
-#     name = forms.CharField(max_length=100, required=True)
-#     district = forms.ChoiceField(choices=DISTRICT_CHOICES, required=True, label="District")
-#     local_address = forms.CharField(max_length=100, required=True, label="Local Address", widget=forms.TextInput(attrs={
-#         'placeholder': 'e.g. Ward No. 5, Budhanilkantha',
-#         'class': 'form-control form-control-sm'
-#     }))
-#     phone = forms.CharField(max_length=15, required=True)
-#     skill = forms.CharField(max_length=100, required=True)
-#     experience_years = forms.IntegerField(min_value=0, required=True)
-#     photo = forms.ImageField(required=False)
-#     citizenship_front = forms.ImageField(required=False)
-#     citizenship_back = forms.ImageField(required=False)
-#     email = forms.EmailField(required=True)
-
-    # class Meta:
-    #     model = User
-    #     fields = (
-    #         'username', 'email', 'name', 'district', 'local_address',
-    #         'phone', 'skill', 'experience_years',
-    #         'photo', 'citizenship_front', 'citizenship_back',
-            
-    #     )
-
-    # def clean_phone(self):
-    #     phone = self.cleaned_data['phone']
-    #     if not phone.isdigit() or len(phone) < 10:
-    #         raise forms.ValidationError("Enter a valid phone number (at least 10 digits).")
-    #     return phone

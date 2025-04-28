@@ -32,30 +32,31 @@
   <!-- Home Section -->
   <section id="home" class="mb-5">
     <div class="hero-section text-center py-5 rounded">
-      <h1 class="display-4">Find Trusted Professionals</h1>
-      <p class="lead">
-        Book plumbers, carpenters, electricians, and more with ease.
-      </p>
-      <a href="#search" class="btn btn-light btn-lg mt-3">Get Started</a>
+        <h1 class="display-4">Find Trusted Professionals</h1>
+        <p class="lead">
+            Book plumbers, carpenters, electricians, and more with ease.
+        </p>
+        <a href="#search" class="btn btn-light btn-lg mt-3">Get Started</a>
     </div>
     <div class="row mt-5">
-      <div class="col-md-4 text-center">
-        <i class="fas fa-search fa-2x text-primary mb-3"></i>
-        <h5>Search</h5>
-        <p>Find professionals by trade or location.</p>
-      </div>
-      <div class="col-md-4 text-center">
-        <i class="fas fa-calendar-check fa-2x text-primary mb-3"></i>
-        <h5>Book</h5>
-        <p>Schedule services at your convenience.</p>
-      </div>
-      <div class="col-md-4 text-center">
-        <i class="fas fa-star fa-2x text-primary mb-3"></i>
-        <h5>Rate</h5>
-        <p>Review and rate your experience.</p>
-      </div>
+        <div class="col-md-3 text-center">
+            <i class="fas fa-search fa-2x text-primary mb-3"></i>
+            <h5>Search</h5>
+            <p>Find professionals by trade or location.</p>
+        </div>
+        <div class="col-md-3 text-center">
+            <i class="fas fa-calendar-check fa-2x text-primary mb-3"></i>
+            <h5>Book</h5>
+            <p>Schedule services at your convenience.</p>
+        </div>
+        <div class="col-md-3 text-center">
+            <i class="fas fa-star fa-2x text-primary mb-3"></i>
+            <h5>Rate</h5>
+            <p>Review and rate your experience.</p>
+        </div>
+        
     </div>
-  </section>
+</section>
 
   <!-- Search Section -->
   <section id="search" class="mb-5">
@@ -187,52 +188,53 @@
       </div>
     </div>
   </section>
-
-  <!-- Profile Section -->
-  <section id="profile" class="mb-5">
-    <h2 class="mb-4">Your Profile</h2>
-    <div class="card">
+<!-- Register as a Professional Section -->
+<section id="register-professional" class="mb-5">
+  <h2 class="mb-4">Register Yourself as a Professional</h2>
+  <div class="card">
       <div class="card-body">
-        <div class="d-flex align-items-center mb-3">
-          <img
-            src="https://via.placeholder.com/100"
-            class="rounded-circle profile-img me-3"
-            alt="User Profile"
-          />
-          <div>
-            <h4 class="mb-0">Your Name</h4>
-            <p class="text-muted mb-0">Member since March 2025</p>
+          <div class="d-flex align-items-center mb-3">
+              <i class="fas fa-user-tie fa-3x text-primary me-3"></i>
+              <div>
+                  <h4 class="mb-0">Become a Trusted Professional</h4>
+                  <p class="text-muted mb-0">Join our network of trusted professionals!</p>
+              </div>
           </div>
-        </div>
-        <form>
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              value="you@example.com"
-              disabled
-            />
-          </div>
-          <div class="mb-3">
-            <label for="phone" class="form-label">Phone</label>
-            <input
-              type="tel"
-              class="form-control"
-              id="phone"
-              value="+1 123-456-7890"
-            />
-          </div>
-          <button type="submit" class="btn btn-primary">Update Profile</button>
-          <button type="button" class="btn btn-danger ms-2" onclick="logout()">
-            Logout
+          <button type="button" class="btn btn-primary" > <a href="{% url 'users:professional_signup' %}" class="text-white text-decoration-none">Register Now</a>
+              
           </button>
-        </form>
+
+          <!-- Registration Form (Initially hidden) -->
+          <!-- <div id="registerForm" class="collapse mt-3">
+              <form>
+                  <div class="mb-3">
+                      <label for="fullName" class="form-label">Full Name</label>
+                      <input type="text" class="form-control" id="fullName" placeholder="Enter your full name" required />
+                  </div>
+                  <div class="mb-3">
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" class="form-control" id="email" placeholder="Enter your email" required />
+                  </div>
+                  <div class="mb-3">
+                      <label for="phone" class="form-label">Phone</label>
+                      <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" required />
+                  </div>
+                  <div class="mb-3">
+                      <label for="service" class="form-label">Service Type</label>
+                      <select class="form-select" id="service" required>
+                          <option value="" disabled selected>Select your service</option>
+                          <option value="plumber">Plumber</option>
+                          <option value="electrician">Electrician</option>
+                          <option value="carpenter">Carpenter</option>
+                          <option value="other">Other</option>
+                      </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+          </div>
       </div>
-    </div>
-  </section>
-</div>
+  </div> -->
+</section>
 
 <!-- Profile Modal -->
 <div

@@ -2,60 +2,266 @@
 {% block title %}Professional Signup{% endblock %}
 {% block content %}
 {% load static %}
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
 
-    <div class="container-fluid p-0">
-        <div class="row g-0 min-vh-100">
-            <!-- Left Section -->
-            <div class="col-md-6 left-section d-flex flex-column justify-content-center align-items-start p-5">
-                <!-- <div>
-                    <div class="d-flex align-items-center mb-4">
-                        <svg class="w-6 h-6 text-blue-600 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7m-9 9v-6h6v6m-6-6h6"></path>
-                        </svg>
-                        <span class="text-blue-600 fw-semibold fs-2">ProConnect</span>
-                    </div>
-                    <h1 class="header-text">
-                        Simplify <span class="highlight">Scheduling</span><br>for Professionals<br>and Users
-                    </h1>
-                </div> -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+<style>
+    /* General Styles */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    /* Container Layout */
+    .container-fluid {
+        overflow: hidden;
+    }
+
+    /* Left Section - Background Image */
+    .left-section {
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        color: white;
+        background-size: cover;
+        position: relative;
+    }
+
+    .left-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .left-content {
+        position: relative;
+        z-index: 1;
+        padding: 2rem;
+    }
+
+    .left-section h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .left-section p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        opacity: 0.9;
+    }
+
+    /* Right Section - Form */
+    .right-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background-color: #ffffff;
+    }
+
+    /* Form Container */
+    .form-container {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .form-container h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
+        color: #343a40;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    /* Form Elements - Compact Version */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #495057;
+        margin-bottom: 0.4rem;
+    }
+
+    .form-control {
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        border: 1px solid #e1e5ee;
+        transition: all 0.3s ease;
+        height: calc(1.5em + 0.75rem + 2px);
+        /* Reduced height */
+    }
+
+    .form-control:focus {
+        border-color: #6e8efb;
+        box-shadow: 0 0 0 0.2rem rgba(110, 142, 251, 0.25);
+    }
+
+    /* Error Styling */
+    .text-danger {
+        font-size: 0.8rem;
+        color: #dc3545;
+        margin-top: 0.2rem;
+    }
+
+    /* Button Styling */
+    .btn-primary {
+        background-color: #6e8efb;
+        border-color: #6e8efb;
+        padding: 0.6rem 1.25rem;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #5a7df4;
+        border-color: #5a7df4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(110, 142, 251, 0.3);
+    }
+
+    /* Link Styling */
+    .text-link {
+        color: #6e8efb;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-align: center;
+        display: flex;
+        margin-left: 100px;
+        padding-left: 80px;
+        padding-top: 20px;
+    }
+
+    .text-link:hover {
+        color: #5a7df4;
+        text-decoration: underline;
+    }
+
+    .bottom-text {
+        text-align: center;
+        margin-top: 1.25rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    /* Form Group Spacing */
+    .mb-3 {
+        margin-bottom: 1rem !important;
+        /* Reduced from 1.5rem */
+    }
+
+    /* File Input Customization */
+    .form-control[type="file"] {
+        padding: 0.35rem;
+    }
+
+    /* Responsive Layout */
+    @media (max-width: 992px) {
+
+        .left-section,
+        .right-section {
+            min-height: auto;
+            padding: 2rem 1.25rem;
+        }
+
+        .left-section {
+            order: 2;
+        }
+
+        .right-section {
+            order: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem;
+        }
+
+        .form-container h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .form-container {
+            padding: 1.25rem;
+        }
+
+        .form-control {
+            padding: 0.45rem 0.65rem;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+<div class="container-fluid p-0">
+    <div class="row g-0 min-vh-100">
+        <!-- Left Section -->
+        <div class="col-lg-6 left-section d-flex align-items-center justify-content-center p-5">
+            <div class="left-content">
+                <h1>Join Our Professional Network</h1>
+                <p>Connect with clients, showcase your skills, and grow your business. Sign up today to access exclusive
+                    features designed for professionals like you.</p>
+                <ul class="mt-4" style="list-style-type: none; padding-left: 0;">
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Build your professional profile</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Get discovered by potential clients</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Manage your appointments</li>
+                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Receive secure payments</li>
+                </ul>
             </div>
+        </div>
 
-            <!-- Right Section -->
-            <div class="col-md-6 right-section">
-                <div class="form-container">
-                    <h2> Signup as Professional</h2>
-                    <!-- <p class="mb-4">Create your Account</p> -->
+        <!-- Right Section -->
+        <div class="col-lg-6 right-section">
+            <div class="form-container">
+                <h2>Professional Sign Up</h2>
 
-                    <!-- Professional Signup Form -->
-                    <div class="form-section">
-                        <form method="post" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            {% for field in form %}
-                                <div class="mb-2">
-                                    <label for="{{ field.id_for_label }}" class="form-label mb-0" >{{ field.label }}</label>
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <span class="text-danger d-block mt-1">{{ field.errors|join:", " }}</span>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary">Sign Up</button>
-                        </form>
-                    </div>
+                <!-- Professional Signup Form -->
+                <div class="form-section">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
 
-                    <p class="mt-3 text-center text-secondary">
-                        Already have an account? <a href="{% url 'users:login' %}" class="text-link">Log in</a>
-                    </p>
+                            {% if field.errors %}
+                            <span class="text-danger d-block mt-1">{{ field.errors|join:", " }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary">Register as a professional</button>
+                    </form>
                 </div>
+
+
+                <!-- <button type="button" class="btn-back"> -->
+                    <a href="{% url 'home_module:home' %}" class="text-link">Back To Home </a>
+                <!-- </button> -->
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
 
 {% endblock %}
