@@ -1,24 +1,30 @@
 
 # users/views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth.views import LoginView
-from django.urls import reverse
+from django.contrib.auth import login as auth_login ,get_user_model
 from .forms import UserSignupForm, LoginForm, ManpowerSignupForm
-from .models import UserProfile, ManpowerProfile
+from users.models import UserProfile, ManpowerProfile
 from home import views
+from django.contrib.auth.decorators import login_required
 
+
+@login_required
 def profile(request):
-    return render(request, 'users/profile.html')
+    user = request.user
+    user_profile = UserProfile.objects.get(user=user) 
+    return render(request, 'users/profile.html', {'user_profile': user_profile})
+    
 
 # def signup_choice(request):
 #     return render(request, 'users/signup_choice.html')
-
+User = get_user_model()
 def signup(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit= False)
+            user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count())
+            user.save()
             UserProfile.objects.create(
                 user=user,
                 full_name=form.cleaned_data['full_name'],
@@ -49,6 +55,8 @@ def professional_signup(request):
     else:
         form = ManpowerSignupForm()
     return render(request, 'users/professional_signup.html', {'form': form})
+
+
 def login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -59,3 +67,5 @@ def login(request):
     else:
         form = LoginForm()
         return render(request, 'users/login.html', {'form':form})
+
+

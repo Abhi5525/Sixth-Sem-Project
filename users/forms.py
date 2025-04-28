@@ -47,12 +47,15 @@ class LoginForm(forms.Form):
         password = cleaned_data.get('password')
         
         if email and password:
-            user = authenticate(email = email, password = password)
-            if user is None:
-                raise forms.ValidationError("Invalid credentials")
-            self.user = user
-            
-            
+             try:
+                 user = User.objects.get(email = email)
+                 user = authenticate(username = user.username, password = password)
+                 if user is None:
+                     raise forms.ValidationError("Invalid credentials")
+                 self.user = user
+             except User.DoesNotExist:
+                 raise forms.ValidationError("Invalid Credentials")
+             
         return cleaned_data
 
 
