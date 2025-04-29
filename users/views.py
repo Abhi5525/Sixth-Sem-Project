@@ -1,11 +1,13 @@
 
 # users/views.py
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
 from .forms import UserSignupForm, LoginForm, ManpowerSignupForm
 from users.models import UserProfile, ManpowerProfile
 from home import views
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LogoutView
 
 
 @login_required
@@ -33,7 +35,7 @@ def signup(request):
             return redirect('users:login')
     else:
         form = UserSignupForm()
-    return render(request, 'users/signup.html', {'form': form})
+    return render(request, 'users/html', {'form': form})
 
 def professional_signup(request):
     if request.method == 'POST':
@@ -68,4 +70,8 @@ def login(request):
         form = LoginForm()
     return render(request, 'users/login.html', {'form':form})
 
-
+class CustomLogoutView(LogoutView):
+    def dispatch(self, request, *args, **kwargs):
+        messages.success(request, "You have been logged out successfully.")
+        return super().dispatch(request, *args, **kwargs)
+    template_name='users/login.html'

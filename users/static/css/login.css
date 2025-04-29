@@ -1,7 +1,7 @@
 /* Main Container */
 .login-container {
     max-width: 1200px;
-    margin: 2rem auto;
+    margin: 1.2rem auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     border-radius: 15px;
     overflow: hidden;
@@ -15,7 +15,7 @@
                 url('/static/images/login_cover.png');
     background-size: cover;
     background-position: center;
-    padding: 3rem;
+    padding: 1.5rem;
     color: white;
     display: flex;
     flex-direction: column;
@@ -32,14 +32,14 @@
     font-size: 1.2rem;
     font-weight: 600;
     letter-spacing: 1.5px;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.4rem;
     text-transform: uppercase;
 }
 
 .calendar-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.1rem;
     line-height: 1.2;
 }
 
@@ -97,7 +97,7 @@
 /* Button */
 .btn-login {
     background: #194178;
-    color: white;
+    color: white !important;
     padding: 12px;
     border: none;
     border-radius: 8px;
@@ -108,7 +108,7 @@
     margin-top: 1rem;
 }
 
-.btn-login:hover {
+.btn-login:hover {color: white !important;
     background: #14305c;
     transform: translateY(-2px);
     transition: background 0.3s, transform 0.3s;
@@ -151,16 +151,16 @@
 
 /* Responsive Adjustments */
 @media (max-width: 992px) {
-    .calendar-bg {
+    /* .calendar-bg {
         display: none;
-    }
+    } */
     
     .login-form {
-        padding: 2.5rem;
+        padding: 1rem 1.4rem;
     }
     
     .form-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
 }
 
@@ -171,6 +171,6 @@
     }
     
     .login-form {
-        padding: 2rem;
+        padding: 1.2rem;
     }
 }
