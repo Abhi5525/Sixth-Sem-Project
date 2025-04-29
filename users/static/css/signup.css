@@ -1,0 +1,122 @@
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.left-section {
+    background-image: url("/static/images/skillpeople.png");
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    position: relative;
+}
+
+.left-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(30, 58, 138, 0.85);
+}
+
+.overlay-text {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.right-section {
+    background-color: #ffffff;
+}
+
+.form-container {
+    max-width: 450px;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+}
+
+.form-container h2 {
+    color: #1e3a8a;
+    font-weight: 700;
+}
+
+.form-control {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 0.25rem rgba(30, 58, 138, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.btn-primary {
+    background-color: #1e3a8a;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 500;
+}
+
+.text-link {
+    color: #1e3a8a;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.text-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.invalid-feedback {
+    font-size: 0.85rem;
+}
+
+/* Custom file upload button */
+.form-control[type="file"] {
+    padding: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .left-section {
+        min-height: 300px;
+    }
+    
+    .form-container {
+        padding: 1.5rem;
+    }
+}
+/* Hide password help text */
+#id_password1 + .helptext,
+#id_password2 + .helptext {
+    display: none;
+}
