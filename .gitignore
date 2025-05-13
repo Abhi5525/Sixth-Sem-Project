@@ -24,3 +24,4 @@ media/
 Thumbs.db
 # Django migrations
 **/migrations/**
+**/migrations/__pychache__/**
