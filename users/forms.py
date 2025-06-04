@@ -6,18 +6,18 @@ from .models import UserProfile, ManpowerProfile
 from django.contrib.auth import get_user_model, authenticate
 
 class UserSignupForm(UserCreationForm):
-    username = None
+    username =  forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Username'}))
     full_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Full Name'}))
 
     phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Phone Number'}))
 
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
-        'class': 'form-control','placeholder': 'Email Address'
-    }))
+    # email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+    #     'class': 'form-control','placeholder': 'Email Address'
+    # }))
 
     class Meta:
         model = User
-        fields = ('full_name', 'email', 'phone_number', 'password1', 'password2')
+        fields = ('full_name', 'phone_number', 'password1', 'password2')
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,22 +33,37 @@ class UserSignupForm(UserCreationForm):
     
 User = get_user_model()
 class LoginForm(forms.Form):
-    username = None
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
-        'class': 'form-control','placeholder': 'Email Address'
-    }))
-    password = forms.CharField(required=True, widget=forms.PasswordInput(attrs={
-        'class': 'form-control','placeholder': 'Password'
-    }))
+    username = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Username'
+        })
+    )
+    # email = forms.EmailField(
+    #     required=True,
+    #     widget=forms.EmailInput(attrs={
+    #         'class': 'form-control',
+    #         'placeholder': 'Email Address'
+    #     })
+    # )
+    password = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Password'
+        })
+    )
     
     def clean(self):
         cleaned_data =  super().clean()
-        email = cleaned_data.get('email')
+        # email = cleaned_data.get('email')
+        username = cleaned_data.get('username')
         password = cleaned_data.get('password')
         
-        if email and password:
+        if username and password:
              try:
-                 user = User.objects.get(email = email)
+                 user = User.objects.get(username = username)
                  user = authenticate(username = user.username, password = password)
                  if user is None:
                      raise forms.ValidationError("Invalid credentials")
@@ -60,36 +75,48 @@ class LoginForm(forms.Form):
 
 
 class ManpowerSignupForm(UserCreationForm):
-    name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    # name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
     district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'District'}))
     local_address = forms.CharField(max_length=100, required=True, label="Local Address", widget=forms.TextInput(attrs={
         'placeholder': 'e.g. Ward No. 5, Budhanilkantha',
         'class': 'form-control'
     }))
-    phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
+    # phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
     skill = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Skills'}))
     experience_years = forms.IntegerField(min_value=0, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'experience'}))
     photo = forms.ImageField(required=False, )
     citizenship_front = forms.ImageField(required=False)
     citizenship_back = forms.ImageField(required=False)
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    # email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
 
     class Meta:
         model = User
-        fields = (
-             'email', 'name', 
-            'phone', 'skill', 'district', 'local_address','experience_years',
+        fields = (  'skill', 'district', 'local_address','experience_years',
             'photo', 'citizenship_front', 'citizenship_back',
             
         )
 
-    def clean_phone(self):
-        phone = self.cleaned_data['phone']
-        if not phone.isdigit() or len(phone) < 10:
-            raise forms.ValidationError("Enter a valid phone number (at least 10 digits).")
-        return phone
+    # def clean_phone(self):
+    #     phone = self.cleaned_data['phone']
+    #     if not phone.isdigit() or len(phone) < 10:
+    #         raise forms.ValidationError("Enter a valid phone number (at least 10 digits).")
+    #     return phone
 
-    
+class UserProfileUpdateForm(forms.ModelForm):
+    user_type = 'user'
+
+    class Meta:
+        model = UserProfile  # or User if you're updating User model directly
+        fields = ['user', 'full_name', 'phone_number']  # exclude user_type if not in model
+
+class ManpowerProfileUpdateForm(forms.ModelForm):
+    user_type = 'manpower'
+
+    class Meta:
+        model = ManpowerProfile  # use ManpowerProfile for manpower profile updates
+        fields = ['user', 'address', 'skill', 'experience_years']  # exclude user_type if not in model
+
+
 
 # # List of all 77 districts of Nepal
 # DISTRICT_CHOICES = [

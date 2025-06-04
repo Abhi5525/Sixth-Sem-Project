@@ -1,13 +1,17 @@
 
 # users/views.py
 from django.contrib import messages
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
-from .forms import UserSignupForm, LoginForm, ManpowerSignupForm
+from django.urls import reverse
+from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
 from users.models import UserProfile, ManpowerProfile
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
+from django.contrib.auth.models import User
+from django import forms
 
 
 @login_required
@@ -35,7 +39,7 @@ def signup(request):
             return redirect('users:login')
     else:
         form = UserSignupForm()
-    return render(request, 'users/html', {'form': form})
+    return render(request, 'users/signup.html', {'form': form})
 
 def professional_signup(request):
     if request.method == 'POST':
@@ -70,6 +74,46 @@ def login(request):
         form = LoginForm()
     return render(request, 'users/login.html', {'form':form})
 
+@login_required
+def profile_update(request):
+    user = request.user
+    profile_type = request.GET.get('type', 'user')  # Default to user profile
+    
+    try:
+        # Determine which profile to update
+        if profile_type == 'manpower':
+            profile = ManpowerProfile.objects.get(user=user)
+            form_class = ManpowerProfileUpdateForm
+            # success_url = reverse('users:manpower_profile')
+        else:
+            profile = UserProfile.objects.get(user=user)
+            form_class = UserProfileUpdateForm
+        
+        success_url = reverse('users:profile')
+        if request.method == 'POST':
+            form = form_class(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': "Profile updated successfully."
+                    })
+                messages.success(request, "Profile updated successfully.")
+                return redirect(success_url)
+        else:
+            form = form_class(instance=profile)
+            
+        # For AJAX requests, return just the form HTML
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return render(request, 'users/profile.html', {'form': form})
+            
+        return render(request, 'users/profile.html', {'form': form})
+        
+    except (UserProfile.DoesNotExist, ManpowerProfile.DoesNotExist):
+        raise Http404("Profile not found")
+    
 class CustomLogoutView(LogoutView):
     def dispatch(self, request, *args, **kwargs):
         messages.success(request, "You have been logged out successfully.")
