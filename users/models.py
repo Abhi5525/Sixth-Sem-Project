@@ -14,9 +14,9 @@ class UserProfile(models.Model):
 
 class ManpowerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
+    # name = models.CharField(max_length=100)
     address = models.TextField()
-    phone = models.CharField(max_length=15)
+    # phone = models.CharField(max_length=15)
     skill = models.CharField(max_length=100)
     experience_years = models.PositiveIntegerField()
     photo = models.ImageField(upload_to='manpower/photos/', blank=True, null=True)

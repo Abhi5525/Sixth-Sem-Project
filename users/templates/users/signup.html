@@ -22,8 +22,8 @@
 
             <!-- Right Section with Form -->
             <div class="col-md-6 right-section d-flex align-items-center justify-content-center">
-                <div class="form-container p-4 shadow rounded">
-                    <div class="text-center mb-4">
+                <div class="form-container  p-2 ps-4 shadow rounded">
+                    <div class="text-center mb-2">
                         <h2 class="fw-bold">Create Your Account</h2>
                         <p class="text-muted">Start your journey with us today</p>
                     </div>
@@ -34,7 +34,7 @@
                             {% csrf_token %}
                             
                             {% for field in form %}
-                                <div class="mb-3">
+                                <div class="mb-2">
                                     <label for="{{ field.id_for_label }}" class="form-label">
                                         {% if field.name == 'email' %}
                                             <i class="fas fa-envelope me-2"></i>
