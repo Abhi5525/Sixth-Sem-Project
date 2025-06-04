@@ -18,8 +18,8 @@ class ManpowerProfile(models.Model):
     address = models.TextField()
     # phone = models.CharField(max_length=15)
     skill = models.CharField(max_length=100)
-    experience_years = models.PositiveIntegerField()
-    photo = models.ImageField(upload_to='manpower/photos/', blank=True, null=True)
+    experience = models.CharField(max_length=200)
+    # photo = models.ImageField(upload_to='manpower/photos/', blank=True, null=True)
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
 

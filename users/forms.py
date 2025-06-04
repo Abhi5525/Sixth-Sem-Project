@@ -7,8 +7,7 @@ from django.contrib.auth import get_user_model, authenticate
 
 class UserSignupForm(UserCreationForm):
     username =  forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Username'}))
-    full_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Full Name'}))
-
+    
     phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Phone Number'}))
 
     # email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
@@ -17,7 +16,7 @@ class UserSignupForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('full_name', 'phone_number', 'password1', 'password2')
+        fields = ('username', 'phone_number', 'password1', 'password2')
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -76,10 +75,16 @@ class LoginForm(forms.Form):
 
 class ManpowerSignupForm(UserCreationForm):
     # name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    full_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Full Name'}))
+
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+        'class': 'form-control', 'placeholder': 'Email'}))
+
     province = forms.CharField(max_length= 100, required=True, label="Province", widget=forms.TextInput(attrs={
         'class': 'form-control', 'placeholder': "e.g: Bagmati"
     }))
-    district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g: Kavrepalanchowk'}))
+    district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'e.g: Kavrepalanchowk'}))
     municipality = forms.CharField(max_length=100, required=True, label="Gaupalika/Nagarpalika", widget=forms.TextInput(attrs={
         'placeholder': 'e.g. Budhanilkantha',
         'class': 'form-control'
@@ -89,17 +94,18 @@ class ManpowerSignupForm(UserCreationForm):
         'class': 'form-control'
     }))
     # phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
-    skill = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Skills'}))
-    experience_years = forms.IntegerField(min_value=0, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'experience'}))
-    photo = forms.ImageField(required=False, )
+    skill = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'Skills'}))
+    experience = forms.CharField(max_length=200, required=True, widget=forms.Textarea(attrs={
+        'class': 'form-control', 'placeholder': 'experience'}))
+    # photo = forms.ImageField(required=False, )
     citizenship_front = forms.ImageField(required=False)
     citizenship_back = forms.ImageField(required=False)
-    # email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+   
 
     class Meta:
         model = User
-        fields = (  'skill','province', 'district', 'municipality','ward', 'experience_years',
-            'photo', 'citizenship_front', 'citizenship_back',
+        fields = ( 'full_name','email','skill','province', 'district', 'municipality','ward', 'experience', 'citizenship_front', 'citizenship_back',
             
         )
 
@@ -121,7 +127,7 @@ class ManpowerProfileUpdateForm(forms.ModelForm):
 
     class Meta:
         model = ManpowerProfile  # use ManpowerProfile for manpower profile updates
-        fields = ['user', 'address', 'skill', 'experience_years']  # exclude user_type if not in model
+        fields = ['user', 'address', 'skill', 'experience']  # exclude user_type if not in model
 
 
 

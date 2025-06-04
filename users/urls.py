@@ -15,8 +15,7 @@ urlpatterns = [
     path('signup/professional/', views.professional_signup, name='professional_signup'),
 
 
-    path('form/<int:municipality_id>/', views.get_ward, name = "get_ward"),
-
-    path('form/<int:province_id>/', views.get_districts, name="get_districts"),
-    path('form/<int:district_id>/', views.get_municipality, name = "get_municipality"),
+    path('province/district/municipality/<int:municipality_id>/', views.get_ward, name = "get_ward"),
+    path('province/<int:province_id>/', views.get_districts, name="get_districts"),
+    path('province/district/<int:district_id>/', views.get_municipality, name = "get_municipality"),
 ]
