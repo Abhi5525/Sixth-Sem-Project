@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls  import path
-from users import views
+from . import views
 from django.contrib.auth.views import LogoutView
 
 # from .views import CustomLoginView
@@ -14,4 +14,9 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('signup/professional/', views.professional_signup, name='professional_signup'),
 
+
+    path('form/<int:municipality_id>/', views.get_ward, name = "get_ward"),
+
+    path('form/<int:province_id>/', views.get_districts, name="get_districts"),
+    path('form/<int:district_id>/', views.get_municipality, name = "get_municipality"),
 ]

@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
 from django.urls import reverse
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
-from users.models import UserProfile, ManpowerProfile
+from users.models import UserProfile, ManpowerProfile, District, Municipality, Ward
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
@@ -119,3 +119,15 @@ class CustomLogoutView(LogoutView):
         messages.success(request, "You have been logged out successfully.")
         return super().dispatch(request, *args, **kwargs)
     template_name='users/login.html'
+
+def get_districts(request, province_id):
+    districts = list(District.objects.filter(province_id = province_id).values('id', "name"))
+    return JsonResponse({'districts': districts})
+
+def get_municipality(request, district_id):
+    municipality = list(Municipality.objects.filter(district_id = district_id).values('id', 'name'))
+    return JsonResponse({'municipality': municipality})
+
+def get_ward(request, municipality_id):
+    ward = list(Ward.objects.filter(municipality_id= municipality_id).values('id', 'number'))
+    return JsonResponse({'ward': ward})

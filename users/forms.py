@@ -76,9 +76,16 @@ class LoginForm(forms.Form):
 
 class ManpowerSignupForm(UserCreationForm):
     # name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
-    district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'District'}))
-    local_address = forms.CharField(max_length=100, required=True, label="Local Address", widget=forms.TextInput(attrs={
-        'placeholder': 'e.g. Ward No. 5, Budhanilkantha',
+    province = forms.CharField(max_length= 100, required=True, label="Province", widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': "e.g: Bagmati"
+    }))
+    district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g: Kavrepalanchowk'}))
+    municipality = forms.CharField(max_length=100, required=True, label="Gaupalika/Nagarpalika", widget=forms.TextInput(attrs={
+        'placeholder': 'e.g. Budhanilkantha',
+        'class': 'form-control'
+    }))
+    ward = forms.IntegerField(required=True, label= "Ward No", widget=forms.NumberInput(attrs={
+        'placeholder': 'e.g: 1',
         'class': 'form-control'
     }))
     # phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
@@ -91,7 +98,7 @@ class ManpowerSignupForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = (  'skill', 'district', 'local_address','experience_years',
+        fields = (  'skill','province', 'district', 'municipality','ward', 'experience_years',
             'photo', 'citizenship_front', 'citizenship_back',
             
         )

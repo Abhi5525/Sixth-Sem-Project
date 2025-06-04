@@ -24,4 +24,31 @@ class ManpowerProfile(models.Model):
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
 
     def __str__(self):
+        return self()
+    
+
+class Province(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
         return self.name
+    
+class District(models.Model):
+    name = models.CharField(max_length=100)
+    province = models.ForeignKey(Province, on_delete= models.CASCADE, related_name="districts")
+
+    def __str__(self):
+        return self.name
+class Municipality(models.Model):
+    name = models.CharField(max_length=100)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="municipality")
+
+    def __str__(self):
+        return self.name
+    
+class Ward(models.Model):
+    number = models.PositiveBigIntegerField()
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="ward")
+
+    def __str__(self):
+        return f"Ward no - {self.number}"
