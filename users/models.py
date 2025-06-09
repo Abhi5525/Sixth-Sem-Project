@@ -18,7 +18,7 @@ class ManpowerProfile(models.Model):
     address = models.TextField()
     # phone = models.CharField(max_length=15)
     skill = models.CharField(max_length=100)
-    experience = models.CharField(max_length=200)
+    experience = models.CharField(max_length=200, default="no experience")
     # photo = models.ImageField(upload_to='manpower/photos/', blank=True, null=True)
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
@@ -28,6 +28,7 @@ class ManpowerProfile(models.Model):
     
 
 class Province(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -47,7 +48,7 @@ class Municipality(models.Model):
         return self.name
     
 class Ward(models.Model):
-    number = models.PositiveBigIntegerField()
+    number = models.PositiveSmallIntegerField()
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="ward")
 
     def __str__(self):

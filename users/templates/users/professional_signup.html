@@ -208,6 +208,62 @@
         }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function()
+    {
+        const selectedProvince = document.getElementById('province');
+        const selectedDistrict = document.getElementById('district');
+        const selectedMunicipality = document.getElementById('municipality');
+        const selectedWard = document.getElementById('ward');
+
+        selectedProvince.addEventListener('change', function()
+    {
+        const provinceId = this.value;
+        fetch(`/district/${provinceId}/`)
+        .then(res => res.json())
+        .then(data => {
+            selectedDistrict.innerHTML = '<option value = ""> Select the district </option>';
+            selectedMunicipality.innerHTML = '';
+            selectedWard.innerHTML = '';
+
+            data.districts.array.forEach(d => {
+                selectedDistrict.innerHTML += `<option value = "${d.id}">${d.name}</option>`;
+            });
+        });
+    });
+
+    selectedDistrict.addEventListener('change', function()
+{
+    const districtId = this.value;
+    fetch(`municipality/${districtId}/`)
+    .then(res => res.json())
+    .then(data => {
+        selectedMunicipality.innerHTML = `<option value = ""> Select Municiplaity </option>`;
+        selectedWard,innerHTML = '';
+
+        data.municipalities.array.forEach(m =>
+            {
+                selectedMunicipality.innerHTML += `<option value = "${m.id}">${m.name}</option>`
+            });
+    });
+});
+
+selectedMunicipality.addEventListener('change', function()
+{
+    const municiplityId = this.value;
+    fetch(`ward/${municipalityId}/`)
+    .then(res => res.json())
+    .then(data => {
+        selectedWard.innerHTML = `<option value = ""> Select the ward</option>`;
+        date.wards.array.forEach(w => 
+            {
+                selectedWard.innerHTML += `<option value = "${w.id}"> ${w.name}</option>`;
+            });
+    });
+});
+    })
+</script>
 <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
         <!-- Left Section -->

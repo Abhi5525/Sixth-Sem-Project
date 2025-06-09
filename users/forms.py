@@ -81,16 +81,23 @@ class ManpowerSignupForm(UserCreationForm):
         'class': 'form-control', 'placeholder': 'Email'}))
 
     province = forms.CharField(max_length= 100, required=True, label="Province", widget=forms.TextInput(attrs={
-        'class': 'form-control', 'placeholder': "e.g: Bagmati"
+        'class': 'form-control', 
+        'id' : 'province',
+        'placeholder': "e.g: Bagmati"
     }))
     district = forms.CharField(max_length=100, required=True, label="District", widget=forms.TextInput(attrs={
-        'class': 'form-control', 'placeholder': 'e.g: Kavrepalanchowk'}))
+        'class': 'form-control', 
+        'id' : 'distruct',
+        'placeholder': 'e.g: Kavrepalanchowk'}))
+    
     municipality = forms.CharField(max_length=100, required=True, label="Gaupalika/Nagarpalika", widget=forms.TextInput(attrs={
         'placeholder': 'e.g. Budhanilkantha',
+        'id' : 'municipality',
         'class': 'form-control'
     }))
     ward = forms.IntegerField(required=True, label= "Ward No", widget=forms.NumberInput(attrs={
         'placeholder': 'e.g: 1',
+        'id' : 'ward',
         'class': 'form-control'
     }))
     # phone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}))
