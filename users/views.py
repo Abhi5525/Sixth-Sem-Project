@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
 from django.urls import reverse
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
-from users.models import UserProfile, ManpowerProfile, District, Municipality, Ward
+from users.models import UserProfile, ManpowerProfile, District, Municipality
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
@@ -46,18 +46,9 @@ def professional_signup(request):
         form = ManpowerSignupForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            ManpowerProfile.objects.create(
-                user=user,
-                name=form.cleaned_data['name'],
-                address=form.cleaned_data['address'],
-                phone=form.cleaned_data['phone'],
-                skill=form.cleaned_data['skill'],
-                experience_years=form.cleaned_data['experience_years'],
-                photo=form.cleaned_data['photo'],
-                citizenship_front=form.cleaned_data['citizenship_front'],
-                citizenship_back=form.cleaned_data['citizenship_back']
-            )
             return redirect('users:login')
+        else:
+            print(form.errors)
     else:
         form = ManpowerSignupForm()
     return render(request, 'users/professional_signup.html', {'form': form})
@@ -128,6 +119,11 @@ def get_municipality(request, district_id):
     municipality = list(Municipality.objects.filter(district_id = district_id).values('id', 'name'))
     return JsonResponse({'municipality': municipality})
 
-def get_ward(request, municipality_id):
-    ward = list(Ward.objects.filter(municipality_id= municipality_id).values('id', 'number'))
-    return JsonResponse({'ward': ward})
+
+def get_wards(request, municipality_id):
+    try:
+        municipality = Municipality.objects.get(id=municipality_id)
+        wards = list(range(1, municipality.ward + 1)) # assuming this field exists
+        return JsonResponse({'wards': wards})
+    except Municipality.DoesNotExist:
+        return JsonResponse({'wards': []})
