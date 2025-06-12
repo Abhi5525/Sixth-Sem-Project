@@ -2,15 +2,13 @@
 # users/models.py
 from django.db import models
 from django.contrib.auth.models import User
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
     
-
     def __str__(self):
-        return self.full_name
+        return self.username
 
 class ManpowerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -26,8 +24,7 @@ class ManpowerProfile(models.Model):
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
 
     def __str__(self):
-        return self()
-    
+        return self.full_name  # or self.user.username
 
 class Province(models.Model):
     id = models.AutoField(primary_key=True)

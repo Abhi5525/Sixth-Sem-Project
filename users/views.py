@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
 from django.urls import reverse
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
-from users.models import UserProfile, ManpowerProfile, District, Municipality
+from users.models import UserProfile, ManpowerProfile, District, Municipality, Province
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
@@ -29,11 +29,11 @@ def signup(request):
         form = UserSignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit= False)
-            user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count())
+            # user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count())
             user.save()
             UserProfile.objects.create(
                 user=user,
-                full_name=form.cleaned_data['full_name'],
+                # full_name=form.cleaned_data['full_name'],
                 phone_number=form.cleaned_data['phone_number']
             )
             return redirect('users:login')
@@ -41,18 +41,22 @@ def signup(request):
         form = UserSignupForm()
     return render(request, 'users/signup.html', {'form': form})
 
+@login_required
 def professional_signup(request):
     if request.method == 'POST':
-        form = ManpowerSignupForm(request.POST, request.FILES)
+        form = ManpowerSignupForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            user = form.save()
-            return redirect('users:login')
+            manpower_profile = form.save(commit=False)
+            manpower_profile.user = request.user
+            manpower_profile.save()
+            messages.success(request, "Profile created successfully.")
+            return redirect('users:profile')  # Adjust to your profile URL
         else:
+            messages.error(request, "Please correct the errors below.")
             print(form.errors)
     else:
-        form = ManpowerSignupForm()
+        form = ManpowerSignupForm(user=request.user)
     return render(request, 'users/professional_signup.html', {'form': form})
-
 
 def login(request):
     if request.method == 'POST':
@@ -110,20 +114,29 @@ class CustomLogoutView(LogoutView):
         messages.success(request, "You have been logged out successfully.")
         return super().dispatch(request, *args, **kwargs)
     template_name='users/login.html'
-
-def get_districts(request, province_id):
-    districts = list(District.objects.filter(province_id = province_id).values('id', "name"))
+def get_districts(request):
+    province_name = request.GET.get('province_name', '')
+    districts = []
+    if province_name:
+        province = Province.objects.filter(name=province_name).first()
+        if province:
+            districts = list(District.objects.filter(province=province).values('name'))
+            districts = [{'name': d['name']} for d in districts]
     return JsonResponse({'districts': districts})
 
-def get_municipality(request, district_id):
-    municipality = list(Municipality.objects.filter(district_id = district_id).values('id', 'name'))
-    return JsonResponse({'municipality': municipality})
+def get_municipality(request):
+    district_name = request.GET.get('district_name', '')
+    municipalities = []
+    if district_name:
+        municipalities = list(Municipality.objects.filter(district__name=district_name).values('name'))
+        municipalities = [{'name': m['name']} for m in municipalities]
+    return JsonResponse({'municipality': municipalities})
 
-
-def get_wards(request, municipality_id):
+def get_wards(request):
+    municipality_name = request.GET.get('municipality_name', '')
     try:
-        municipality = Municipality.objects.get(id=municipality_id)
-        wards = list(range(1, municipality.ward + 1)) # assuming this field exists
+        municipality = Municipality.objects.get(name=municipality_name)
+        wards = list(range(1, municipality.ward + 1))
         return JsonResponse({'wards': wards})
     except Municipality.DoesNotExist:
         return JsonResponse({'wards': []})

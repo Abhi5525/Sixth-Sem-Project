@@ -210,89 +210,109 @@
 </style>
 <script>
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
-    const csrftoken = getCookie('csrftoken');
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const selectedProvince = document.getElementById('province');
-        const selectedDistrict = document.getElementById('district');
-        const selectedMunicipality = document.getElementById('municipality');
-        const selectedWard = document.getElementById('ward');
+document.addEventListener('DOMContentLoaded', function () {
+    const selectedProvince = document.getElementById('province');
+    const selectedDistrict = document.getElementById('district');
+    const selectedMunicipality = document.getElementById('municipality');
+    const selectedWard = document.getElementById('ward');
 
-        selectedProvince.addEventListener('change', function () {
-            const provinceId = this.value;
-            fetch(`/users/district/${provinceId}/`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Network response was not ok');
-                return res.json();
-            })
-            .then(data => {
-                selectedDistrict.innerHTML = '<option value="">Select District</option>';
-                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.districts.forEach(d => {
-                    selectedDistrict.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-                });
-            })
-            .catch(error => console.error('Error:', error));
+    // Populate province dropdown via AJAX
+    fetch('/users/provinces/', { // New endpoint to get province names
+        method: 'GET',
+        headers: { 'X-CSRFToken': csrftoken }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+    })
+    .then(data => {
+        selectedProvince.innerHTML = '<option value="">--- Select Province ---</option>';
+        data.provinces.forEach(p => {
+            selectedProvince.innerHTML += `<option value="${p.name}">${p.name}</option>`;
         });
+    })
+    .catch(error => console.error('Error:', error));
 
-        selectedDistrict.addEventListener('change', function () {
-            const districtId = this.value;
-            fetch(`/users/municipality/${districtId}/`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Network response was not ok');
-                return res.json();
-            })
-            .then(data => {
-                console.log(data);
-                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.municipality.forEach(m => {
-                    selectedMunicipality.innerHTML += `<option value="${m.id}">${m.name}</option>`;
-                });
-            })
-            .catch(error => console.error('Error:', error));
-        });
-
-        selectedMunicipality.addEventListener('change', function () {
-            const municipalityId = this.value;
-            fetch(`/users/ward/${municipalityId}/`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Network response was not ok');
-                return res.json();
-            })
-            .then(data => {
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.wards.forEach(w => {
-                    selectedWard.innerHTML += `<option value="${w}">${w}</option>`;
-                });
-            })
-            .catch(error => console.error('Error:', error));
-        });
+    selectedProvince.addEventListener('change', function () {
+        const provinceName = this.value;
+        fetch(`/users/district/?province_name=${encodeURIComponent(provinceName)}`, {
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrftoken }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            console.log('Districts data:', data);
+            selectedDistrict.innerHTML = '<option value="">Select District</option>';
+            selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
+            selectedWard.innerHTML = '<option value="">Select Ward</option>';
+            data.districts.forEach(d => {
+                selectedDistrict.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
     });
+
+    selectedDistrict.addEventListener('change', function () {
+        const districtName = this.value;
+        fetch(`/users/municipality/?district_name=${encodeURIComponent(districtName)}`, {
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrftoken }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            console.log('Municipality data:', data);
+            selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
+            selectedWard.innerHTML = '<option value="">Select Ward</option>';
+            data.municipality.forEach(m => {
+                selectedMunicipality.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    selectedMunicipality.addEventListener('change', function () {
+        const municipalityName = this.value;
+        fetch(`/users/ward/?municipality_name=${encodeURIComponent(municipalityName)}`, {
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrftoken }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            console.log('Wards data:', data);
+            selectedWard.innerHTML = '<option value="">Select Ward</option>';
+            data.wards.forEach(w => {
+                selectedWard.innerHTML += `<option value="${w}">${w}</option>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
 </script>
+
 <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
         <!-- Left Section -->
