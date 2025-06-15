@@ -28,16 +28,19 @@ class UserSignupForm(UserCreationForm):
 class ManpowerSignupForm(forms.ModelForm):
     class Meta:
         model = ManpowerProfile
-        fields = ['full_name', 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back']
+        fields = ['full_name', 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
         widgets = {
+            'full_name':forms.TextInput(attrs={'class':'form-control','id':'full_name','placeholder': 'Enter your name'}),
+            'email':forms.EmailInput(attrs={'class':'form-control' ,'id':'email', 'placeholder':'Enter your email'}),
             'province': forms.Select(attrs={'class': 'form-control', 'id': 'province', 'placeholder': "e.g: Bagmati"}),
             'district': forms.Select(attrs={'class': 'form-control', 'id': 'district', 'placeholder': 'e.g: Kavrepalanchowk'}),
             'municipality': forms.Select(attrs={'class': 'form-control', 'id': 'municipality', 'placeholder': 'e.g: Budhanilkantha'}),
             'ward': forms.Select(attrs={'class': 'form-control', 'id': 'ward', 'placeholder': 'e.g: 1'}),
-            'skill': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Skills'}),
+            'skill': forms.TextInput(attrs={'class': 'form-control','id':'skill', 'placeholder': 'Enter your Skills'}),
             'experience': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'experience'}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'rate':forms.NumberInput(attrs={'class':'form-control', 'id':'rate', 'placeholder': 'Enter your rate per hour'})
         }
 
     def __init__(self, *args, **kwargs):

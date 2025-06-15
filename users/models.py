@@ -22,6 +22,7 @@ class ManpowerProfile(models.Model):
     experience = models.CharField(max_length=200, default="no experience")
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
+    rate = models.IntegerField(default=0)
 
     def __str__(self):
         return self.full_name  # or self.user.username
