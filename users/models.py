@@ -1,19 +1,61 @@
-
-# users/models.py
 from django.db import models
-from django.contrib.auth.models import User
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    username = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=15)
-    
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, phone_number=None, full_name=None, password=None, **extra_fields):
+        if not phone_number:
+            raise ValueError('Phone number is required for normal users.')
+        if not full_name:
+            raise ValueError('Full name is required for normal users.')
+        if not password:
+            raise ValueError('Password is required.')
+
+        user = self.model(
+            phone_number=phone_number,
+            full_name=full_name,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email=None, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required for superusers.')
+        if not password:
+            raise ValueError('Password is required.')
+
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        # ✅ phone_number and full_name not needed for superuser
+        user = self.model(
+            email=email,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    full_name = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(unique=True)
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'       # ✅ Superuser logs in with email
+    REQUIRED_FIELDS = []           # ✅ No extra prompts during createsuperuser
+
+    objects = CustomUserManager()
+
     def __str__(self):
-        return self.username
+        return self.email or self.phone_number
 
 class ManpowerProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=100)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     skill = models.CharField(max_length=100)
     province = models.CharField(max_length=100)
     district = models.CharField(max_length=100, default="kathmandu")
@@ -25,7 +67,7 @@ class ManpowerProfile(models.Model):
     rate = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.full_name  # or self.user.username
+        return f"{self.user.full_name}'s Manpower Profile"
 
 class Province(models.Model):
     id = models.AutoField(primary_key=True)

@@ -1,10 +1,38 @@
 from django.contrib import admin
-from .models import UserProfile, ManpowerProfile,Province,District,Municipality
+from .models import Province,District,Municipality
 
-# Register your models here.
-admin.site.register(UserProfile)
-admin.site.register(ManpowerProfile)
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .models import CustomUser, ManpowerProfile
+
+class UserAdmin(BaseUserAdmin):
+    model = CustomUser
+    list_display = ('phone_number', 'full_name', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_active')
+    search_fields = ('phone_number', 'full_name')
+    ordering = ('phone_number',)
+
+    fieldsets = (
+        (None, {'fields': ('phone_number', 'password')}),
+        ('Personal Info', {'fields': ('full_name', 'email', 'username', 'skill',
+                                      'province', 'district', 'municipality',
+                                      'ward', 'experience',
+                                      'citizenship_front', 'citizenship_back',
+                                      'rate')}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('phone_number', 'password1', 'password2', 'is_staff', 'is_active')}
+        ),
+    )
+
+admin.site.register(CustomUser, UserAdmin)
+
 admin.site.register(Province)
 admin.site.register(District)
 admin.site.register(Municipality)
 # admin.site.register(Ward)
+admin.site.register(ManpowerProfile)

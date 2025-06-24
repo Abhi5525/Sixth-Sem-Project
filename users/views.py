@@ -6,20 +6,25 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
 from django.urls import reverse
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
-from users.models import UserProfile, ManpowerProfile, District, Municipality, Province
+from users.models import CustomUser, ManpowerProfile, District, Municipality, Province
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
 from django.contrib.auth.models import User
 from django import forms
 
-
 @login_required
 def profile(request):
-    user = request.user
-    user_profile = UserProfile.objects.get(user=user) 
-    return render(request, 'users/profile.html', {'user_profile': user_profile})
-    
+    user = request.user  # CustomUser
+    try:
+        manpower_profile = ManpowerProfile.objects.get(user=user)
+    except ManpowerProfile.DoesNotExist:
+        manpower_profile = None
+    return render(request, 'users/profile.html', {
+        'user': user,
+        'manpower_profile': manpower_profile
+    })
+
 
 # def signup_choice(request):
 #     return render(request, 'users/signup_choice.html')
@@ -30,12 +35,9 @@ def signup(request):
         if form.is_valid():
             user = form.save(commit= False)
             # user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count())
+            user.set_password(form.cleaned_data['password1'])
             user.save()
-            UserProfile.objects.create(
-                user=user,
-                # full_name=form.cleaned_data['full_name'],
-                phone_number=form.cleaned_data['phone_number']
-            )
+            messages.success(request, "Account created successfully. Please log in.")
             return redirect('users:login')
     else:
         form = UserSignupForm()
@@ -81,7 +83,7 @@ def profile_update(request):
             form_class = ManpowerProfileUpdateForm
             # success_url = reverse('users:manpower_profile')
         else:
-            profile = UserProfile.objects.get(user=user)
+            profile = user
             form_class = UserProfileUpdateForm
         
         success_url = reverse('users:profile')
@@ -106,7 +108,7 @@ def profile_update(request):
             
         return render(request, 'users/profile.html', {'form': form})
         
-    except (UserProfile.DoesNotExist, ManpowerProfile.DoesNotExist):
+    except (ManpowerProfile.DoesNotExist, CustomUser.DoesNotExist):
         raise Http404("Profile not found")
     
 class CustomLogoutView(LogoutView):
@@ -114,6 +116,8 @@ class CustomLogoutView(LogoutView):
         messages.success(request, "You have been logged out successfully.")
         return super().dispatch(request, *args, **kwargs)
     template_name='users/login.html'
+
+
 def get_districts(request):
     province_name = request.GET.get('province_name', '')
     districts = []

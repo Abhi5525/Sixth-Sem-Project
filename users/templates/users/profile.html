@@ -66,9 +66,9 @@
     <div class="card-body">
       <h5 class="card-title">Personal Details</h5>
       <dl class="row mb-0">
-        {% if user_profile %}
+        {% if manpower_profile %}
         <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">{{ user_profile.full_name }}</dd>
+        <dd class="col-sm-9">{{ manpower_profile.user.full_name }}</dd>
         {% else %}
         <p>No profile data available.</p>
         {% endif %}
@@ -77,10 +77,10 @@
         <dd class="col-sm-9">123 Main Street, City, Country</dd>
 
         <dt class="col-sm-3">Email</dt>
-        <dd class="col-sm-9">{{ user_profile.user.email }}</dd>
+        <dd class="col-sm-9">{{ manpower_profile.email }}</dd>
 
         <dt class="col-sm-3">Contact Number</dt>
-        <dd class="col-sm-9">{{ user_profile.phone_number }}</dd>
+        <dd class="col-sm-9">{{ manpower_profile.user.phone_number }}</dd>
 
         <dt class="col-sm-3">House Number</dt>
         <dd class="col-sm-9">A-45</dd>

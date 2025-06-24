@@ -1,36 +1,36 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserProfile, ManpowerProfile, Province, District, Municipality
+from .models import Province, District, Municipality, CustomUser, ManpowerProfile
 from django.contrib.auth import get_user_model, authenticate
 
 User = get_user_model()
 
 class UserSignupForm(UserCreationForm):
-    username = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}))
+    full_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
     phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}))
 
     class Meta:
         model = User
-        fields = ('username', 'phone_number', 'password1', 'password2')
+        fields = ('full_name', 'phone_number', 'password1')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm Password'})
 
+
     def clean_phone_number(self):
         phone = self.cleaned_data['phone_number']
-        if not phone.isdigit() or len(phone) < 10:
-            raise forms.ValidationError("Enter a valid phone number (at least 10 digits).")
+        if not phone.isdigit() or len(phone) != 10:
+            raise forms.ValidationError("Enter a valid phone number (10 digits).")
         return phone
 
 class ManpowerSignupForm(forms.ModelForm):
     class Meta:
         model = ManpowerProfile
-        fields = ['full_name', 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
+        fields = [ 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
         widgets = {
-            'full_name':forms.TextInput(attrs={'class':'form-control','id':'full_name','placeholder': 'Enter your name'}),
             'email':forms.EmailInput(attrs={'class':'form-control' ,'id':'email', 'placeholder':'Enter your email'}),
             'province': forms.Select(attrs={'class': 'form-control', 'id': 'province', 'placeholder': "e.g: Bagmati"}),
             'district': forms.Select(attrs={'class': 'form-control', 'id': 'district', 'placeholder': 'e.g: Kavrepalanchowk'}),
@@ -40,23 +40,30 @@ class ManpowerSignupForm(forms.ModelForm):
             'experience': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'experience'}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'rate':forms.NumberInput(attrs={'class':'form-control', 'id':'rate', 'placeholder': 'Enter your rate per hour'})
+            'rate':forms.NumberInput(attrs={'class':'form-control',  'id':'rate', 'placeholder': 'Enter your rate per hour'})
+        }
+        labels = {
+            'rate': 'Rate/Hour',
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)  # Get the logged-in user from kwargs
-        super(ManpowerSignupForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if user:
-            try:
-                user_profile = UserProfile.objects.get(user=user)
-                # Pre-fill fields from UserProfile or User
-                self.fields['full_name'].initial = user_profile.username  # or user.get_full_name()
-                self.fields['email'].initial = user.email
-            except UserProfile.DoesNotExist:
-                self.fields['full_name'].initial = user.username
-                self.fields['email'].initial = user.email
+            # Pre-fill fields from UserProfile or User
+            # self.fields['full_name'].initial = user.full_name
+            # self.fields['skill'].initial = user.manpowerprofile.skill
+            # self.fields['province'].initial = user.manpowerprofile.province
+            # self.fields['district'].initial = user.manpowerprofile.district
+            # self.fields['municipality'].initial = user.manpowerprofile.municipality
+            # self.fields['ward'].initial = user.manpowerprofile.ward
+            # self.fields['experience'].initial = user.manpowerprofile.experience
+            # self.fields['citizenship_front'].initial = user.manpowerprofile.citizenship_front
+            # self.fields['citizenship_back'].initial = user.manpowerprofile.citizenship_back
+            # self.fields['rate'].initial = user.manpowerprofile.rate
+
         # Populate province dropdown (optional, as JavaScript handles this)
-        self.fields['province'].widget.choices = [('', '--- Select Province ---')] + [(p.name, p.name) for p in Province.objects.all()]
+            self.fields['province'].widget.choices = [('', '--- Select Province ---')] + [(p.name, p.name) for p in Province.objects.all()]
 
     def clean_province(self):
         province = self.cleaned_data.get('province')
@@ -89,11 +96,11 @@ class ManpowerSignupForm(forms.ModelForm):
         return ward
 
 class LoginForm(forms.Form):
-    username = forms.CharField(
+    phone_number = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Username'
+            'placeholder': 'Phone Number'
         })
     )
     password = forms.CharField(
@@ -106,31 +113,46 @@ class LoginForm(forms.Form):
     
     def clean(self):
         cleaned_data = super().clean()
-        username = cleaned_data.get('username')
+        phone_number = cleaned_data.get('phone_number')
         password = cleaned_data.get('password')
         
-        if username and password:
-            try:
-                user = User.objects.get(username=username)
-                user = authenticate(username=user.username, password=password)
-                if user is None:
-                    raise forms.ValidationError("Invalid credentials")
-                self.user = user
-            except User.DoesNotExist:
-                raise forms.ValidationError("Invalid Credentials")
+        if phone_number and password:
+            # Validate phone number format
+            user = authenticate(phone_number=phone_number, password=password)
+            if not user:
+                raise forms.ValidationError("Invalid credentials")
+            self.user = user
              
         return cleaned_data
+    
+
+# users/forms.py
+from django import forms
+from .models import CustomUser, ManpowerProfile
 
 class UserProfileUpdateForm(forms.ModelForm):
-    user_type = 'user'
-
     class Meta:
-        model = UserProfile
-        fields = ['username', 'phone_number']
+        model = CustomUser
+        fields = ['full_name', 'phone_number']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 class ManpowerProfileUpdateForm(forms.ModelForm):
-    user_type = 'manpower'
-
     class Meta:
         model = ManpowerProfile
-        fields = ['skill', 'experience']
+        fields = ['email', 'skill', 'province', 'district', 'municipality',
+                  'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'skill': forms.TextInput(attrs={'class': 'form-control'}),
+            'province': forms.Select(attrs={'class': 'form-control'}),
+            'district': forms.Select(attrs={'class': 'form-control'}),
+            'municipality': forms.Select(attrs={'class': 'form-control'}),
+            'ward': forms.Select(attrs={'class': 'form-control'}),
+            'experience': forms.Textarea(attrs={'class': 'form-control'}),
+            'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'rate': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
