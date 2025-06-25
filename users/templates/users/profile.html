@@ -47,7 +47,7 @@
   }
 </style>
 {%endblock%}{%block main-content%}
-<div class="container py-4">
+<div class="container py-4 mb-4"  >
   <!-- Profile Header -->
   <div class="row align-items-center mb-4">
     <div class="col-auto">
@@ -69,12 +69,9 @@
         {% if manpower_profile %}
         <dt class="col-sm-3">Name</dt>
         <dd class="col-sm-9">{{ manpower_profile.user.full_name }}</dd>
-        {% else %}
-        <p>No profile data available.</p>
-        {% endif %}
 
         <dt class="col-sm-3">Address</dt>
-        <dd class="col-sm-9">123 Main Street, City, Country</dd>
+        <dd class="col-sm-9">{{ manpower_profile.province }}, {{ manpower_profile.district }}, {{ manpower_profile.municipality }}</dd>
 
         <dt class="col-sm-3">Email</dt>
         <dd class="col-sm-9">{{ manpower_profile.email }}</dd>
@@ -82,12 +79,15 @@
         <dt class="col-sm-3">Contact Number</dt>
         <dd class="col-sm-9">{{ manpower_profile.user.phone_number }}</dd>
 
-        <dt class="col-sm-3">House Number</dt>
-        <dd class="col-sm-9">A-45</dd>
-
         <dt class="col-sm-3">Services Received</dt>
         <dd class="col-sm-9">12</dd>
+        {% else %}
+        <p>No profile data available.</p>
+        {% endif %}
       </dl>
+    </div>
+  </div>
+
       <button
         class="btn btn-primary mt-3"
         data-bs-toggle="modal"
@@ -99,7 +99,7 @@
   </div>
 
   <!-- Stats Card -->
-  <div class="card mb-4">
+  <div class="card m-4">
     <div class="card-body">
       <h5 class="card-title">Statistics</h5>
       <div class="row text-center">
@@ -118,15 +118,17 @@
       </div>
     </div>
   </div>
-  Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla eligendi
-  voluptatum maiores eveniet corporis ab tenetur culpa impedit voluptates a
-  facere, dolore praesentium excepturi commodi laboriosam dolorem debitis sunt.
-  Pariatur? Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda
-  praesentium ipsa similique magni molestias officia quasi, odit recusandae
-  aspernatur doloremque illo veniam atque, laudantium quas maiores optio nostrum
-  iure nulla?
+  <div class="text-center mb-5 mt-4">
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla eligendi
+    voluptatum maiores eveniet corporis ab tenetur culpa impedit voluptates a
+    facere, dolore praesentium excepturi commodi laboriosam dolorem debitis sunt.
+    Pariatur? Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda
+    praesentium ipsa similique magni molestias officia quasi, odit recusandae
+    aspernatur doloremque illo veniam atque, laudantium quas maiores optio nostrum
+    iure nulla?
+  </div>
   <!-- Logout Button -->
-  <div class="text-center">
+  <div class="text-center mb-5 mt-4">
     <button
       class="btn btn-outline-danger"
       data-bs-toggle="modal"

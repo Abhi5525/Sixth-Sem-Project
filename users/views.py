@@ -10,8 +10,8 @@ from users.models import CustomUser, ManpowerProfile, District, Municipality, Pr
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
-from django.contrib.auth.models import User
-from django import forms
+# from django.contrib.auth.models import User
+# from django import forms
 
 @login_required
 def profile(request):
@@ -59,17 +59,25 @@ def professional_signup(request):
     else:
         form = ManpowerSignupForm(user=request.user)
     return render(request, 'users/professional_signup.html', {'form': form})
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib import messages
 
 def login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            auth_login(request, form.user)
-            return redirect('home_module:home')
-           
+            phone = form.cleaned_data.get('phone_number')
+            password = form.cleaned_data.get('password')
+
+            user = authenticate(request, username=phone, password=password)
+            if user:
+                auth_login(request, user)
+                return redirect('home_module:home')
+            else:
+                form.add_error(None, 'Invalid phone number or password')
     else:
         form = LoginForm()
-    return render(request, 'users/login.html', {'form':form})
+    return render(request, 'users/login.html', {'form': form})
 
 @login_required
 def profile_update(request):

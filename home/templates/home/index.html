@@ -112,7 +112,7 @@
             <p class="card-text">
               <i class="fas fa-star text-warning"></i> 4.8 (120 reviews)<br />
               <i class="fas fa-map-marker-alt"></i> 2 miles away<br />
-              <i class="fas fa-dollar-sign"></i> {{manpower.rate}}
+              <i class="fas fa-dollar-sign"></i> {{manpower.rate}}  Rs per hour
 
             </p>
 
@@ -126,7 +126,6 @@
         </div>
 
       </div>
-      {% endfor %}
     </div>
 
   </section>
@@ -208,12 +207,12 @@
             <p class="text-muted" id="modalTrade"></p>
           </div>
           <p>
-            <strong>Rating:</strong> <span id="modalRating"></span><br />
-            <strong>Location:</strong> <span id="modalLocation"></span><br />
-            <strong>Rate:</strong> <span id="modalRate"></span><br />
-            <strong>Experience:</strong> 8 years<br />
+            <strong>Rating:4.5</strong> <span id="modalRating"></span><br />
+            <strong>Location:{{ manpower.province}}, {{ manpower.district}}</strong> <span id="modalLocation"></span><br />
+            <strong>Rate:{{ manpower.rate }}Rs per hour</strong> <span id="modalRate"></span><br />
+            <strong>Experience:</strong> {{ manpower.experience }}<br />
             <strong>About:</strong> Experienced professional specializing in
-            residential services.
+            {{ manpower.skill }}. Committed to providing high-quality services with a focus on customer satisfaction.
           </p>
         </div>
         <div class="modal-footer">
@@ -227,6 +226,8 @@
       </div>
     </div>
   </div>
+      {% endfor %}
+
   {% endblock %} {% block scripts %}
   <script>
     // Sample data (replace with backend data)

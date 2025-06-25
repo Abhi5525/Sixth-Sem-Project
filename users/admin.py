@@ -29,10 +29,31 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
 
+
+class UsersAdmin(admin.ModelAdmin):
+    list_display = ('phone_number', 'full_name', 'is_staff', 'is_active')
+    search_fields = ('phone_number', 'full_name')
+    list_filter = ('is_staff', 'is_active')
+
+class ManpowerProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_full_name', 'phone_number', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'rate')
+    search_fields = ('user__full_name', 'skill', 'province__name', 'district__name', 'municipality__name')
+    list_filter = ('province', 'district', 'municipality')
+
+    def get_full_name(self, obj):
+        return obj.user.full_name
+    get_full_name.short_description = 'Full Name'
+
+    def phone_number(self, obj):
+        return obj.user.phone_number
+    phone_number.short_description = 'Phone Number'
+
+
 admin.site.register(CustomUser, UserAdmin)
+admin.site.register(ManpowerProfile, ManpowerProfileAdmin)
 
 admin.site.register(Province)
 admin.site.register(District)
 admin.site.register(Municipality)
 # admin.site.register(Ward)
-admin.site.register(ManpowerProfile)
+# admin.site.register(ManpowerProfile)

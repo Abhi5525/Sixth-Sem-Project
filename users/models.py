@@ -20,8 +20,8 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email=None, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required for superusers.')
+        # if not email:
+        #     raise ValueError('Email is required for superusers.')
         if not password:
             raise ValueError('Password is required.')
 
@@ -40,12 +40,12 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)  # ✅ Superuser logs in with email
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'       # ✅ Superuser logs in with email
+    USERNAME_FIELD = 'phone_number'       # ✅ Superuser logs in with email
     REQUIRED_FIELDS = []           # ✅ No extra prompts during createsuperuser
 
     objects = CustomUserManager()
