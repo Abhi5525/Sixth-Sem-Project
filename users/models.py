@@ -65,6 +65,7 @@ class ManpowerProfile(models.Model):
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
     rate = models.IntegerField(default=0)
+    profile_picture = models.ImageField(upload_to='manpower/profile_pictures/', blank=True, null=True, default='manpower/profile_pictures/images.png')
 
     def __str__(self):
         return f"{self.user.full_name}'s Manpower Profile"

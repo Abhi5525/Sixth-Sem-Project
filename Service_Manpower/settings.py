@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',  # Django REST Framework for API support
+    'rest_framework_simplejwt',  # JWT authentication
 ]
 
 
@@ -143,3 +145,10 @@ LOGOUT_REDIRECT_URL='users:login'
 LOGIN_URL='users:login'
 
 AUTH_USER_MODEL = 'users.CustomUser'  # Use the custom user model
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}

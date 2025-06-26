@@ -36,9 +36,10 @@ class UsersAdmin(admin.ModelAdmin):
     list_filter = ('is_staff', 'is_active')
 
 class ManpowerProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'get_full_name', 'phone_number', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'rate')
+    list_display = ('user', 'get_full_name', 'phone_number', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'rate', 'profile_picture')
     search_fields = ('user__full_name', 'skill', 'province__name', 'district__name', 'municipality__name')
     list_filter = ('province', 'district', 'municipality')
+    # list_editable = ('profile_picture')
 
     def get_full_name(self, obj):
         return obj.user.full_name
