@@ -1,18 +1,188 @@
-
-{%extends 'home/base-navbar.html'%} {%block title%}Bookings - Service App
-{%endblock%} {%block styles%}
-<!-- <style>
-
-</style> -->
+{% extends 'home/base-navbar.html' %}
+{% block title %}Bookings - Service App{% endblock %}
+{% block styles %}
 <link rel="stylesheet" href="/static/css/bookings.css">
-{%endblock%} {% block main-content%}
+<style>
+.heading-container {
+  margin-top: 40px;
+  max-width: 900px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+  padding: 36px 44px;
+}
+.heading-container h1 {
+  font-size: 2.7rem;
+  font-weight: 800;
+  margin-bottom: 36px;
+  color: #234e70;
+  letter-spacing: -1.5px;
+  text-align: center;
+}
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-top: 36px;
+  margin-bottom: 18px;
+  color: #234e70;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 7px;
+  letter-spacing: 0.5px;
+}
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.booking-card {
+  background: linear-gradient(90deg, #f0f4f8 80%, #dbeafe 100%);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(35,78,112,0.06);
+  padding: 0;
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  border-left: 6px solid #234e70;
+}
+.booking-card:hover {
+  box-shadow: 0 8px 24px rgba(35,78,112,0.13);
+  transform: translateY(-2px) scale(1.01);
+}
+.booking-header {
+  display: flex;
+  align-items: center;
+  background: #234e70;
+  color: #fff;
+  padding: 14px 24px;
+}
+.booking-header .icon {
+  font-size: 1.7rem;
+  margin-right: 16px;
+}
+.booking-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.booking-info {
+  padding: 18px 24px 14px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  font-size: 1.01rem;
+  color: #2d3748;
+}
+.booking-info .info-label {
+  font-weight: 600;
+  color: #234e70;
+  margin-right: 4px;
+}
+.booking-status {
+  font-size: 0.98rem;
+  font-weight: 600;
+  padding: 5px 16px;
+  border-radius: 8px;
+  margin-left: auto;
+  margin-top: 8px;
+  display: inline-block;
+}
+.status-upcoming {
+  background: #bee3f8;
+  color: #234e70;
+}
+.status-completed {
+  background: #c6f6d5;
+  color: #276749;
+}
+.status-cancelled {
+  background: #fed7d7;
+  color: #c53030;
+}
+@media (max-width: 600px) {
+  .heading-container {
+    padding: 18px 4px;
+  }
+  .booking-header, .booking-info {
+    padding: 10px 10px;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+</style>
+{% endblock %}
+{% block main-content %}
 <div class="container heading-container">
   <h1>Your Bookings</h1>
-  <h2>Upcoming</h2>
-  <div class="upcoming-list"></div>
-  <h2>Past Bookings</h2>
-  <div class="past-list"></div>
-</div>
 
-<!-- <h2>Hellllllllllllllllllllllo</h2> -->
-{%endblock%}
+  <div>
+    <div class="section-title">Upcoming</div>
+    <div class="booking-list">
+      {% for booking in upcoming_bookings %}
+      <div class="booking-card">
+        <div class="booking-header">
+          <span class="icon">📅</span>
+          <span class="booking-title">{{ booking.service_name }}</span>
+          <span class="booking-status status-upcoming">Upcoming</span>
+        </div>
+        <div class="booking-info">
+          <div><span class="info-label">Date:</span> {{ booking.date }}</div>
+          <div><span class="info-label">Time:</span> {{ booking.time }}</div>
+          {% if booking.address %}
+          <div><span class="info-label">Address:</span> {{ booking.address }}</div>
+          {% endif %}
+          {% if booking.provider %}
+          <div><span class="info-label">Provider:</span> {{ booking.provider }}</div>
+          {% endif %}
+          {% if booking.price %}
+          <div><span class="info-label">Price:</span> ₹{{ booking.price }}</div>
+          {% endif %}
+          {% if booking.notes %}
+          <div><span class="info-label">Notes:</span> {{ booking.notes }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div style="color:#a0aec0; padding: 12px;">No upcoming bookings.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="section-title">Booking History</div>
+    <div class="booking-list">
+      {% for booking in past_bookings %}
+      <div class="booking-card">
+        <div class="booking-header">
+          <span class="icon">
+            {% if booking.status == 'Completed' %}✅{% elif booking.status == 'Cancelled' %}❌{% else %}📅{% endif %}
+          </span>
+          <span class="booking-title">{{ booking.service_name }}</span>
+          {% if booking.status == 'Completed' %}
+          <span class="booking-status status-completed">Completed</span>
+          {% elif booking.status == 'Cancelled' %}
+          <span class="booking-status status-cancelled">Cancelled</span>
+          {% endif %}
+        </div>
+        <div class="booking-info">
+          <div><span class="info-label">Date:</span> {{ booking.date }}</div>
+          <div><span class="info-label">Time:</span> {{ booking.time }}</div>
+          {% if booking.address %}
+          <div><span class="info-label">Address:</span> {{ booking.address }}</div>
+          {% endif %}
+          {% if booking.provider %}
+          <div><span class="info-label">Provider:</span> {{ booking.provider }}</div>
+          {% endif %}
+          {% if booking.price %}
+          <div><span class="info-label">Price:</span> ₹{{ booking.price }}</div>
+          {% endif %}
+          {% if booking.notes %}
+          <div><span class="info-label">Notes:</span> {{ booking.notes }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div style="color:#a0aec0; padding: 12px;">No booking history.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

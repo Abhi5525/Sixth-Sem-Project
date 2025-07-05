@@ -5,6 +5,8 @@ app_name = 'bookings'
 urlpatterns = [
    
     path('', views.bookings, name = 'bookings'),
+    path('details/', views.detailsForm, name = 'detailsForm'),
+
 
 
 ]
