@@ -27,3 +27,5 @@ Thumbs.db
 # Django migrations
 **/migrations/**
 **/migrations/__pychache__/**.pyc
+*.pyc
+__pycache__/
