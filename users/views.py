@@ -10,6 +10,9 @@ from users.models import CustomUser, ManpowerProfile, District, Municipality, Pr
 from home import views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib import messages
+from django.urls import reverse_lazy
 # from django.contrib.auth.models import User
 # from django import forms
 
@@ -50,6 +53,8 @@ def professional_signup(request):
         if form.is_valid():
             manpower_profile = form.save(commit=False)
             manpower_profile.user = request.user
+            request.user.is_professional = True
+            request.user.save()
             manpower_profile.save()
             messages.success(request, "Profile created successfully.")
             return redirect('users:profile')  # Adjust to your profile URL
@@ -59,8 +64,47 @@ def professional_signup(request):
     else:
         form = ManpowerSignupForm(user=request.user)
     return render(request, 'users/professional_signup.html', {'form': form})
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib import messages
+
+
+# @login_required
+# def profile_update(request):
+#     user = request.user
+#     # profile_type = request.GET.get.is_client  # Default to user profile
+    
+#     try:
+#         # Determine which profile to update
+#         if profile_type == 
+#             profile = ManpowerProfile.objects.get(user=user)
+#             form_class = ManpowerProfileUpdateForm
+#             # success_url = reverse('users:manpower_profile')
+#         else:
+#             profile = user
+#             form_class = UserProfileUpdateForm
+        
+#         success_url = reverse('users:profile')
+#         if request.method == 'POST':
+#             form = form_class(request.POST, request.FILES, instance=profile)
+#             if form.is_valid():
+#                 form.save()
+                
+#                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#                     return JsonResponse({
+#                         'success': True,
+#                         'message': "Profile updated successfully."
+#                     })
+#                 messages.success(request, "Profile updated successfully.")
+#                 return redirect(success_url)
+#         else:
+#             form = form_class(instance=profile)
+            
+#         # For AJAX requests, return just the form HTML
+#         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             return render(request, 'users/profile.html', {'form': form})
+            
+#         return render(request, 'users/profile.html', {'form': form})
+        
+#     except (ManpowerProfile.DoesNotExist, CustomUser.DoesNotExist):
+#         raise Http404("Profile not found")
 
 def login(request):
     if request.method == 'POST':
@@ -68,62 +112,28 @@ def login(request):
         if form.is_valid():
             phone = form.cleaned_data.get('phone_number')
             password = form.cleaned_data.get('password')
-
             user = authenticate(request, username=phone, password=password)
             if user:
                 auth_login(request, user)
+                next_page = request.POST.get('next') or request.GET.get('next')
+                if next_page:
+                    return redirect(next_page)
                 return redirect('home_module:home')
             else:
                 form.add_error(None, 'Invalid phone number or password')
     else:
         form = LoginForm()
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, 'users/login.html', {
+        'form': form,
+        'next': request.GET.get('next', '')
+    })
 
-@login_required
-def profile_update(request):
-    user = request.user
-    profile_type = request.GET.get('type', 'user')  # Default to user profile
-    
-    try:
-        # Determine which profile to update
-        if profile_type == 'manpower':
-            profile = ManpowerProfile.objects.get(user=user)
-            form_class = ManpowerProfileUpdateForm
-            # success_url = reverse('users:manpower_profile')
-        else:
-            profile = user
-            form_class = UserProfileUpdateForm
-        
-        success_url = reverse('users:profile')
-        if request.method == 'POST':
-            form = form_class(request.POST, request.FILES, instance=profile)
-            if form.is_valid():
-                form.save()
-                
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': "Profile updated successfully."
-                    })
-                messages.success(request, "Profile updated successfully.")
-                return redirect(success_url)
-        else:
-            form = form_class(instance=profile)
-            
-        # For AJAX requests, return just the form HTML
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return render(request, 'users/profile.html', {'form': form})
-            
-        return render(request, 'users/profile.html', {'form': form})
-        
-    except (ManpowerProfile.DoesNotExist, CustomUser.DoesNotExist):
-        raise Http404("Profile not found")
-    
 class CustomLogoutView(LogoutView):
-    def dispatch(self, request, *args, **kwargs):
+    next_page = reverse_lazy('user:login')  # Redirect to login page after logout
+
+    def post(self, request, *args, **kwargs):
         messages.success(request, "You have been logged out successfully.")
-        return super().dispatch(request, *args, **kwargs)
-    template_name='users/login.html'
+        return super().post(request, *args, **kwargs)
 
 
 def get_districts(request):

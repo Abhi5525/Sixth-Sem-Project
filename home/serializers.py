@@ -3,6 +3,7 @@ from users.models import CustomUser, ManpowerProfile
 
 class ManpowerSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.full_name')
+    user_id = serializers.IntegerField(source='user.id')
     location = serializers.SerializerMethodField()
     rate = serializers.SerializerMethodField()
     profile_picture = serializers.SerializerMethodField()
@@ -10,7 +11,7 @@ class ManpowerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ManpowerProfile
-        fields = ['id', 'name',  'location', 'rate', 'experience', 'about', 'profile_picture']
+        fields = ['id','user_id', 'name',  'location', 'rate', 'experience', 'about', 'profile_picture']
 
     def get_location(self, obj):
         return f"{obj.province}, {obj.district}"

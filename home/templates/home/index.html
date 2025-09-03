@@ -68,14 +68,16 @@
 
     <form method="get">
       <div class="row">
-      <div class="form">
-        <div class="input-group mb-3">
-        <input type="search" class="form-control" id="searchInput" name="searchInput" placeholder="Search plumbers, carpenters..." aria-label="Search" value="{{ request.GET.q|default:'' }}" />
-        <button class="btn btn-primary" type="submit">
-          <i class="fas fa-search"></i> Search
-        </button>
+        <div class="form">
+          <div class="input-group mb-3">
+            <input type="search" class="form-control" id="searchInput" name="searchInput"
+              placeholder="Search plumbers, carpenters..." aria-label="Search"
+              value="{{ request.GET.searchInput|default:'' }}" />
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
         </div>
-      </div>
       </div>
     </form>
     <!-- <div class="d-flex flex-wrap gap-2 mb-4">
@@ -225,7 +227,11 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <a href="{% url 'bookings:detailsForm' %}" class="btn btn-primary" >Book Now</a>
+          <button type="button" id="bookNowBtn" class="btn btn-primary">
+            Book Now
+          </button>
+
+
         </div>
       </div>
     </div>
@@ -236,18 +242,16 @@
 {% endblock %} {% block scripts %}
 
 <script>
+
+
   let selectedProfessionalId = null;
 
-  function fetchProfile(id) {
-    selectedProfessionalId = id;
 
-    fetch(`/api/manpower/${id}/`)  // Update with actual endpoint for single manpower
-      .then(response => {
-        if (!response.ok) throw new Error('Profile fetch failed');
-        return response.json();
-      })
+  function fetchProfile(id) {
+    fetch(`/api/manpower/${id}/`)
+      .then(res => res.json())
       .then(pro => {
-        // Populate modal fields
+        selectedProfessionalId = pro.id; // Use ManpowerProfile ID, NOT user_id
         document.getElementById("modalName").textContent = pro.name;
         document.getElementById("modalTrade").textContent = pro.trade;
         document.getElementById("modalRating").textContent = pro.rating + " (120 reviews)";
@@ -257,84 +261,20 @@
         document.getElementById("modalAbout").textContent = pro.about;
         document.getElementById("modalProfileImg").src = pro.profile_picture;
       })
-      .catch(error => {
-        console.error("Error fetching profile:", error);
-        alert("Failed to load profile.");
-      });
+      .catch(err => console.error(err));
   }
 
-
-  function bookProfessional() {
-    if (selectedProfessionalId) {
-      // Redirect or send AJAX request with selectedProfessionalId
-      alert("Booking professional ID: " + selectedProfessionalId);
-      // Example: window.location.href = `/book/${selectedProfessionalId}/`;
+  // Simple redirect function
+  function redirectToBooking() {
+    if (!selectedProfessionalId) {
+      alert("Please select a professional first!");
+      return;
     }
+    window.location.href = `/bookings/booking-form/${selectedProfessionalId}/`;
   }
 
-  // Display on load
-  window.onload = () => {
-    displayProfessionals(professionals);
-  };
-  let activeFilters = new Set();
-
-  // Search functionality
-  function searchProfessionals() {
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    filterAndDisplay(query);
-  }
-
-  // Category filter toggle
-  document.querySelectorAll(".category-filter").forEach((button) => {
-    button.addEventListener("click", function () {
-      const category = this.getAttribute("data-category");
-
-      // Toggle active state and filter
-      if (activeFilters.has(category)) {
-        activeFilters.delete(category);
-        this.classList.remove("btn-primary");
-        this.classList.add("btn-outline-primary");
-      } else {
-        activeFilters.add(category);
-        this.classList.remove("btn-outline-primary");
-        this.classList.add("btn-primary");
-      }
-
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      filterAndDisplay(query);
-    });
-  });
-
-  // Filter and display professionals
-  function filterAndDisplay(query = "") {
-    let filtered = professionals;
-
-    // Apply category filters if any are active
-    if (activeFilters.size > 0) {
-      filtered = filtered.filter((pro) => activeFilters.has(pro.trade));
-    }
-
-    // Apply search query
-    if (query) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.trade.toLowerCase().includes(query)
-      );
-    }
-
-    displayProfessionals(filtered);
-  }
-
-  // Book professional
-  function bookProfessional() {
-    alert(
-      "Booking confirmed for " +
-      document.getElementById("modalName").textContent
-    );
-    // Add backend booking logic here
-  }
-
+  // Attach function to button
+  document.getElementById('bookNowBtn').addEventListener('click', redirectToBooking);
   // Cancel booking
   function cancelBooking(service) {
     if (confirm(`Are you sure you want to cancel ${service}?`)) {
@@ -351,70 +291,51 @@
     }
   }
 
-  // Initial load
-  document.addEventListener("DOMContentLoaded", () => filterAndDisplay());
-
-  // Add event listener for search input
-  document
-    .getElementById("searchInput")
-    .addEventListener("input", searchProfessionals);
-
-
-
   // Search functionality
-  function searchProfessionals() {
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    filterAndDisplay(query);
-  }
+  // function searchProfessionals() {
+  //   const query = document.getElementById("searchInput").value.toLowerCase();
+  //   filterAndDisplay(query);
+  // }
 
   // Category filter toggle
-  document.querySelectorAll(".category-filter").forEach((button) => {
-    button.addEventListener("click", function () {
-      const category = this.getAttribute("data-category");
+  // function setupCategoryFilters() {
+  //   document.querySelectorAll(".category-filter").forEach((button) => {
+  //     button.addEventListener("click", function () {
+  //       const category = this.getAttribute("data-category");
+  //       if (activeFilters.has(category)) {
+  //         activeFilters.delete(category);
+  //         this.classList.remove("btn-primary");
+  //         this.classList.add("btn-outline-primary");
+  //       } else {
+  //         activeFilters.add(category);
+  //         this.classList.remove("btn-outline-primary");
+  //         this.classList.add("btn-primary");
+  //       }
+  //       searchProfessionals();
+  //     });
+  //   });
+  // }
 
-      // Toggle active state and filter
-      if (activeFilters.has(category)) {
-        activeFilters.delete(category);
-        this.classList.remove("btn-primary");
-        this.classList.add("btn-outline-primary");
-      } else {
-        activeFilters.add(category);
-        this.classList.remove("btn-outline-primary");
-        this.classList.add("btn-primary");
-      }
+  // // Filter and display professionals
+  // function filterAndDisplay(query = "") {
+  //   let filtered = professionals;
+  //   if (activeFilters.size > 0) {
+  //     filtered = filtered.filter((pro) => activeFilters.has(pro.trade));
+  //   }
+  //   if (query) {
+  //     filtered = filtered.filter(
+  //       (p) => p.name.toLowerCase().includes(query) || p.trade.toLowerCase().includes(query)
+  //     );
+  //   }
+  //   displayProfessionals(filtered);
+  // }
 
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      filterAndDisplay(query);
-    });
-  });
-
-
-  // Book professional
-  function bookProfessional() {
-    alert(
-      "Booking confirmed for " +
-      document.getElementById("modalName").textContent
-    );
-    // Add backend booking logic here
-  }
-
-  // Cancel booking
-  function cancelBooking(service) {
-    if (confirm(`Are you sure you want to cancel ${service}?`)) {
-      alert(`${service} has been canceled.`);
-      // Add backend cancel logic here
-    }
-  }
-
-  // Logout
-  function logout() {
-    if (confirm("Are you sure you want to logout?")) {
-      alert("Logged out successfully.");
-      // Add logout logic here
-    }
-  }
-
-
+  // Initial setup
+  // document.addEventListener("DOMContentLoaded", () => {
+  //   setupCategoryFilters();
+  //   filterAndDisplay();
+  //   document.getElementById("searchInput").addEventListener("input", searchProfessionals);
+  // });
 </script>
 
 {% endblock %}

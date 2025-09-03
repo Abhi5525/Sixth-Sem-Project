@@ -79,6 +79,149 @@
       .navbar-toggler-icon {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
       }
+    .enhanced-nav-logo {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.enhanced-nav-logo:hover {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 8px 25px rgba(255, 255, 255, 0.15));
+}
+
+.enhanced-logo-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    box-shadow: 
+        0 4px 20px rgba(255, 255, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 1px 3px rgba(25, 118, 210, 0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.enhanced-logo-icon::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+    animation: enhancedShine 4s ease-in-out infinite;
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+}
+
+.enhanced-logo-icon-inner {
+    font-size: 26px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #0d47a1, #1565c0, #1976d2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(13, 71, 161, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+.enhanced-logo-text {
+    color: white;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.enhanced-logo-text::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ffffff 0%, #90caf9 50%, #ffffff 100%);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1px;
+    box-shadow: 0 0 8px rgba(144, 202, 249, 0.4);
+}
+
+.enhanced-nav-logo:hover .enhanced-logo-text::after {
+    width: 100%;
+}
+
+.enhanced-logo-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, #64b5f6, transparent);
+    border-radius: 50%;
+    top: 10px;
+    right: 8px;
+    animation: float 3s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+@keyframes enhancedShine {
+    0% { 
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        opacity: 0;
+    }
+    50% { 
+        transform: translateX(0%) translateY(0%) rotate(45deg);
+        opacity: 1;
+    }
+    100% { 
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+        opacity: 0;
+    }
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) scale(1);
+        opacity: 0.6;
+    }
+    50% { 
+        transform: translateY(-4px) scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+@media (max-width: 768px) {
+    .enhanced-logo-text {
+        font-size: 22px;
+    }
+    
+    .enhanced-logo-icon {
+        width: 45px;
+        height: 45px;
+        margin-right: 12px;
+    }
+    
+    .enhanced-logo-icon-inner {
+        font-size: 22px;
+    }
+}
+
 
       /* Show the bottom navbar only on mobile */
       @media (max-width: 768px) {
@@ -95,6 +238,7 @@
       }
     </style>
     {% block styles %} {% endblock %}
+    {% load static %}
   </head>
   <body class="position-relative">
     <!-- Navigation Bar -->
@@ -104,7 +248,13 @@
           class="navbar-brand d-flex align-items-center"
           href="{% url 'home_module:home' %}"
         >
-          <i class="fas fa-briefcase me-2"></i> Manpower Booking
+          
+         <div class="enhanced-nav-logo">
+    <div class="enhanced-logo-icon">
+        <div class="enhanced-logo-icon-inner">M</div>
+    </div>
+    <div class="enhanced-logo-text">Mistri Nepal</div>
+</div>
         </a>
         <button
           class="navbar-toggler"

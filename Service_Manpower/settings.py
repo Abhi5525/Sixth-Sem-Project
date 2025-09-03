@@ -14,6 +14,13 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+
+GDAL_LIBRARY_PATH = r"C:\Users\DELL\miniconda3\envs\geodjango310\Library\bin\gdal.dll"
+os.environ['GDAL_LIBRARY_PATH'] = GDAL_LIBRARY_PATH
+
+GEOS_LIBRARY_PATH = r"C:\Users\DELL\miniconda3\envs\geodjango310\Library\bin\geos_c.dll"
+os.environ['GEOS_LIBRARY_PATH'] = GEOS_LIBRARY_PATH
 
 
 # Quick-start development settings - unsuitable for production
@@ -42,7 +49,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Django REST Framework for API support
     'rest_framework_simplejwt',  # JWT authentication
+    'django.contrib.gis',  # For GIS support
 ]
+
 
 
 
@@ -82,12 +91,12 @@ WSGI_APPLICATION = 'Service_Manpower.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'manpowerweb',      # Your PostgreSQL database name
-        'USER': 'postgres',          # Your PostgreSQL username
-        'PASSWORD': 'root123',  # Your PostgreSQL password
-        'HOST': 'localhost',        # Set to the database server IP if remote
-        'PORT': '5432',             # Default PostgreSQL port
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'manpowerweb',     # Your PostgreSQL database name
+        'USER': 'postgres',        # Your PostgreSQL username
+        'PASSWORD': 'root123',     # Your PostgreSQL password
+        'HOST': 'localhost',       # Set to the database server IP if remote
+        'PORT': '5432',            # Default PostgreSQL port
     }
 }
 
@@ -151,4 +160,32 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
+}
+# eSewa Settings
+ESEWA_MERCHANT_CODE = "EPAYTEST"
+ESEWA_TEST_URL = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+ESEWA_VERIFY_URL = "https://rc.esewa.com.np/api/epay/transaction/status"
+ESEWA_SECRET_KEY = "8gBm/:&EnhH.1/q"
+
+
+# settings.py
+GALLIMAPS_API_KEY = "fcc76e0a-38eb-449e-8386-218b935bc95c"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
