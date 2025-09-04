@@ -1,191 +1,617 @@
 {% extends 'home/base-navbar.html' %}
+{% load static %}
 {% block title %}Bookings - Service App{% endblock %}
-{% block styles %}
-<link rel="stylesheet" href="/static/css/bookings.css">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-.heading-container {
-  margin-top: 40px;
-  max-width: 900px;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.10);
-  padding: 36px 44px;
-}
-.heading-container h1 {
-  font-size: 2.7rem;
-  font-weight: 800;
-  margin-bottom: 36px;
-  color: #234e70;
-  letter-spacing: -1.5px;
-  text-align: center;
-}
-.section-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-top: 36px;
-  margin-bottom: 18px;
-  color: #234e70;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 7px;
-  letter-spacing: 0.5px;
-}
-.booking-list {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-.booking-card {
-  background: linear-gradient(90deg, #f0f4f8 80%, #dbeafe 100%);
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(35,78,112,0.06);
-  padding: 0;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
-  border-left: 6px solid #234e70;
-}
-.booking-card:hover {
-  box-shadow: 0 8px 24px rgba(35,78,112,0.13);
-  transform: translateY(-2px) scale(1.01);
-}
-.booking-header {
-  display: flex;
-  align-items: center;
-  background: #234e70;
-  color: #fff;
-  padding: 14px 24px;
-}
-.booking-header .icon {
-  font-size: 1.7rem;
-  margin-right: 16px;
-}
-.booking-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-.booking-info {
-  padding: 18px 24px 14px 24px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px 32px;
-  font-size: 1.01rem;
-  color: #2d3748;
-}
-.booking-info .info-label {
-  font-weight: 600;
-  color: #234e70;
-  margin-right: 4px;
-}
-.booking-status {
-  font-size: 0.98rem;
-  font-weight: 600;
-  padding: 5px 16px;
-  border-radius: 8px;
-  margin-left: auto;
-  margin-top: 8px;
-  display: inline-block;
-}
-.status-upcoming {
-  background: #bee3f8;
-  color: #234e70;
-}
-.status-completed {
-  background: #c6f6d5;
-  color: #276749;
-}
-.status-cancelled {
-  background: #fed7d7;
-  color: #c53030;
-}
-@media (max-width: 600px) {
-  .heading-container {
-    padding: 18px 4px;
-  }
-  .booking-header, .booking-info {
-    padding: 10px 10px;
-    flex-direction: column;
-    gap: 8px;
-  }
-}
+    /* Base & Layout */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #2d3748;
+        line-height: 1.6;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .heading-container {
+        margin-top: 40px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        padding: 40px 50px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Titles & Headings */
+    .page-title {
+        font-size: 3.2rem;
+        font-weight: 900;
+        margin-bottom: 50px;
+        color: #234e70;
+        text-align: center;
+        letter-spacing: -2px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, #234e70, #4a90e2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 40px 0 25px 0;
+        color: #234e70;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 3px;
+        background: linear-gradient(90deg, #234e70, transparent);
+        border-radius: 2px;
+    }
+    .section-icon {
+        font-size: 1.4rem;
+        color: #4a90e2;
+    }
+    
+    /* Booking Cards */
+    .booking-list { display: grid; gap: 25px; }
+    .booking-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(35,78,112,0.12);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        position: relative;
+    }
+    .booking-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #667eea);
+    }
+    .booking-card:hover {
+        box-shadow: 0 16px 48px rgba(35,78,112,0.2);
+        transform: translateY(-8px) scale(1.02);
+    }
+    .booking-header {
+        background: linear-gradient(135deg, #234e70 0%, #2d5aa0 100%);
+        color: #fff;
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+    .booking-header::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.1);
+        transform: skewY(-2deg) scale(1.1);
+    }
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        z-index: 1;
+    }
+    .service-icon {
+        font-size: 1.8rem;
+        padding: 8px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+    .booking-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .booking-status {
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 8px 18px;
+        border-radius: 25px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        backdrop-filter: blur(10px);
+        z-index: 1;
+    }
+    .status-confirmed { background: rgba(16, 185, 129, 0.9); color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+    .status-pending-payment { background: rgba(245, 158, 11, 0.9); color: #fff; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
+    .status-completed { background: rgba(34, 197, 94, 0.9); color: #fff; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+    .status-cancelled { background: rgba(239, 68, 68, 0.9); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+    
+    /* Booking Content */
+    .booking-content { padding: 30px; }
+    .booking-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    .detail-group {
+        background: rgba(248, 250, 252, 0.8);
+        padding: 18px 22px;
+        border-radius: 16px;
+        border-left: 4px solid #4a90e2;
+        transition: all 0.2s ease;
+    }
+    .detail-group:hover {
+        background: rgba(59, 130, 246, 0.05);
+        transform: translateX(5px);
+    }
+    .detail-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .detail-value {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #234e70;
+        word-break: break-word;
+    }
+    .booking-id {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: #6b7280;
+        background: rgba(255,255,255,0.6);
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+    
+    /* Info Sections */
+    .professional-info {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid #bae6fd;
+        margin-top: 20px;
+    }
+    .professional-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0369a1;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .payment-info {
+        background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid #fde68a;
+        margin-top: 20px;
+    }
+    .payment-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .fee-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.6);
+        border-radius: 8px;
+    }
+    .fee-row.total {
+        border: 2px solid #f59e0b;
+        padding: 12px;
+        margin-top: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #92400e;
+        background: rgba(255,255,255,0.9);
+    }
+    .currency {
+        font-weight: 700;
+        color: #059669;
+    }
+    .payment-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    .payment-paid { background: rgba(34, 197, 94, 0.1); color: #15803d; border: 1px solid #22c55e; }
+    .payment-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid #f59e0b; }
+    
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+    .empty-state i { font-size: 3rem; margin-bottom: 20px; opacity: 0.5; }
+    .empty-state p { font-size: 1.1rem; font-weight: 500; }
+    
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 30px;
+        border-radius: 20px;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        position: relative;
+        animation-name: animatetop;
+        animation-duration: 0.4s;
+    }
+    @keyframes animatetop {
+        from { top: -300px; opacity: 0; }
+        to { top: 0; opacity: 1; }
+    }
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        position: absolute;
+        top: 15px; right: 25px;
+    }
+    .close-button:hover,
+    .close-button:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .modal-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #234e70;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 10px;
+    }
+    .modal-body .detail-group {
+        background: #f8fafc;
+        border-left: 4px solid #4a90e2;
+    }
+    
+    /* New 'View Details' button styling */
+    .view-details-btn {
+        margin-top: 20px;
+        padding: 12px 25px;
+        background: #4a90e2;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    }
+    .view-details-btn:hover {
+        background: #3b76c2;
+        transform: translateY(-2px);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .heading-container { margin-top: 20px; padding: 25px 20px; }
+        .page-title { font-size: 2.2rem; margin-bottom: 30px; }
+        .booking-header { flex-direction: column; gap: 15px; align-items: flex-start; padding: 15px 20px; }
+        .booking-content { padding: 20px; }
+        .booking-details { grid-template-columns: 1fr; gap: 15px; }
+        .section-title { font-size: 1.3rem; }
+    }
+    @media (max-width: 480px) {
+        .container { padding: 10px; }
+        .page-title { font-size: 1.8rem; }
+    }
 </style>
 {% endblock %}
+
 {% block main-content %}
-<div class="container heading-container">
-  <h1>Your Bookings</h1>
+<div class="container">
+    <div class="heading-container">
+        <h1 class="page-title">
+            <i class="fas fa-calendar-alt" style="margin-right: 15px; color: #4a90e2;"></i>
+            Your Bookings
+        </h1>
 
-  <div>
-    <div class="section-title">Upcoming</div>
-    <div class="booking-list">
-      {% for booking in upcoming_bookings %}
-      <div class="booking-card">
-        <div class="booking-header">
-          <span class="icon">📅</span>
-          <span class="booking-title">{{ booking.service_name }}</span>
-          <span class="booking-status status-upcoming">Upcoming</span>
+        <div class="bookings-section">
+            <h2 class="section-title">
+                <i class="fas fa-clock section-icon"></i>
+                Upcoming Bookings
+            </h2>
+            <div class="booking-list">
+                {% for booking in upcoming_bookings %}
+                <div class="booking-card"
+                     data-id="{{ booking.id }}"
+                     data-service-name="{{ booking.professional.skill|title }}"
+                     data-start-time="{{ booking.booking_time|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ booking.end_time|date:'M d, Y \a\t g:i A' }}"
+                     data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
+                     data-professional-name="{{ booking.professional.user.full_name}}"
+                     data-professional-skill="{{ booking.professional.skill|title }}"
+                     data-professional-phone="{{ booking.professional.user.phone_number }}"
+                     data-total-fee="{{ booking.total_fee|floatformat:2 }}"
+                     data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
+                     data-is-paid="{{ booking.payment.is_paid|yesno:'true,false' }}"
+                     data-payment-date="{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}"
+                     data-esewa-ref="{{ booking.payment.esewa_ref_id }}"
+                     data-client-name="{{ booking.client_name }}"
+                >
+                    <div class="booking-header">
+                        <div class="header-left">
+                            <i class="fas fa-tools service-icon"></i>
+                            <span class="booking-title">{{ booking.professional.skill|title }}</span>
+                        </div>
+                        {% if booking.is_confirmed %}
+                            <span class="booking-status status-confirmed">Confirmed</span>
+                        {% else %}
+                            <span class="booking-status status-pending-payment">Pending Payment</span>
+                        {% endif %}
+                    </div>
+                    <div class="booking-content">
+                        <div class="booking-details">
+                            <div class="detail-group">
+                                <div class="detail-label"><i class="fas fa-calendar"></i> Start Time</div>
+                                <div class="detail-value">{{ booking.booking_time|date:"M d, Y \a\t g:i A" }}</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>
+                                <div class="detail-value">{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}</div>
+                            </div>
+                        </div>
+                        <button class="view-details-btn" onclick="openModal(this)">View Details</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <p>No upcoming bookings found.</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="booking-info">
-          <div><span class="info-label">Date:</span> {{ booking.date }}</div>
-          <div><span class="info-label">Time:</span> {{ booking.time }}</div>
-          {% if booking.address %}
-          <div><span class="info-label">Address:</span> {{ booking.address }}</div>
-          {% endif %}
-          {% if booking.provider %}
-          <div><span class="info-label">Provider:</span> {{ booking.provider }}</div>
-          {% endif %}
-          {% if booking.price %}
-          <div><span class="info-label">Price:</span> ₹{{ booking.price }}</div>
-          {% endif %}
-          {% if booking.notes %}
-          <div><span class="info-label">Notes:</span> {{ booking.notes }}</div>
-          {% endif %}
+        
+        <div class="bookings-section">
+            <h2 class="section-title">
+                <i class="fas fa-history section-icon"></i>
+                Booking History
+            </h2>
+            <div class="booking-list">
+                {% for booking in past_bookings %}
+                <div class="booking-card"
+                     data-id="{{ booking.id }}"
+                     data-service-name="{{ booking.professional.skill|title }}"
+                     data-start-time="{{ booking.booking_time|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ booking.end_time|date:'M d, Y \a\t g:i A' }}"
+                     data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
+                     data-professional-name="{{ booking.professional.user.full_name}}"
+                     data-professional-skill="{{ booking.professional.skill|title }}"
+                     data-professional-phone="{{ booking.professional.user.phone_number }}"
+                     data-total-fee="{{ booking.total_fee|floatformat:2 }}"
+                     data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
+                     data-is-paid="{{ booking.payment.is_paid|yesno:'true,false' }}"
+                     data-payment-date="{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}"
+                     data-esewa-ref="{{ booking.payment.esewa_ref_id }}"
+                     data-client-name="{{ booking.client_name }}"
+                >
+                    <div class="booking-header">
+                        <div class="header-left">
+                            {% if booking.status == 'completed' %}
+                                <i class="fas fa-check-circle service-icon"></i>
+                            {% elif booking.status == 'cancelled' %}
+                                <i class="fas fa-times-circle service-icon"></i>
+                            {% else %}
+                                <i class="fas fa-tools service-icon"></i>
+                            {% endif %}
+                            <span class="booking-title">{{ booking.professional.skill|title }}</span>
+                        </div>
+                        <span class="booking-status status-{{ booking.status }}">{{ booking.status|title }}</span>
+                    </div>
+                    <div class="booking-content">
+                        <div class="booking-details">
+                            <div class="detail-group">
+                                <div class="detail-label"><i class="fas fa-calendar"></i> Service Date</div>
+                                <div class="detail-value">{{ booking.booking_time|date:"M d, Y \a\t g:i A" }}</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>
+                                <div class="detail-value">{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}</div>
+                            </div>
+                        </div>
+                        <button class="view-details-btn" onclick="openModal(this)">View Details</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No booking history found.</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-      </div>
-      {% empty %}
-      <div style="color:#a0aec0; padding: 12px;">No upcoming bookings.</div>
-      {% endfor %}
     </div>
-  </div>
-
-  <div>
-    <div class="section-title">Booking History</div>
-    <div class="booking-list">
-      {% for booking in past_bookings %}
-      <div class="booking-card">
-        <div class="booking-header">
-          <span class="icon">
-            {% if booking.status == 'Completed' %}✅{% elif booking.status == 'Cancelled' %}❌{% else %}📅{% endif %}
-          </span>
-          <span class="booking-title">{{ booking.service_name }}</span>
-          {% if booking.status == 'Completed' %}
-          <span class="booking-status status-completed">Completed</span>
-          {% elif booking.status == 'Cancelled' %}
-          <span class="booking-status status-cancelled">Cancelled</span>
-          {% endif %}
-        </div>
-        <div class="booking-info">
-          <div><span class="info-label">Date:</span> {{ booking.date }}</div>
-          <div><span class="info-label">Time:</span> {{ booking.time }}</div>
-          {% if booking.address %}
-          <div><span class="info-label">Address:</span> {{ booking.address }}</div>
-          {% endif %}
-          {% if booking.provider %}
-          <div><span class="info-label">Provider:</span> {{ booking.provider }}</div>
-          {% endif %}
-          {% if booking.price %}
-          <div><span class="info-label">Price:</span> ₹{{ booking.price }}</div>
-          {% endif %}
-          {% if booking.notes %}
-          <div><span class="info-label">Notes:</span> {{ booking.notes }}</div>
-          {% endif %}
-        </div>
-      </div>
-      {% empty %}
-      <div style="color:#a0aec0; padding: 12px;">No booking history.</div>
-      {% endfor %}
-    </div>
-  </div>
 </div>
+
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 class="modal-title">Booking Details</h2>
+        <div class="modal-body">
+            <div class="booking-details">
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-hashtag"></i> Booking ID</div>
+                    <div class="detail-value" id="modalBookingId"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-user-tie"></i> Service</div>
+                    <div class="detail-value" id="modalService"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-user"></i> Client Name</div>
+                    <div class="detail-value" id="modalClientName"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-calendar"></i> Start Date & Time</div>
+                    <div class="detail-value" id="modalStartTime"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>
+                    <div class="detail-value" id="modalDuration"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-calendar-check"></i> End Time</div>
+                    <div class="detail-value" id="modalEndTime"></div>
+                </div>
+            </div>
+            
+            <div class="professional-info">
+                <div class="professional-header"><i class="fas fa-user-tie"></i> Professional Details</div>
+                <div class="booking-details">
+                    <div class="detail-group">
+                        <div class="detail-label"><i class="fas fa-id-badge"></i> Professional</div>
+                        <div class="detail-value" id="modalProfessionalName"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label"><i class="fas fa-phone"></i> Contact Number</div>
+                        <div class="detail-value" id="modalProfessionalPhone"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-info">
+                <div class="payment-header"><i class="fas fa-receipt"></i> Payment Information</div>
+                <div class="fee-row">
+                    <span>Total Service Fee:</span>
+                    <span class="currency" id="modalTotalFee"></span>
+                </div>
+                <div class="fee-row">
+                    <span>Deposit Amount (10%):</span>
+                    <span class="currency" id="modalDepositAmount"></span>
+                </div>
+                <div class="fee-row">
+                    <span>Payment Status:</span>
+                    <span id="modalPaymentStatus" class="payment-status"></span>
+                </div>
+                <div class="fee-row" id="modalPaymentDateRow">
+                    <span>Paid On:</span>
+                    <span id="modalPaymentDate"></span>
+                </div>
+                <div class="fee-row" id="modalEsewaRefRow">
+                    <span>eSewa Ref ID:</span>
+                    <span id="modalEsewaRef" class="booking-id"></span>
+                </div>
+                <div class="fee-row total">
+                    <span>Remaining Balance:</span>
+                    <span class="currency" id="modalRemainingBalance"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(button) {
+        const card = button.closest('.booking-card');
+        const modal = document.getElementById('bookingModal');
+        
+        // Populate modal with data from the clicked card
+        document.getElementById('modalBookingId').textContent = `#BK-${card.dataset.id.padStart(5, '0')}`;
+        document.getElementById('modalService').textContent = card.dataset.serviceName;
+        document.getElementById('modalClientName').textContent = card.dataset.clientName;
+        document.getElementById('modalStartTime').textContent = card.dataset.startTime;
+        document.getElementById('modalDuration').textContent = card.dataset.duration;
+        document.getElementById('modalEndTime').textContent = card.dataset.endTime;
+        document.getElementById('modalProfessionalName').textContent = card.dataset.professionalName;
+        document.getElementById('modalProfessionalPhone').textContent = card.dataset.professionalPhone;
+        document.getElementById('modalTotalFee').textContent = `Rs${card.dataset.totalFee}`;
+        document.getElementById('modalDepositAmount').textContent = `Rs${card.dataset.depositAmount}`;
+        
+        // Calculate and display remaining balance
+        const totalFee = parseFloat(card.dataset.totalFee);
+        const depositAmount = parseFloat(card.dataset.depositAmount);
+        const remainingBalance = totalFee - depositAmount;
+        document.getElementById('modalRemainingBalance').textContent = `Rs${remainingBalance.toFixed(2)}`;
+        
+        // Handle payment status
+        const isPaid = card.dataset.isPaid === 'true';
+        const paymentStatusSpan = document.getElementById('modalPaymentStatus');
+        paymentStatusSpan.textContent = isPaid ? 'Paid' : 'Pending';
+        paymentStatusSpan.className = isPaid ? 'payment-status payment-paid' : 'payment-status payment-pending';
+        paymentStatusSpan.innerHTML = isPaid ? '<i class="fas fa-check-circle"></i> Paid' : '<i class="fas fa-clock"></i> Pending';
+        
+        // Conditionally show payment date and eSewa ID
+        const paymentDateRow = document.getElementById('modalPaymentDateRow');
+        const esewaRefRow = document.getElementById('modalEsewaRefRow');
+        
+        if (isPaid && card.dataset.paymentDate) {
+            paymentDateRow.style.display = 'flex';
+            document.getElementById('modalPaymentDate').textContent = card.dataset.paymentDate;
+        } else {
+            paymentDateRow.style.display = 'none';
+        }
+        
+        if (card.dataset.esewaRef && card.dataset.esewaRef !== 'None') {
+            esewaRefRow.style.display = 'flex';
+            document.getElementById('modalEsewaRef').textContent = card.dataset.esewaRef;
+        } else {
+            esewaRefRow.style.display = 'none';
+        }
+        
+        modal.style.display = "block";
+    }
+    
+    // Get the modal and the close button
+    const modal = document.getElementById('bookingModal');
+    const closeBtn = document.getElementsByClassName("close-button")[0];
+    
+    // Close the modal when the user clicks on the close button
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+    
+    // Close the modal when the user clicks anywhere outside of the modal
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
 {% endblock %}

@@ -1,3 +1,4 @@
+# from pyexpat.errors import messages
 from django.shortcuts import render
 from users.models import ManpowerProfile, CustomUser
 # from django.contrib.auth.models import User
@@ -11,17 +12,24 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.conf import settings
 from django.http import JsonResponse   
+from django.contrib import messages
 # Create your views here.
+from django.db.models import Q
+from django.contrib import messages
+
 def home(request):
     query = request.GET.get('searchInput')
+    
     if query:
         manpower_list = ManpowerProfile.objects.select_related('user').filter(
-            skill__icontains=query
-        ) | ManpowerProfile.objects.select_related('user').filter(
-            user__full_name__icontains=query
+            Q(skill__icontains=query) | Q(user__full_name__icontains=query),
+            is_available=True
         )
+        if not manpower_list.exists():
+            messages.info(request, "No professionals found matching your search criteria.")
     else:
-        manpower_list = ManpowerProfile.objects.all()
+        manpower_list = ManpowerProfile.objects.filter(is_available=True).select_related('user')
+        
     return render(request, 'home/index.html', {
         'ManpowerList': manpower_list
     })

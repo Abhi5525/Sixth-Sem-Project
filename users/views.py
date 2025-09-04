@@ -2,35 +2,76 @@
 # users/views.py
 from django.contrib import messages
 from django.http import Http404, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login as auth_login ,get_user_model
-from django.urls import reverse
+from django.db import transaction                                                           
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
-from users.models import CustomUser, ManpowerProfile, District, Municipality, Province
-from home import views
+from users.models import  ManpowerProfile, District, Municipality, Province
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login   
 from django.contrib import messages
 from django.urls import reverse_lazy
-# from django.contrib.auth.models import User
-# from django import forms
+from django.contrib.auth import get_user_model
 
-@login_required
+@login_required             
 def profile(request):
-    user = request.user  # CustomUser
-    try:
-        manpower_profile = ManpowerProfile.objects.get(user=user)
-    except ManpowerProfile.DoesNotExist:
-        manpower_profile = None
-    return render(request, 'users/profile.html', {
-        'user': user,
-        'manpower_profile': manpower_profile
+    user = request.user
+    manpower_profile = None
+    if user.is_professional:
+        manpower_profile = get_object_or_404(ManpowerProfile, user=user)
+
+    user_form = UserProfileUpdateForm(instance=user)
+    profile_form = ManpowerProfileUpdateForm(instance=manpower_profile) if manpower_profile else None
+
+    return render(request, "users/profile.html", {
+        "user": user,
+        "manpower_profile": manpower_profile,
+        "user_form": user_form,
+        "profile_form": profile_form,
     })
 
 
-# def signup_choice(request):
-#     return render(request, 'users/signup_choice.html')
+@login_required
+def update_profile(request):
+    """Handle profile update for both client and professional."""
+    user = request.user
+    manpower_profile = None
+    if user.is_professional:
+        manpower_profile = get_object_or_404(ManpowerProfile, user=user)
+
+    if request.method == "POST":
+        user_form = UserProfileUpdateForm(request.POST, instance=user)
+        profile_form = ManpowerProfileUpdateForm(request.POST, request.FILES, instance=manpower_profile) if manpower_profile else None
+
+        if user_form.is_valid() and (not profile_form or profile_form.is_valid()):
+            user_form.save()
+            if profile_form:
+                profile_form.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect("users:profile")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        user_form = UserProfileUpdateForm(instance=user)
+        profile_form = ManpowerProfileUpdateForm(instance=manpower_profile) if manpower_profile else None
+
+    return render(request, "users/update_profile.html", {
+        "user_form": user_form,
+        "profile_form": profile_form,
+    })
+
+
+@login_required
+def toggle_availability(request, pk):
+    """Toggle availability for professionals only."""
+    if request.method == "POST":
+        manpower = get_object_or_404(ManpowerProfile, pk=pk, user=request.user)
+        manpower.is_available = not manpower.is_available
+        manpower.save()
+        return JsonResponse({"success": True, "is_available": manpower.is_available})
+    return JsonResponse({"success": False}, status=400)
+
 User = get_user_model()
 def signup(request):
     if request.method == 'POST':
@@ -129,7 +170,7 @@ def login(request):
     })
 
 class CustomLogoutView(LogoutView):
-    next_page = reverse_lazy('user:login')  # Redirect to login page after logout
+    next_page = reverse_lazy('users:login')  # Redirect to login page after logout
 
     def post(self, request, *args, **kwargs):
         messages.success(request, "You have been logged out successfully.")
@@ -162,3 +203,4 @@ def get_wards(request):
         return JsonResponse({'wards': wards})
     except Municipality.DoesNotExist:
         return JsonResponse({'wards': []})
+  

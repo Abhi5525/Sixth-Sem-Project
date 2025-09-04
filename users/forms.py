@@ -125,34 +125,34 @@ class LoginForm(forms.Form):
              
         return cleaned_data
     
-
-# users/forms.py
-from django import forms
-from .models import CustomUser, ManpowerProfile
-
 class UserProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['full_name', 'phone_number']
+        fields = ['full_name', 'phone_number', 'email']
         widgets = {
             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+
 
 class ManpowerProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = ManpowerProfile
-        fields = ['email', 'skill', 'province', 'district', 'municipality',
-                  'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
+        fields = [
+            'skill', 'province', 'district', 'municipality', 'ward',
+            'experience', 'citizenship_front', 'citizenship_back', 'rate',
+            'profile_picture'
+        ]
         widgets = {
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'skill': forms.TextInput(attrs={'class': 'form-control'}),
-            'province': forms.Select(attrs={'class': 'form-control'}),
-            'district': forms.Select(attrs={'class': 'form-control'}),
-            'municipality': forms.Select(attrs={'class': 'form-control'}),
-            'ward': forms.Select(attrs={'class': 'form-control'}),
-            'experience': forms.Textarea(attrs={'class': 'form-control'}),
+            'province': forms.TextInput(attrs={'class': 'form-control'}),
+            'district': forms.TextInput(attrs={'class': 'form-control'}),
+            'municipality': forms.TextInput(attrs={'class': 'form-control'}),
+            'ward': forms.NumberInput(attrs={'class': 'form-control'}),
+            'experience': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'rate': forms.NumberInput(attrs={'class': 'form-control'}),
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

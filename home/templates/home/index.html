@@ -95,6 +95,17 @@
       </button>
     </div> -->
 
+<div class="container mt 3">
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="professionalsList">
       {% for manpower in ManpowerList %}
@@ -137,6 +148,7 @@
       {% endfor %}
 
     </div>
+</div>
 
   </section>
 

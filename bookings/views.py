@@ -232,9 +232,39 @@ def esewa_callback(request):
 def payment_failed(request):
     return render(request, 'bookings/payment_failed.html')
 # Create your views here.
-
 def bookings(request):
-    return render(request, 'bookings/bookings.html')
+    user = request.user
+    now = timezone.now()
+
+    # Upcoming bookings
+    upcoming_bookings = Booking.objects.filter(
+        client=user,
+        booking_time__gte=now
+    ).select_related('professional__user').order_by('booking_time')
+
+    # Past bookings
+    past_bookings = Booking.objects.filter(
+        client=user,
+        booking_time__lt=now
+    ).select_related('professional__user').order_by('-booking_time')
+
+    # Attach payment and remaining balance
+    for booking in list(upcoming_bookings) + list(past_bookings):
+        try:
+            booking.payment
+        except Payment.DoesNotExist:
+            booking.payment = None
+
+        # Remaining balance calculation (total minus deposit)
+        booking.remaining_balance = booking.total_fee - booking.deposit_amount
+
+        if booking.booking_time < now:
+            booking.status = 'completed'  # adjust if you have real status field
+
+    return render(request, 'bookings/bookings.html', {
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings
+    })
 
 def payment_Success(request):
     return render(request, 'bookings/payment_success.html')
