@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Django REST Framework for API support
     'rest_framework_simplejwt',  # JWT authentication
-    'django.contrib.gis',  # For GIS support
+    
 ]
 
 
@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'Service_Manpower.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'manpowerweb',     # Your PostgreSQL database name
         'USER': 'postgres',        # Your PostgreSQL username
         'PASSWORD': 'root123',     # Your PostgreSQL password

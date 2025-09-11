@@ -1,7 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from django.contrib.gis.db import models as gis_models
-from django.core.exceptions import ValidationError
 # Custom User Manager (unchanged)
 class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number=None, full_name=None, password=None, **extra_fields):

@@ -1,7 +1,6 @@
 from decimal import Decimal
 from django.db import models
-from django.contrib.gis.db import models as gis_models
-from django.contrib.gis.geos import Point
+
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import uuid

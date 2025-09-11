@@ -6,10 +6,8 @@ from  django.views.generic.list import ListView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ManpowerSerializer
-from django.contrib.gis.db.models.functions import Distance
-from django.contrib.gis.measure import D
 from django.contrib.auth.decorators import login_required
-from django.contrib.gis.geos import Point
+
 from django.conf import settings
 from django.http import JsonResponse   
 from django.contrib import messages
@@ -36,25 +34,25 @@ def home(request):
 
 
 
-@login_required
-def find_professionals(request):
-    if request.method == 'POST':
-        latitude = float(request.POST.get('latitude'))
-        longitude = float(request.POST.get('longitude'))
-        skill = request.POST.get('skill')
+# @login_required
+# def find_professionals(request):
+#     if request.method == 'POST':
+#         latitude = float(request.POST.get('latitude'))
+#         longitude = float(request.POST.get('longitude'))
+#         skill = request.POST.get('skill')
 
-        user_location = Point(longitude, latitude, srid=4326)
-        professionals = CustomUser.objects.filter(
-            user_type='professional',
-            manpowerprofile__is_available=True,
-            manpowerprofile__skill=skill,
-            manpowerprofile__location__distance_lte=(user_location, D(km=10))
-        ).annotate(
-            distance=Distance('manpowerprofile__location', user_location)
-        ).order_by('distance')
+#         user_location = Point(longitude, latitude, srid=4326)
+#         professionals = CustomUser.objects.filter(
+#             user_type='professional',
+#             manpowerprofile__is_available=True,
+#             manpowerprofile__skill=skill,
+#             manpowerprofile__location__distance_lte=(user_location, D(km=10))
+#         ).annotate(
+#             distance=Distance('manpowerprofile__location', user_location)
+#         ).order_by('distance')
 
-        return render(request, 'home/index.html', {'professionals': professionals})
-    return render(request, 'home/index.html')
+#         return render(request, 'home/index.html', {'professionals': professionals})
+#     return render(request, 'home/index.html')
 
 @api_view(['GET'])
 def manpower_list_api(request):
