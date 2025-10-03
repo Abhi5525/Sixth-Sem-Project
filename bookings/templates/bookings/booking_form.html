@@ -1,10 +1,10 @@
 {% extends "home/base-navbar.html" %}
 {% block main-content %}
 <div class="container py-5">
-    <div class="">
+    {% comment %} <div class="">
         <p id="locationStatus" class="form-label" style="color: blue;">Detecting your location...</p>
     </div>
-    
+     {% endcomment %}
     <div class="booking-card">
         <h2 class="text-primary">Book {{ professional.full_name }}</h2>
         <form id="bookingForm">
@@ -41,25 +41,10 @@
 </div>
 
 <script>
-let userLatitude = null;
-let userLongitude = null;
-
-// Get user location
-if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            userLatitude = position.coords.latitude;
-            userLongitude = position.coords.longitude;
-            document.getElementById("locationStatus").innerText = "Location detected ✔";
-        },
-        (error) => {
-            console.error("Location permission denied:", error);
-            document.getElementById("locationStatus").innerText = "Location not detected ❌";
-            alert("We need your location to proceed with booking.");
-        }
-    );
-}
-
+const lat = localStorage.getItem("userLat");
+const lng = localStorage.getItem("userLng");
+let userLatitude = lat ? parseFloat(lat) : null;
+let userLongitude = lng ? parseFloat(lng) : null;
 // Handle form submit
 document.getElementById("bookingForm").addEventListener("submit", function(e) {
     e.preventDefault(); // Stop normal submission

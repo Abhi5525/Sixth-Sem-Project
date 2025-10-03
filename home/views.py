@@ -1,5 +1,6 @@
 # from pyexpat.errors import messages
-from django.shortcuts import render
+import json
+from django.shortcuts import get_object_or_404, render
 from users.models import ManpowerProfile, CustomUser
 # from django.contrib.auth.models import User
 from  django.views.generic.list import ListView
@@ -29,10 +30,22 @@ def home(request):
         manpower_list = ManpowerProfile.objects.filter(is_available=True).select_related('user')
         
     return render(request, 'home/index.html', {
-        'ManpowerList': manpower_list
+        'ManpowerList': manpower_list,
+        'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False)
+ 
     })
 
 
+@login_required
+def update_professional_location(request):
+    if request.method == "POST" and request.user.is_professional:
+        data = json.loads(request.body)
+        profile = get_object_or_404(ManpowerProfile, user=request.user)
+        profile.latitude = data.get("latitude")
+        profile.longitude = data.get("longitude")
+        profile.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
 
 # @login_required
 # def find_professionals(request):
