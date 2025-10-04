@@ -1,14 +1,13 @@
-# from pyexpat.errors import messages
+
 import json
 from django.shortcuts import get_object_or_404, render
+from bookings.models import Booking
 from users.models import ManpowerProfile, CustomUser
-# from django.contrib.auth.models import User
-from  django.views.generic.list import ListView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ManpowerSerializer
 from django.contrib.auth.decorators import login_required
-
+from django.utils import timezone
 from django.conf import settings
 from django.http import JsonResponse   
 from django.contrib import messages
@@ -92,3 +91,45 @@ def maps(request):
 def get_galli_maps_token(request):
     """Return the Galli Maps API key securely"""
     return JsonResponse({"token": settings.GALLIMAPS_API_KEY})
+
+
+
+def professional_availability(request):
+    now = timezone.now()
+
+    active_bookings = Booking.objects.filter(
+        booking_time__lte=now,
+        end_time__gte=now,
+        is_confirmed=True
+    ).select_related('professional')
+
+    booking_dict = {b.professional_id: b for b in active_bookings}
+
+    professionals = ManpowerProfile.objects.select_related('user').all()
+    data = []
+
+    for prof in professionals:
+        active_booking = booking_dict.get(prof.id)
+        if active_booking:
+            remaining = (active_booking.end_time - now).total_seconds()
+            hours, remainder = divmod(int(remaining), 3600)
+            minutes = remainder // 60
+            status = "Busy"
+            message = f"Free in {hours}h {minutes}m"
+            is_available = False
+            
+        else:
+            status = "Available"
+            message = "Available"
+            is_available = True
+           
+
+        data.append({
+            "id": prof.id,
+            "status": status,
+            "message": message,
+            "is_available": is_available,
+            
+        })
+
+    return JsonResponse(data, safe=False)

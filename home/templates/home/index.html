@@ -3,6 +3,29 @@
 
 {% block styles %}
 <style>
+
+.custom-search-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 50px 0 0 50px;
+    padding: 0.75rem 1.5rem;
+    transition: border-color 0.3s ease;
+}
+
+.custom-search-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.custom-search-btn {
+    border-radius: 0 50px 50px 0;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.search-input-group {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    border-radius: 50px;}
+
   .service-card,
   .booking-card {
     transition: transform 0.2s;
@@ -180,10 +203,12 @@
     {% comment %} margin-top: 0.1rem; {% endcomment %}
     border-radius: 0 8px 8px 0;
   }
+
+  
 </style>
 {% endblock %} {% block main-content %} 
 <!-- Main Content -->
-<div class="container py-5 position-relative">
+<div class="container py-5 position-relative ">
   <!-- Home Section -->
   <section id="home" class="mb-5">
     <div class="hero-section text-center py-5 rounded">
@@ -217,20 +242,26 @@
   <section id="search" class="mb-5">
     <h2 class="mb-4">Find Professionals</h2>
 
-    <form method="get">
-      <div class="row">
-        <div class="form">
-          <div class="input-group mb-3">
-            <input type="search" class="form-control" id="searchInput" name="searchInput"
-              placeholder="Search plumbers, carpenters..." aria-label="Search"
-              value="{{ request.GET.searchInput|default:'' }}" />
-            <button class="btn btn-primary" type="submit">
-              <i class="fas fa-search"></i> Search
-            </button>
-          </div>
-        </div>
+<form method="get">
+  <div class="row">
+    <div class="form">
+      <div class="input-group search-input-group mb-3">
+        <input 
+          type="search" 
+          class="form-control custom-search-input" 
+          id="searchInput" 
+          name="searchInput"
+          placeholder="Search plumbers, carpenters..." 
+          aria-label="Search"
+          value="{{ request.GET.searchInput|default:'' }}" 
+        />
+        <button class="btn btn-primary custom-search-btn" type="submit">
+          <i class="fas fa-search me-2"></i>Search
+        </button>
       </div>
-    </form>
+    </div>
+  </div>
+</form>
     <!-- <div class="d-flex flex-wrap gap-2 mb-4">
       <button class="btn btn-outline-primary category-filter" data-category="Plumber">
         Plumber
@@ -284,6 +315,21 @@
               <i class="fas fa-star text-warning"></i> 4.8 (120 reviews)<br />
               <i class="fas fa-map-marker-alt"></i> 2 km away<br />
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">रु {{manpower.rate}}</span> / hour
+
+         {% comment %} <div class = "card-body position-relative">        {% endcomment %}
+<span class="availability badge position-absolute {% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
+      data-id="{{ manpower.id }}">
+    {% if manpower.is_available %}
+        <i class="fas fa-check-circle"></i> Available
+    {% else %}
+        <i class="fas fa-clock"></i> 
+    {% endif %}
+</span>
+
+{% if not manpower.is_available %}
+<small class="d-block text-muted">{{ manpower.availability_message }}</small>
+{% endif %}
+{% comment %} </div> {% endcomment %}
 
             </p>
 
@@ -478,6 +524,29 @@
 {% endblock %} {% block scripts %}
 
 <script>
+
+        
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/availability/')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(pro => {
+                const element = document.querySelector(`.availability[data-id='${pro.id}']`);
+                if (element) {
+                  if (pro.is_available) {
+    // Green badge with check icon
+    element.innerHTML = `<i class="fas fa-check-circle"></i> Available`;
+    element.className = 'availability badge bg-success '; // Changed mt-1 to mt-2, removed ms-2
+} else {
+    // Yellow badge with clock icon
+    element.innerHTML = `<i class="fas fa-clock me-1"></i>${pro.message}`;
+    element.className = 'availability badge bg-warning '; // Changed mt-1 to mt-2, removed ms-2
+}
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching availability:', error));
+});
 
 
   let selectedProfessionalId = null;

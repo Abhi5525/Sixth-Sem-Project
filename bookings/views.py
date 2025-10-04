@@ -1,15 +1,19 @@
 import json
-from django.shortcuts import render
-import logging
-import hashlib
-import hmac
+import uuid
 import base64
+import hmac
+import hashlib
+import logging
+from decimal import Decimal
+import requests
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import Booking, Payment
-import requests
-import xmltodict
+from django.utils import timezone
+
 from django.conf import settings
 from django.http import JsonResponse
 from users.models import ManpowerProfile 
@@ -17,8 +21,6 @@ from django.core.exceptions import ValidationError
 from django.utils.dateparse import parse_datetime
 from decimal import Decimal
 from datetime import timedelta
-import traceback
-from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -101,21 +103,6 @@ def generate_signature(payment_data, secret_key):
         hmac.new(secret_key.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).digest()
     ).decode('utf-8')
     return signature
-import json
-import uuid
-import base64
-import hmac
-import hashlib
-import logging
-from decimal import Decimal
-import requests
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-
-from .models import Booking, Payment
 
 logger = logging.getLogger(__name__)
 
