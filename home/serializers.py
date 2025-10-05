@@ -11,7 +11,7 @@ class ManpowerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ManpowerProfile
-        fields = ['id','user_id', 'name',  'location', 'rate', 'experience', 'about', 'profile_picture']
+        fields = ['id','user_id', 'name',  'location', 'rate', 'experience', 'about', 'profile_picture','total_reviews','average_rating']
 
     def get_location(self, obj):
         return f"{obj.province}, {obj.district}"

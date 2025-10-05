@@ -71,6 +71,9 @@ class ManpowerProfile(models.Model):
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Changed to DecimalField for precision
+    average_rating = models.FloatField(default=0.0)
+    total_reviews = models.IntegerField(default=0)
+
     profile_picture = models.ImageField(upload_to='manpower/profile_pictures/', blank=True, null=True, default='manpower/profile_pictures/images.png')
     is_available = models.BooleanField(default=True)  # Availability status
     latitude = models.FloatField(null=True, blank=True)

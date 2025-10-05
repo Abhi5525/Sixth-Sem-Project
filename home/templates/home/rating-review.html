@@ -1,0 +1,400 @@
+{% block styles %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #f5f7fa;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    /* Modal Container */
+    .modal-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        width: 100%;
+        max-width: 420px;
+        overflow: hidden;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Modal Header */
+    .modal-header {
+        background: #1976d2;
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+        border-bottom: 3px solid #1565c0;
+    }
+
+    .modal-header h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+
+    .modal-header p {
+        font-size: 1rem;
+        opacity: 0.95;
+        font-weight: 500;
+    }
+
+    /* Modal Body */
+    .modal-body {
+        padding: 1.5rem;
+        background: white;
+    }
+
+    /* Star Rating */
+    .star-rating {
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .star-rating > label {
+        display: block;
+        color: #37474f;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stars {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .stars input[type="radio"] {
+        display: none;
+    }
+
+    .stars label {
+        cursor: pointer;
+        font-size: 2.2rem;
+        color: #e0e0e0;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+
+    .stars label:hover,
+    .stars label:hover ~ label,
+    .stars input[type="radio"]:checked ~ label {
+        color: #ffc107;
+    }
+
+    /* Textarea */
+    .review-input {
+        margin-bottom: 1.25rem;
+    }
+
+    .review-input label {
+        display: block;
+        color: #37474f;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .review-input textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 90px;
+        transition: all 0.2s ease;
+    }
+
+    .review-input textarea:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.08);
+    }
+
+    .review-input textarea::placeholder {
+        color: #9e9e9e;
+    }
+
+    /* Buttons */
+    .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.65rem 1.25rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #1976d2;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1565c0;
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    }
+
+    .btn-secondary {
+        background: #eceff1;
+        color: #546e7a;
+    }
+
+    .btn-secondary:hover {
+        background: #cfd8dc;
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+    /* Rating Display */
+    .rating-text {
+        text-align: center;
+        color: #1976d2;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        min-height: 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Login Message */
+    .login-message {
+        text-align: center;
+        padding: 1.5rem;
+        color: #546e7a;
+    }
+
+    .login-message a {
+        color: #1976d2;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .login-message a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .modal-container {
+            max-width: 100%;
+            margin: 0 10px;
+        }
+        
+        .modal-body {
+            padding: 1.25rem;
+        }
+    }
+</style>
+{% endblock %} {% block main-content %} 
+
+<div class="modal-overlay">
+        <div class="modal-container">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2>Rate & Review</h2>
+                <p>Share your experience with us</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="modal-header">
+    <h2>Rate & Review</h2>
+    <p>{{ professional.user.full_name }}</p>
+</div>
+
+                <!-- If user is authenticated -->
+                <form id="reviewForm" data-professional-id="{{ professional.id }}">
+                    <!-- Star Rating -->
+                    <div class="star-rating">
+                        <label>Your Rating</label>
+                        <div class="stars">
+                            <input type="radio" name="rating" value="5" id="star5" required>
+                            <label for="star5">★</label>
+                            <input type="radio" name="rating" value="4" id="star4">
+                            <label for="star4">★</label>
+                            <input type="radio" name="rating" value="3" id="star3">
+                            <label for="star3">★</label>
+                            <input type="radio" name="rating" value="2" id="star2">
+                            <label for="star2">★</label>
+                            <input type="radio" name="rating" value="1" id="star1">
+                            <label for="star1">★</label>
+                        </div>
+                        <div class="rating-text" id="ratingText"></div>
+                    </div>
+
+                    <!-- Review Textarea -->
+                    <div class="review-input">
+                        <label>Your Review</label>
+                        <textarea 
+                            name="comment" 
+                            placeholder="Tell us about your experience..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </div>
+                </form>
+
+                <!-- If user is NOT authenticated (uncomment to test) -->
+                <!-- <div class="login-message">
+                    <p>Please <a href="#">login</a> to leave a review.</p>
+                </div> -->
+            </div>
+        </div>
+    </div>
+
+     <script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Star rating interaction
+    const stars = document.querySelectorAll('.stars input[type="radio"]');
+    const ratingText = document.getElementById('ratingText');
+    
+    const ratingMessages = {
+        1: 'Poor',
+        2: 'Fair',
+        3: 'Good',
+        4: 'Very Good',
+        5: 'Excellent'
+    };
+
+    stars.forEach(star => {
+        star.addEventListener('change', function() {
+            const value = this.value;
+            ratingText.textContent = ratingMessages[value];
+        });
+    });
+
+    // Form submission
+    const form = document.getElementById('reviewForm');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const professionalId = this.dataset.professionalId;
+            const formData = new FormData(this);
+            
+            // Check if rating is selected
+            const rating = formData.get('rating');
+            if (!rating) {
+                alert('Please select a rating');
+                return;
+            }
+            
+            fetch(`/review/${professionalId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = `/`;  // Redirect back to professional profile
+                } else {
+                    alert(data.error || "Error submitting review");
+                }
+            })
+            .catch(err => {
+                console.error("Error submitting review:", err);
+                alert("Network error — please try again.");
+            });
+        });
+    }
+
+    // Close modal functionality
+    function closeModal() {
+        window.history.back();  // Go back to previous page
+    }
+
+    // Close modal when clicking Cancel button
+    const cancelBtn = document.querySelector('.btn-secondary');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+    }
+
+    // Close modal when clicking outside
+    const modalOverlay = document.querySelector('.modal-overlay');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

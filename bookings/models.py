@@ -70,3 +70,17 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for Booking {self.booking.id} - {'Paid' if self.is_paid else 'Pending'}"
+    
+# bookings/models.py
+
+class RatingReview(models.Model):
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="review")
+    reviewer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reviews_given")
+    professional = models.ForeignKey(ManpowerProfile, on_delete=models.CASCADE, related_name="reviews_received")
+    
+    rating = models.PositiveSmallIntegerField(default=0)  # 1 to 5 stars
+    comment = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.reviewer.full_name} → {self.professional.user.full_name} ({self.rating}⭐)"

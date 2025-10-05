@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 # Create your views here.
 from django.db.models import Q
-from django.contrib import messages
+from bookings.models import RatingReview
 
 def home(request):
     query = request.GET.get('searchInput')
@@ -133,3 +133,44 @@ def professional_availability(request):
         })
 
     return JsonResponse(data, safe=False)
+
+
+
+
+@login_required
+def review_page(request, professional_id):
+    professional = get_object_or_404(ManpowerProfile, id=professional_id)
+    return render(request, 'home/rating-review.html', {'professional': professional})
+
+@login_required
+def submit_review(request, professional_id):
+    if request.method == "POST":
+        try:
+            rating = int(request.POST.get('rating'))
+            comment = request.POST.get('comment', '')
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Invalid rating value'}, status=400)
+
+        professional = get_object_or_404(ManpowerProfile, id=professional_id)
+
+        # Ensure the user has booked this professional before reviewing
+        booking = Booking.objects.filter(
+            professional=professional,
+            client=request.user,
+            is_confirmed=True
+        ).order_by('-booking_time').first()
+
+        if not booking:
+            return JsonResponse({'error': 'You can only review professionals you have booked.'}, status=403)
+
+        # Create or update review for that booking
+        RatingReview.objects.update_or_create(
+            booking=booking,
+            reviewer=request.user,
+            professional=professional,
+            defaults={'rating': rating, 'comment': comment}
+        )
+
+        return JsonResponse({'success': True, 'message': 'Review submitted successfully!'})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)

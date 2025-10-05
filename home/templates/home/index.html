@@ -203,7 +203,146 @@
     {% comment %} margin-top: 0.1rem; {% endcomment %}
     border-radius: 0 8px 8px 0;
   }
+/* Review Section Styling */
+#review-section {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
 
+#review-section h4 {
+  color: #1a5490;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid #e3f2fd;
+  padding-bottom: 0.5rem;
+}
+
+#reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#reviewForm label {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: -0.5rem;
+}
+
+#reviewForm select {
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #d1e7fd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#reviewForm select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+#reviewForm textarea {
+  padding: 0.8rem;
+  border: 1.5px solid #d1e7fd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  background: white;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+#reviewForm textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+#reviewForm textarea::placeholder {
+  color: #90a4ae;
+  font-style: italic;
+}
+
+#reviewForm button[type="submit"] {
+  padding: 0.75rem 1.5rem;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+#reviewForm button[type="submit"]:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+}
+
+#reviewForm button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* Login prompt styling */
+#review-section p {
+  color: #546e7a;
+  font-size: 0.95rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #1976d2;
+}
+
+#review-section p a {
+  color: #1976d2;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+#review-section p a:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+/* Star rating in select */
+#reviewForm select option {
+  font-size: 1.1rem;
+  padding: 0.3rem;
+}
+
+#rateReviewBtn { 
+   border: 2px solid #1976d2;
+
+  color: #1976d2;
+
+  transition: all 0.3s ease;
+  width: 160px;
+  height: 40px;
+  
+  margin-left:150px
+  
+ 
+}
+
+#rateReviewBtn:hover {
+   background: #1976d2;
+  color: #f6f5f5ff;
+}
   
 </style>
 {% endblock %} {% block main-content %} 
@@ -312,7 +451,7 @@
               </div>
             </div>
             <p class="card-text">
-              <i class="fas fa-star text-warning"></i> 4.8 (120 reviews)<br />
+              <i class="fas fa-star text-warning"></i> {{ manpower.average_rating|floatformat:1 }} ({{ manpower.total_reviews }} reviews)<br />
               <i class="fas fa-map-marker-alt"></i> 2 km away<br />
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">रु {{manpower.rate}}</span> / hour
 
@@ -338,6 +477,8 @@
               onclick="fetchProfile('{{ manpower.id }}')">
               View Profile
             </button>
+      
+
 
           </div>
         </div>
@@ -464,7 +605,7 @@
             <div>
               <div class="info-label">Rating</div>
               <div class="info-value">
-                <span class="rating-stars">★★★★★</span>
+                <span class="rating-stars"></span>
                 <span id="modalRating"></span>
               </div>
             </div>
@@ -501,14 +642,19 @@
           </div>
         </div>
 
-        <div class="about-section">
-          <div class="info-label mb-0">
+        <div class="about-section mb-1">
+          <div class="info-label ">
             <i class="fas fa-info-circle me-2"></i>About
           </div>
             <div class="info-value" id="modalAbout" style="font-family: 'Arial;"></div>
           </div>
       </div>
-      <div class="modal-footer">
+  <button id="rateReviewBtn" class="btn btn-outline-primary ">
+  <i class="fas fa-star"></i> Rate & Review
+</button>
+
+
+      <div class="modal-footer mt-2">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
           <i class="fas fa-times-circle me-2"></i>Close
         </button>
@@ -559,15 +705,53 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedProfessionalId = pro.id; // Use ManpowerProfile ID, NOT user_id
         document.getElementById("modalName").textContent = pro.name;
         document.getElementById("modalTrade").textContent = pro.trade;
-        document.getElementById("modalRating").textContent = pro.rating + " (120 reviews)";
+        const rating = (pro.average_rating || 0).toFixed(1); // Shows 1 decimal: 4.5
+const reviewCount = pro.total_reviews || 0;
+ document.querySelector(".rating-stars").innerHTML = generateStars(rating);
+        
+document.getElementById("modalRating").textContent = `${rating} (${reviewCount} reviews)`;
         document.getElementById("modalLocation").textContent = pro.location;
         document.getElementById("modalRate").textContent = pro.rate;
         document.getElementById("modalExperience").textContent = pro.experience;
         document.getElementById("modalAbout").textContent = pro.about;
         document.getElementById("modalProfileImg").src = pro.profile_picture;
+        const rateBtn = document.getElementById("rateReviewBtn");
+      rateBtn.onclick = function() {
+        window.location.href = `/review-page/${pro.id}/`;
+      };
       })
       .catch(err => console.error(err));
   }
+
+// Function to generate stars
+function generateStars(rating) {
+    const fullStar = '★';
+    const halfStar = '⯨';
+    const emptyStar = '☆';
+    
+    let stars = '';
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = (rating % 1) >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+        stars += fullStar;
+    }
+    
+    // Add half star if needed
+    if (hasHalfStar) {
+        stars += halfStar;
+    }
+    
+    // Add empty stars
+    for (let i = 0; i < emptyStars; i++) {
+        stars += emptyStar;
+    }
+    
+    return `<span style="color: #ffc107; font-size: 1.1rem;">${stars}</span>`;
+}
+
 
   let userLat = 27.7, userLng = 85.3; // default Kathmandu
 
