@@ -13,6 +13,7 @@ from .tokens import CustomTokenObtainPairView
 app_name = 'users'
 urlpatterns = [
     path('login/', views.login, name='login'),
+    path('termsandconditions/', views.terms_and_conditions, name='terms_andconditions'),
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     path('signup/', views.signup, name='signup'),
     path('signup/professional/', views.professional_signup, name='professional_signup'),
@@ -22,6 +23,13 @@ urlpatterns = [
     path('profile/toggle-availability/<int:pk>/', views.toggle_availability, name='toggle_availability'),
     path('profile/', views.profile, name='profile'),
     path("profile/update/", views.update_profile, name="update_profile"),
+
+
+
+    path('professional/dashboard/', views.prof_dashboard, name='professional_dashboard'),
+path('booking/<int:booking_id>/view_booking_route/', views.view_booking_route, name='view_route'),
+path('booking/<int:booking_id>/mark_completed/', views.mark_completed, name='mark_completed'),
+
 
     
     # URL to handle client profile updates

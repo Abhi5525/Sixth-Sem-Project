@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Route to {{ booking.client.full_name }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .route-info { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <h2>🚗 Route to {{ booking.client.full_name }}</h2>
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Your OpenRouteService API Key (GET FROM: https://openrouteservice.org/dev/#/signup)
+        const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiMzFlMDA4NTA3NzQ3ZTM5MTBiZTZiNzBiZDNmYmQ0IiwiaCI6Im11cm11cjY0In0=';
+        
+        // Coordinates from Django
+        const proLat = {{ pro.latitude|default:"27.7172" }};
+        const proLng = {{ pro.longitude|default:"85.3240" }};
+        const cusLat = {{ booking.user_latitude|default:"27.6710" }};
+        const cusLng = {{ booking.user_longitude|default:"85.4298" }};
+        
+        // Initialize map
+        const map = L.map('map').setView([(proLat + cusLat)/2, (proLng + cusLng)/2], 13);
+        
+        // Add OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors | Route: OpenRouteService'
+        }).addTo(map);
+        
+        // Add markers
+        L.marker([proLat, proLng], {
+            icon: L.divIcon({
+                html: '<div style="background: #3498db; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">📍 YOU</div>',
+                iconSize: [70, 35],
+                iconAnchor: [35, 17]
+            })
+        }).addTo(map).bindPopup('Your Location');
+        
+        L.marker([cusLat, cusLng], {
+            icon: L.divIcon({
+                html: '<div style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">📍 CUSTOMER</div>',
+                iconSize: [110, 35],
+                iconAnchor: [55, 17]
+            })
+        }).addTo(map).bindPopup('Customer: {{ booking.client.full_name }}');
+        
+        // Draw route using OpenRouteService
+        function drawRoute() {
+            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_API_KEY}&start=${proLng},${proLat}&end=${cusLng},${cusLat}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.features && data.features.length > 0) {
+                        const coordinates = data.features[0].geometry.coordinates;
+                        const latLngs = coordinates.map(coord => [coord[1], coord[0]]);
+                        
+                        // Draw the road route
+                        L.polyline(latLngs, {
+                            color: '#3498db',
+                            weight: 8,
+                            opacity: 0.9,
+                            lineCap: 'round'
+                        }).addTo(map);
+                        
+                        // Show distance and time
+                        const summary = data.features[0].properties.summary;
+                        const distance = (summary.distance / 1000).toFixed(2);
+                        const duration = Math.round(summary.duration / 60);
+                        
+                        L.control({position: 'topright'}).onAdd = function() {
+                            const div = L.DomUtil.create('div', 'route-info');
+                            div.innerHTML = `
+                                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🚗 Route Details</h4>
+                                    <p><strong>Distance:</strong> ${distance} km</p>
+                                    <p><strong>Time:</strong> ${duration} minutes</p>
+                                    <p><strong>Service:</strong> OpenRouteService</p>
+                                </div>
+                            `;
+                            return div;
+                        }.addTo(map);
+                        
+                        // Fit map to route
+                        map.fitBounds(L.polyline(latLngs).getBounds(), {padding: [50, 50]});
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Draw straight line as fallback
+                    L.polyline([[proLat, proLng], [cusLat, cusLng]], {
+                        color: '#e74c3c',
+                        weight: 4,
+                        opacity: 0.7,
+                        dashArray: '10, 10'
+                    }).addTo(map);
+                });
+        }
+        
+        // Start drawing the route
+        drawRoute();
+    </script>
+</body>
+</html>

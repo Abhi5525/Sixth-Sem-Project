@@ -21,6 +21,11 @@ class Booking(models.Model):
     user_longitude = models.FloatField(null=True, blank=True)
     professional_latitude = models.FloatField(null=True, blank=True)
     professional_longitude = models.FloatField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[("upcoming", "Upcoming"), ("ongoing", "Ongoing"), ("completed", "Completed")],
+        default="upcoming"
+    )
 
     class Meta:
         verbose_name = "Booking"

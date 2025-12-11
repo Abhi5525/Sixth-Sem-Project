@@ -1,5 +1,8 @@
 
 # users/views.py
+from datetime import datetime, date
+# At the top of views.py
+from django.utils import timezone
 from django.contrib import messages
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -13,23 +16,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-
-@login_required             
-def profile(request):
-    user = request.user
-    manpower_profile = None
-    if user.is_professional:
-        manpower_profile = get_object_or_404(ManpowerProfile, user=user)
-
-    user_form = UserProfileUpdateForm(instance=user)
-    profile_form = ManpowerProfileUpdateForm(instance=manpower_profile) if manpower_profile else None
-
-    return render(request, "users/profile.html", {
-        "user": user,
-        "manpower_profile": manpower_profile,
-        "user_form": user_form,
-        "profile_form": profile_form,
-    })
+from bookings.models import Booking
 
 
 @login_required
@@ -203,4 +190,216 @@ def get_wards(request):
         return JsonResponse({'wards': wards})
     except Municipality.DoesNotExist:
         return JsonResponse({'wards': []})
-  
+
+@login_required             
+def profile(request):
+    user = request.user
+    
+    # Check if user is a professional
+    try:
+        pro = ManpowerProfile.objects.get(user=user)
+        is_professional = True
+        manpower_profile = pro
+        
+        # Calculate stats for professionals
+        now = datetime.now()
+        
+        # 1. Upcoming Bookings count
+        upcoming_count = pro.professional_bookings.filter(
+            booking_time__gt=now,
+            status__in=["upcoming", "ongoing"]
+        ).count()
+        
+        # 2. Average Rating
+        reviews = pro.reviews_received.all()
+        total_reviews = reviews.count()
+        
+        if total_reviews > 0:
+            avg_rating = sum(r.rating for r in reviews) / total_reviews
+            avg_rating = round(avg_rating, 1)
+        else:
+            avg_rating = 0
+        
+        # 3. Reviews count
+        reviews_count = total_reviews
+        
+    except ManpowerProfile.DoesNotExist:
+        # User is not a professional
+        pro = None
+        manpower_profile = None
+        is_professional = False
+        upcoming_count = 0
+        avg_rating = 0
+        reviews_count = 0
+    
+    # Forms for profile editing
+    user_form = UserProfileUpdateForm(instance=user)
+    profile_form = ManpowerProfileUpdateForm(instance=manpower_profile) if manpower_profile else None
+    
+    context = {
+        "user": user,
+        "user_profile": user,  # Keep both for compatibility
+        "manpower_profile": manpower_profile,
+        "pro": pro,  # Same as manpower_profile
+        "is_professional": is_professional,
+        "user_form": user_form,
+        "profile_form": profile_form,
+        # Stats for professionals
+        "upcoming_count": upcoming_count,
+        "avg_rating": avg_rating,
+        "reviews_count": reviews_count,
+    }
+    
+    return render(request, "users/profile.html", context)
+
+@login_required
+def prof_dashboard(request):
+    pro = get_object_or_404(ManpowerProfile, user=request.user)
+    
+    # CORRECT way to import datetime
+
+    
+    now = datetime.now()  # NOT datetime.datetime.now()
+    today_date = date.today()  # Or now.date()
+    
+    # 1. TODAY'S BOOKINGS: Bookings happening TODAY (date matches today)
+    today_bookings = pro.professional_bookings.filter(
+        booking_time__date=today_date,
+        status__in=["upcoming", "ongoing"]
+    ).order_by('booking_time')
+    
+    # 2. UPCOMING BOOKINGS: Bookings in the FUTURE (after right now)
+    upcoming_bookings = pro.professional_bookings.filter(
+        booking_time__gt=now,  # Strictly after current moment
+        status__in=["upcoming", "ongoing"]
+    ).order_by('booking_time')
+    
+    # 3. HISTORY: Completed bookings OR past bookings (before now)
+    history = pro.professional_bookings.filter(
+        booking_time__lt=now
+    ).exclude(
+        booking_time__date=today_date,
+        status__in=["upcoming", "ongoing"]
+    ).order_by('-booking_time')
+    
+    reviews = pro.reviews_received.all()
+     # Calculate accurate statistics
+    total_reviews = reviews.count()
+    
+    # Calculate average rating
+    if total_reviews > 0:
+        avg_rating = sum(r.rating for r in reviews) / total_reviews
+        avg_rating = round(avg_rating, 1)
+    else:
+        avg_rating = 0
+    
+    # Calculate accurate rating breakdown (1-5 stars)
+    rating_breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    for r in reviews:
+        rating = int(r.rating)  # Assuming rating is integer 1-5
+        if rating in rating_breakdown:
+            rating_breakdown[rating] += 1
+    
+    # Get latest review
+    latest_review = reviews.order_by('-created_at').first()
+    
+    context = {
+        "pro": pro,
+        "today_bookings": today_bookings,
+        "upcoming_bookings": upcoming_bookings,
+        "history": history,
+        "reviews": reviews,
+        "avg_rating": avg_rating,
+        "rating_breakdown": rating_breakdown,
+        "total_reviews": total_reviews,
+        "latest_review": latest_review,
+    }
+    
+    print(f"DEBUG - Rating breakdown: {rating_breakdown}")
+    print(f"DEBUG - Total reviews: {total_reviews}")
+    
+    return render(request, "users/professional_dashboard.html", context)
+@login_required
+def view_booking_route(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    pro = booking.professional
+    
+    # Debug print
+    print(f"DEBUG - Booking ID: {booking_id}")
+    print(f"DEBUG - Professional: {pro.user.full_name}")
+    print(f"DEBUG - Pro coordinates: {pro.latitude}, {pro.longitude}")
+    print(f"DEBUG - Customer coordinates: {booking.user_latitude}, {booking.user_longitude}")
+    print(f"DEBUG - Pro coordinates exist: {pro.latitude is not None}, {pro.longitude is not None}")
+    print(f"DEBUG - Customer coordinates exist: {booking.user_latitude is not None}, {booking.user_longitude is not None}")
+    
+    context = {
+        'booking': booking,
+        'pro': pro,
+        # Pass coordinates as separate variables too
+        'pro_lat': pro.latitude or 0,
+        'pro_lng': pro.longitude or 0,
+        'cus_lat': booking.user_latitude or 0,
+        'cus_lng': booking.user_longitude or 0,
+    }
+    return render(request, 'users/view_route.html', context)
+
+
+@login_required
+def mark_completed(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    booking.status = "completed"
+    booking.save()
+
+    # Make professional available
+    pro = booking.professional
+    pro.is_available = True
+    pro.save()
+
+    return JsonResponse({"success": True})
+
+
+def terms_and_conditions(request):
+    return render(request, "users/terms.html")
+
+# Django caching example
+from django.core.cache import cache
+import hashlib
+import requests
+
+def call_openrouteservice_api(pro_lat, pro_lng, cus_lat, cus_lng):
+    """Call OpenRouteService API to get route data between two coordinates."""
+    try:
+        api_key = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiMzFlMDA4NTA3NzQ3ZTM5MTBiZTZiNzBiZDNmYmQ0IiwiaCI6Im11cm11cjY0In0="  # Replace with your actual API key
+        url = f"https://api.openrouteservice.org/v2/directions/driving?api_key={api_key}&start={pro_lng},{pro_lat}&end={cus_lng},{cus_lat}"
+        
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": "Failed to fetch route data"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@login_required
+def get_route(request):
+    pro_lat = request.GET.get('pro_lat')
+    pro_lng = request.GET.get('pro_lng')
+    cus_lat = request.GET.get('cus_lat')
+    cus_lng = request.GET.get('cus_lng')
+    
+    # Create cache key
+    cache_key = hashlib.md5(f"{pro_lat},{pro_lng},{cus_lat},{cus_lng}".encode()).hexdigest()
+    
+    # Check cache first
+    cached_route = cache.get(cache_key)
+    if cached_route:
+        return JsonResponse(cached_route)
+    
+    # Call API if not cached
+    route_data = call_openrouteservice_api(pro_lat, pro_lng, cus_lat, cus_lng)
+    
+    # Cache for 24 hours
+    cache.set(cache_key, route_data, 60*60*24)
+    
+    return JsonResponse(route_data)

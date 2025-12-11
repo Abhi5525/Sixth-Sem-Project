@@ -12,10 +12,12 @@ class UserSignupForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('full_name', 'phone_number', 'password1')
+        fields = ('full_name', 'phone_number', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if 'usable_password' in self.fields:
+            self.fields.pop('usable_password')
         self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm Password'})
 

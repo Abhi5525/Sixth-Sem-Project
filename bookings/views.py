@@ -45,19 +45,28 @@ def booking_form(request, professional_id):
                 return JsonResponse({'success': False, 'error': 'Invalid booking time format'}, status=400)
 
             # Parse duration
-            duration_hours = float(data.get('duration_hours', 1))
+            duration_hours_raw = data.get('duration_hours') or 1
+            duration_hours = float(duration_hours_raw)
+
             if duration_hours <= 0:
                 return JsonResponse({'success': False, 'error': 'Duration must be positive'}, status=400)
 
             # Calculate end time
             end_time = booking_time + timedelta(hours=duration_hours)
 
-            # Parse user location
-            user_lat = float(data.get('latitude'))
-            user_lng = float(data.get('longitude'))
+            user_lat_raw = data.get('latitude')
+            user_lng_raw = data.get('longitude')
+
+            if not user_lat_raw or not user_lng_raw:
+                return JsonResponse({'success': False, 'error': 'Location missing'}, status=400)
+
+            user_lat = float(user_lat_raw)
+            user_lng = float(user_lng_raw)
+
 
             # Calculate fees using Decimal for precision
             rate = Decimal(str(professional.rate))  # Ensure professional.rate exists
+            
             total_fee = (rate * Decimal(str(duration_hours))).quantize(Decimal('0.01'))
             deposit = (total_fee * Decimal('0.10')).quantize(Decimal('0.01'))
 
@@ -218,6 +227,8 @@ def esewa_callback(request):
 
 def payment_failed(request):
     return render(request, 'bookings/payment_failed.html')
+
+
 # Create your views here.
 def bookings(request):
     user = request.user
@@ -247,6 +258,7 @@ def bookings(request):
 
         if booking.booking_time < now:
             booking.status = 'completed'  # adjust if you have real status field
+        print("past booking:", booking.id, booking.booking_time, booking.status)
 
     return render(request, 'bookings/bookings.html', {
         'upcoming_bookings': upcoming_bookings,

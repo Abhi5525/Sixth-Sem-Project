@@ -147,7 +147,7 @@ def submit_review(request, professional_id):
     if request.method == "POST":
         try:
             rating = int(request.POST.get('rating'))
-            comment = request.POST.get('comment', '')
+            comment = request.POST.get('comment', '').strip()
         except (TypeError, ValueError):
             return JsonResponse({'error': 'Invalid rating value'}, status=400)
 

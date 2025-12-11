@@ -29,3 +29,5 @@ Thumbs.db
 **/migrations/__pychache__/**.pyc
 *.pyc
 __pycache__/
+
+accounts.txt

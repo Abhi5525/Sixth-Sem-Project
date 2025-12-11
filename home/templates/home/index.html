@@ -456,17 +456,17 @@
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">रु {{manpower.rate}}</span> / hour
 
          {% comment %} <div class = "card-body position-relative">        {% endcomment %}
-<span class="availability badge position-absolute {% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
+<span  class="availability badge position-absolute {% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
       data-id="{{ manpower.id }}">
     {% if manpower.is_available %}
-        <i class="fas fa-check-circle"></i> Available
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Available
     {% else %}
-        <i class="fas fa-clock"></i> 
+        <i class="fas fa-clock"style="margin-right: 8px;"></i> 
     {% endif %}
 </span>
 
 {% if not manpower.is_available %}
-<small class="d-block text-muted">{{ manpower.availability_message }}</small>
+<small class="d-block text-muted ">{{ manpower.availability_message }}</small>
 {% endif %}
 {% comment %} </div> {% endcomment %}
 
