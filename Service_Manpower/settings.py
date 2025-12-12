@@ -126,11 +126,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Kathmandu'
+# settings.py
+TIME_ZONE = 'Asia/Kathmandu'  # Or your local timezone
 
+USE_TZ = True  # This is CRITICAL
 USE_I18N = True
 
-USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)

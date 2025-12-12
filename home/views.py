@@ -87,54 +87,64 @@ def manpower_detail_api(request, pk):
 def maps(request):
     return render(request, 'home/index_POC.html')
 
-
-def get_galli_maps_token(request):
-    """Return the Galli Maps API key securely"""
-    return JsonResponse({"token": settings.GALLIMAPS_API_KEY})
-
-
-
 def professional_availability(request):
-    now = timezone.now()
-
+    now_utc = timezone.now()
+    user_tz = timezone.get_current_timezone()
+    
+    # Find professionals who are currently busy
     active_bookings = Booking.objects.filter(
-        booking_time__lte=now,
-        end_time__gte=now,
+        booking_time__lte=now_utc,
+        end_time__gte=now_utc,
         is_confirmed=True
     ).select_related('professional')
-
+    
     booking_dict = {b.professional_id: b for b in active_bookings}
-
+    
     professionals = ManpowerProfile.objects.select_related('user').all()
     data = []
-
+    
     for prof in professionals:
         active_booking = booking_dict.get(prof.id)
+        
         if active_booking:
-            remaining = (active_booking.end_time - now).total_seconds()
-            hours, remainder = divmod(int(remaining), 3600)
-            minutes = remainder // 60
-            status = "Busy"
-            message = f"Free in {hours}h {minutes}m"
-            is_available = False
+            # Convert end time to user's local timezone for display
+            local_end_time = timezone.localtime(active_booking.end_time, user_tz)
             
+            # Calculate remaining time
+            remaining_seconds = (active_booking.end_time - now_utc).total_seconds()
+            
+            if remaining_seconds > 0:
+                hours, remainder = divmod(int(remaining_seconds), 3600)
+                minutes = remainder // 60
+                
+                # Format different messages
+                if hours >= 1:
+                    message = f"Busy, free at {local_end_time.strftime('%I:%M %p')}"
+                elif minutes > 1:
+                    message = f"Busy, free in {minutes} minutes"
+                else:
+                    message = "Busy, finishing up"
+                
+                is_available = False
+                status = "Busy"
+            else:
+                message = "Available"
+                is_available = True
+                status = "Available"
         else:
-            status = "Available"
             message = "Available"
             is_available = True
-           
-
+            status = "Available"
+        
         data.append({
             "id": prof.id,
             "status": status,
             "message": message,
             "is_available": is_available,
-            
+            "local_end_time": local_end_time.strftime("%I:%M %p") if active_booking else None,
         })
-
+    
     return JsonResponse(data, safe=False)
-
-
 
 
 @login_required

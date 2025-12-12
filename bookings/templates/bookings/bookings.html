@@ -1,6 +1,6 @@
 {% extends 'home/base-navbar.html' %}
 {% load static %}
-{% block title %}Bookings - Service App{% endblock %}
+{% load tz %}  <!-- Add this line! -->
 
 {% block styles %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -9,7 +9,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #667eea 0%, #6a676dff 100%);
         min-height: 100vh;
         color: #2d3748;
         line-height: 1.6;
@@ -343,7 +343,6 @@
     }
 </style>
 {% endblock %}
-
 {% block main-content %}
 <div class="container">
     <div class="heading-container">
@@ -362,8 +361,8 @@
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
                      data-service-name="{{ booking.professional.skill|title }}"
-                     data-start-time="{{ booking.booking_time|date:'M d, Y \a\t g:i A' }}"
-                     data-end-time="{{ booking.end_time|date:'M d, Y \a\t g:i A' }}"
+                     data-start-time="{{ booking.booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ booking.end_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
                      data-professional-skill="{{ booking.professional.skill|title }}"
@@ -371,7 +370,7 @@
                      data-total-fee="{{ booking.total_fee|floatformat:2 }}"
                      data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
                      data-is-paid="{{ booking.payment.is_paid|yesno:'true,false' }}"
-                     data-payment-date="{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}"
+                     data-payment-date="{% if booking.payment.payment_date %}{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}{% endif %}"
                      data-esewa-ref="{{ booking.payment.esewa_ref_id }}"
                      data-client-name="{{ booking.client_name }}"
                 >
@@ -390,7 +389,7 @@
                         <div class="booking-details">
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-calendar"></i> Start Time</div>
-                                <div class="detail-value">{{ booking.booking_time|date:"M d, Y \a\t g:i A" }}</div>
+                                <div class="detail-value">{{ booking.booking_time|localtime|date:"M d, Y \a\t g:i A" }}</div>
                             </div>
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>
@@ -419,8 +418,8 @@
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
                      data-service-name="{{ booking.professional.skill|title }}"
-                     data-start-time="{{ booking.booking_time|date:'M d, Y \a\t g:i A' }}"
-                     data-end-time="{{ booking.end_time|date:'M d, Y \a\t g:i A' }}"
+                     data-start-time="{{ booking.local_booking_time|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ booking.local_end_time|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
                      data-professional-skill="{{ booking.professional.skill|title }}"
@@ -428,7 +427,7 @@
                      data-total-fee="{{ booking.total_fee|floatformat:2 }}"
                      data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
                      data-is-paid="{{ booking.payment.is_paid|yesno:'true,false' }}"
-                     data-payment-date="{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}"
+                     data-payment-date="{% if booking.payment.payment_date %}{{ booking.payment.payment_date|date:'M d, Y \a\t g:i A' }}{% endif %}"
                      data-esewa-ref="{{ booking.payment.esewa_ref_id }}"
                      data-client-name="{{ booking.client_name }}"
                 >
@@ -449,7 +448,7 @@
                         <div class="booking-details">
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-calendar"></i> Service Date</div>
-                                <div class="detail-value">{{ booking.booking_time|date:"M d, Y \a\t g:i A" }}</div>
+                                <div class="detail-value">{{ booking.local_booking_time|date:"M d, Y \a\t g:i A" }}</div>
                             </div>
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>

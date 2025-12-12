@@ -287,22 +287,15 @@
             </a>
           </li>
           {%if user.is_authenticated%}
-          {% if not is_professional %}
+          {% comment %} {% if not is_professional %} {% endcomment %}
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center {% if '/bookings/' in request.path %}active{% endif %}"
               href="{% url 'bookings:bookings' %}">
               <i class="fas fa-calendar-check me-2"></i> Bookings
             </a>
           </li>
-          {% endif %}
-          {% if is_professional %}
-          <li class="nav-item">
-            <a class="nav-link d-flex align-items-center {% if '/bookings/' in request.path %}active{% endif %}"
-              href="{% url 'users:professional_dashboard' %}">
-              <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-            </a>
-          </li>
-{% endif %}
+          {% comment %} {% endif %} {% endcomment %}
+         
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center {% if '/profile/' in request.path %}active{% endif %}"
               href="{% url 'users:profile' %}">

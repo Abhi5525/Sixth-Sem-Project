@@ -16,7 +16,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from bookings.models import Booking
+from bookings.models import Booking, Payment
 
 
 @login_required
@@ -256,34 +256,31 @@ def profile(request):
 def prof_dashboard(request):
     pro = get_object_or_404(ManpowerProfile, user=request.user)
     
-    # CORRECT way to import datetime
-
+    # ✅ Use timezone.now() instead of datetime.now()
+    now_utc = timezone.now()  # Timezone-aware UTC datetime
     
-    now = datetime.now()  # NOT datetime.datetime.now()
-    today_date = date.today()  # Or now.date()
     
-    # 1. TODAY'S BOOKINGS: Bookings happening TODAY (date matches today)
+    # 1. TODAY'S BOOKINGS: Bookings happening TODAY in UTC
     today_bookings = pro.professional_bookings.filter(
-        booking_time__date=today_date,
+        booking_time__date=now_utc.date(),  # Compare UTC dates
         status__in=["upcoming", "ongoing"]
     ).order_by('booking_time')
     
-    # 2. UPCOMING BOOKINGS: Bookings in the FUTURE (after right now)
+    # 2. UPCOMING BOOKINGS: Bookings in the FUTURE (UTC comparison)
     upcoming_bookings = pro.professional_bookings.filter(
-        booking_time__gt=now,  # Strictly after current moment
+        booking_time__gt=now_utc,  # Compare UTC datetime with UTC
         status__in=["upcoming", "ongoing"]
     ).order_by('booking_time')
     
-    # 3. HISTORY: Completed bookings OR past bookings (before now)
+    # 3. HISTORY: Past bookings (before now in UTC)
     history = pro.professional_bookings.filter(
-        booking_time__lt=now
+        booking_time__lt=now_utc  # Compare UTC datetime with UTC
     ).exclude(
-        booking_time__date=today_date,
+        booking_time__date=now_utc.date(),  # Exclude today's bookings,
         status__in=["upcoming", "ongoing"]
     ).order_by('-booking_time')
     
     reviews = pro.reviews_received.all()
-     # Calculate accurate statistics
     total_reviews = reviews.count()
     
     # Calculate average rating
@@ -293,16 +290,29 @@ def prof_dashboard(request):
     else:
         avg_rating = 0
     
-    # Calculate accurate rating breakdown (1-5 stars)
+    # Calculate rating breakdown
     rating_breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
     for r in reviews:
-        rating = int(r.rating)  # Assuming rating is integer 1-5
+        rating = int(r.rating)
         if rating in rating_breakdown:
             rating_breakdown[rating] += 1
     
     # Get latest review
     latest_review = reviews.order_by('-created_at').first()
     
+    for booking in list(today_bookings) + list(upcoming_bookings) + list(history):
+        if booking.booking_time < now_utc:
+            booking.status = 'completed'
+        else:
+            booking.status = 'upcoming'
+
+      # Payment info
+        try:
+            booking.payment
+        except Payment.DoesNotExist:
+            booking.payment = None
+        
+        booking.remaining_balance = booking.total_fee - booking.deposit_amount
     context = {
         "pro": pro,
         "today_bookings": today_bookings,
@@ -313,13 +323,11 @@ def prof_dashboard(request):
         "rating_breakdown": rating_breakdown,
         "total_reviews": total_reviews,
         "latest_review": latest_review,
+       
     }
     
-    print(f"DEBUG - Rating breakdown: {rating_breakdown}")
-    print(f"DEBUG - Total reviews: {total_reviews}")
-    
     return render(request, "users/professional_dashboard.html", context)
-@login_required
+
 def view_booking_route(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     pro = booking.professional

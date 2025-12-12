@@ -1,221 +1,451 @@
-{% extends 'users/base.html' %}
-{% block title %}Professional Signup{% endblock %}
+{% comment %} {% extends 'users/base.html' %} {% endcomment %}
+{% comment %} {% block title %}Professional Signup{% endblock %} {% endcomment %}
 {% block content %}
 {% load static %}
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-    /* General Styles */
+    :root {
+        --primary-blue: #4a6cf7;
+        --primary-blue-dark: #3a56d4;
+        --primary-blue-light: #6a8cff;
+        --primary-blue-soft: #e8edff;
+        --secondary-blue: #5d7bf9;
+        --accent-blue: #7a9cff;
+        --text-dark: #2d3748;
+        --text-light: #718096;
+        --bg-light: #f8fafc;
+        --white: #ffffff;
+        --border-light: #e2e8f0;
+        --shadow-soft: 0 4px 20px rgba(74, 108, 247, 0.08);
+        --shadow-medium: 0 8px 30px rgba(74, 108, 247, 0.12);
+        --gradient-primary: linear-gradient(135deg, #4a6cf7 0%, #6a8cff 100%);
+        --gradient-light: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f8f9fa;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: var(--gradient-light);
+        color: var(--text-dark);
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 2rem 0;
     }
 
-    /* Container Layout */
-    .container-fluid {
+    .signup-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .main-container {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-medium);
         overflow: hidden;
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        min-height: 600px;
     }
 
-    /* Left Section - Background Image */
-    .left-section {
-        background: linear-gradient(135deg, #6e8efb, #a777e3);
-        color: white;
-        background-size: cover;
+    /* Left Sidebar */
+    .info-sidebar {
+        background: var(--gradient-primary);
+        color: var(--white);
+        padding: 2.5rem 2rem;
         position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
-    .left-section::before {
+    .info-sidebar::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
     }
 
-    .left-content {
+    .logo-section {
+        text-align: center;
+        margin-bottom: 2rem;
         position: relative;
         z-index: 1;
-        padding: 2rem;
     }
 
-    .left-section h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
+    .logo-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        color: var(--white);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .left-section p {
-        font-size: 1.1rem;
-        line-height: 1.6;
+    .info-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .info-subtitle {
+        font-size: 1rem;
         opacity: 0.9;
+        line-height: 1.5;
     }
 
-    /* Right Section - Form */
-    .right-section {
+    .features-list {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.25rem;
+        position: relative;
+        z-index: 1;
+        margin-top: 2rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: var(--transition);
+    }
+
+    .feature-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
+    }
+
+    .feature-icon-wrapper {
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
-        background-color: #ffffff;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-sm);
+        font-size: 1.4rem;
+        flex-shrink: 0;
     }
 
-    /* Form Container */
-    .form-container {
-        background-color: #ffffff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        width: 100%;
-        max-width: 500px;
+    .feature-text {
+        font-size: 0.95rem;
+        font-weight: 500;
     }
 
-    .form-container h2 {
-        font-size: 1.75rem;
-        margin-bottom: 1.25rem;
-        color: #343a40;
+    /* Form Section */
+    .form-section {
+        padding: 2.5rem 3rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 1.9rem;
+        color: var(--text-dark);
         font-weight: 700;
-        text-align: center;
+        margin-bottom: 0.5rem;
     }
 
-    /* Form Elements - Compact Version */
+    .form-subtitle {
+        color: var(--text-light);
+        font-size: 0.95rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.span-2 {
+        grid-column: span 2;
+    }
+
+    .form-group.span-3 {
+        grid-column: span 3;
+    }
+
     .form-label {
         font-weight: 600;
-        font-size: 0.9rem;
-        color: #495057;
-        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-label i {
+        margin-right: 0.5rem;
+        color: var(--primary-blue);
+        font-size: 0.8rem;
     }
 
     .form-control {
-        border-radius: 6px;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.95rem;
-        border: 1px solid #e1e5ee;
-        transition: all 0.3s ease;
-        height: calc(1.5em + 0.75rem + 2px);
-        /* Reduced height */
+        border-radius: var(--radius-sm);
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+        border: 1px solid var(--border-light);
+        transition: var(--transition);
+        background-color: var(--bg-light);
+        width: 100%;
     }
 
     .form-control:focus {
-        border-color: #6e8efb;
-        box-shadow: 0 0 0 0.2rem rgba(110, 142, 251, 0.25);
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+        background-color: var(--white);
     }
 
-    /* Error Styling */
-    .text-danger {
-        font-size: 0.8rem;
-        color: #dc3545;
-        margin-top: 0.2rem;
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a6cf7' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 12px;
+        padding-right: 2.5rem;
     }
 
-    /* Button Styling */
-    .btn-primary {
-        background-color: #6e8efb;
-        border-color: #6e8efb;
-        padding: 0.6rem 1.25rem;
+    textarea.form-control {
+        resize: none;
+        min-height: 30px;
+    }
+
+    .file-input-container {
+        position: relative;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 0.7rem 1rem;
+        transition: var(--transition);
+    }
+
+    .file-input-label:hover {
+        background: var(--primary-blue-soft);
+        border-color: var(--primary-blue);
+    }
+
+    .file-input-text {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .file-input-icon {
+        color: var(--primary-blue);
         font-size: 0.95rem;
-        border-radius: 6px;
+        margin-left: 0.5rem;
+    }
+
+    .file-input-label input[type="file"] {
+        display: none;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .submit-btn {
+        flex: 1;
+        background: var(--gradient-primary);
+        border: none;
+        padding: 0.9rem 1.5rem;
+        font-size: 1rem;
+        border-radius: var(--radius-sm);
         font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        width: 100%;
-        margin-top: 0.5rem;
+        color: var(--white);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
-    .btn-primary:hover {
-        background-color: #5a7df4;
-        border-color: #5a7df4;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(110, 142, 251, 0.3);
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(74, 108, 247, 0.3);
     }
 
-    /* Link Styling */
-    .text-link {
-        color: #6e8efb;
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .back-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.9rem;
-        text-align: center;
+        font-size: 0.95rem;
+        padding: 0.9rem 1.5rem;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        background-color: var(--primary-blue-soft);
+    }
+
+    .back-link:hover {
+        background-color: var(--primary-blue);
+        color: var(--white);
+        text-decoration: none;
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    .error-text {
+        font-size: 0.8rem;
+        color: #f56565;
+        margin-top: 0.25rem;
         display: flex;
-        margin-left: 100px;
-        padding-left: 80px;
-        padding-top: 20px;
+        align-items: center;
+        gap: 0.25rem;
     }
 
-    .text-link:hover {
-        color: #5a7df4;
-        text-decoration: underline;
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .form-group.span-3 {
+            grid-column: span 2;
+        }
     }
 
-    .bottom-text {
-        text-align: center;
-        margin-top: 1.25rem;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-
-    /* Form Group Spacing */
-    .mb-3 {
-        margin-bottom: 1rem !important;
-        /* Reduced from 1.5rem */
-    }
-
-    /* File Input Customization */
-    .form-control[type="file"] {
-        padding: 0.35rem;
-    }
-
-    /* Responsive Layout */
     @media (max-width: 992px) {
-
-        .left-section,
-        .right-section {
-            min-height: auto;
-            padding: 2rem 1.25rem;
+        .main-container {
+            grid-template-columns: 1fr;
         }
-
-        .left-section {
-            order: 2;
+        
+        .info-sidebar {
+            padding: 2rem;
         }
-
-        .right-section {
-            order: 1;
+        
+        .form-section {
+            padding: 2rem;
+        }
+        
+        .features-list {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        
+        .feature-item {
+            flex: 1;
+            min-width: 200px;
         }
     }
 
     @media (max-width: 768px) {
-        .form-container {
+        .signup-wrapper {
+            padding: 0 1rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-group.span-2,
+        .form-group.span-3 {
+            grid-column: span 1;
+        }
+        
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+        
+        .info-title {
+            font-size: 1.6rem;
+        }
+        
+        .features-list {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            border-radius: var(--radius-md);
+        }
+        
+        .info-sidebar,
+        .form-section {
             padding: 1.5rem;
         }
+    }
 
-        .form-container h2 {
-            font-size: 1.5rem;
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 
-    @media (max-width: 576px) {
-        .form-container {
-            padding: 1.25rem;
-        }
-
-        .form-control {
-            padding: 0.45rem 0.65rem;
-            font-size: 0.9rem;
-        }
+    .form-section {
+        animation: fadeIn 0.6s ease-out;
     }
 </style>
-<script>
 
+<script>
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
             document.getElementById('latitude').value = pos.coords.latitude;
             document.getElementById('longitude').value = pos.coords.longitude;
         });
     }
+    
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -230,152 +460,248 @@
         }
         return cookieValue;
     }
+    
     const csrftoken = getCookie('csrftoken');
-
+    
     document.addEventListener('DOMContentLoaded', function () {
         const selectedProvince = document.getElementById('province');
         const selectedDistrict = document.getElementById('district');
         const selectedMunicipality = document.getElementById('municipality');
         const selectedWard = document.getElementById('ward');
-
-        // Populate province dropdown via AJAX
-        fetch('/users/provinces/', { // New endpoint to get province names
+        
+        function setLoading(element, isLoading) {
+            if (isLoading) {
+                element.disabled = true;
+                element.innerHTML = '<option value="">Loading...</option>';
+            } else {
+                element.disabled = false;
+            }
+        }
+        
+        // Initialize province dropdown
+        setLoading(selectedProvince, true);
+        fetch('/users/provinces/', {
             method: 'GET',
             headers: { 'X-CSRFToken': csrftoken }
         })
-            .then(res => {
-                if (!res.ok) throw new Error('Network response was not ok');
-                return res.json();
-            })
-            .then(data => {
-                selectedProvince.innerHTML = '<option value="">--- Select Province ---</option>';
-                data.provinces.forEach(p => {
-                    selectedProvince.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                });
-            })
-            .catch(error => console.error('Error:', error));
-
+        .then(res => res.json())
+        .then(data => {
+            setLoading(selectedProvince, false);
+            selectedProvince.innerHTML = '<option value="">--- Select Province ---</option>';
+            data.provinces.forEach(p => {
+                selectedProvince.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            selectedProvince.innerHTML = '<option value="">Error loading</option>';
+        });
+        
         selectedProvince.addEventListener('change', function () {
             const provinceName = this.value;
+            if (!provinceName) return;
+            
+            setLoading(selectedDistrict, true);
             fetch(`/users/district/?province_name=${encodeURIComponent(provinceName)}`, {
                 method: 'GET',
                 headers: { 'X-CSRFToken': csrftoken }
             })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json();
-                })
-                .then(data => {
-                    console.log('Districts data:', data);
-                    selectedDistrict.innerHTML = '<option value="">Select District</option>';
-                    selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                    selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                    data.districts.forEach(d => {
-                        selectedDistrict.innerHTML += `<option value="${d.name}">${d.name}</option>`;
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+            .then(res => res.json())
+            .then(data => {
+                setLoading(selectedDistrict, false);
+                selectedDistrict.innerHTML = '<option value="">Select District</option>';
+                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
+                selectedWard.innerHTML = '<option value="">Select Ward</option>';
+                data.districts.forEach(d => {
+                    selectedDistrict.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                selectedDistrict.innerHTML = '<option value="">Error loading</option>';
+            });
         });
-
+        
         selectedDistrict.addEventListener('change', function () {
             const districtName = this.value;
+            if (!districtName) return;
+            
+            setLoading(selectedMunicipality, true);
             fetch(`/users/municipality/?district_name=${encodeURIComponent(districtName)}`, {
                 method: 'GET',
                 headers: { 'X-CSRFToken': csrftoken }
             })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json();
-                })
-                .then(data => {
-                    console.log('Municipality data:', data);
-                    selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                    selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                    data.municipality.forEach(m => {
-                        selectedMunicipality.innerHTML += `<option value="${m.name}">${m.name}</option>`;
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+            .then(res => res.json())
+            .then(data => {
+                setLoading(selectedMunicipality, false);
+                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
+                selectedWard.innerHTML = '<option value="">Select Ward</option>';
+                data.municipality.forEach(m => {
+                    selectedMunicipality.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                selectedMunicipality.innerHTML = '<option value="">Error loading</option>';
+            });
         });
-
+        
         selectedMunicipality.addEventListener('change', function () {
             const municipalityName = this.value;
+            if (!municipalityName) return;
+            
+            setLoading(selectedWard, true);
             fetch(`/users/ward/?municipality_name=${encodeURIComponent(municipalityName)}`, {
                 method: 'GET',
                 headers: { 'X-CSRFToken': csrftoken }
             })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json();
-                })
-                .then(data => {
-                    console.log('Wards data:', data);
-                    selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                    data.wards.forEach(w => {
-                        selectedWard.innerHTML += `<option value="${w}">${w}</option>`;
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+            .then(res => res.json())
+            .then(data => {
+                setLoading(selectedWard, false);
+                selectedWard.innerHTML = '<option value="">Select Ward</option>';
+                data.wards.forEach(w => {
+                    selectedWard.innerHTML += `<option value="${w}">${w}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                selectedWard.innerHTML = '<option value="">Error loading</option>';
+            });
+        });
+        
+        // File input preview
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            const container = input.closest('.file-input-container');
+            if (container) {
+                const textSpan = container.querySelector('.file-input-text');
+                input.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        textSpan.textContent = this.files[0].name;
+                        textSpan.style.color = 'var(--primary-blue)';
+                    } else {
+                        textSpan.textContent = 'Choose file...';
+                        textSpan.style.color = 'var(--text-light)';
+                    }
+                });
+            }
         });
     });
 </script>
 
-<div class="container-fluid p-0">
-    <div class="row g-0 min-vh-100">
-        <!-- Left Section -->
-        <div class="col-lg-6 left-section d-flex align-items-center justify-content-center p-5">
-            <div class="left-content">
-                <h1>Join Our Professional Network</h1>
-                <p>Connect with clients, showcase your skills, and grow your business. Sign up today to access exclusive
-                    features designed for professionals like you.</p>
-                <ul class="mt-4" style="list-style-type: none; padding-left: 0;">
-                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Build your professional profile</li>
-                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Get discovered by potential clients</li>
-                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Manage your appointments</li>
-                    <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Receive secure payments</li>
-                </ul>
+<div class="signup-wrapper">
+    <div class="main-container">
+        <!-- Left Sidebar -->
+        <div class="info-sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h1 class="info-title">Join Our Professional Network</h1>
+                <p class="info-subtitle">Connect with clients who need your expertise</p>
+            </div>
+            
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="feature-text">Showcase your skills & experience</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-text">Connect with local clients</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="feature-text">Easy booking management</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-text">Secure payments & protection</div>
+                </div>
             </div>
         </div>
-
-        <!-- Right Section -->
-        <div class="col-lg-6 right-section">
-            <div class="form-container">
-                <h2>Professional Sign Up</h2>
-
-                <!-- Professional Signup Form -->
-                <div class="form-section">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-
-                            {% if field.errors %}
-                            <span class="text-danger d-block mt-1">{{ field.errors|join:", " }}</span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                        <input type="hidden" id="latitude" name="latitude">
-                        <input type="hidden" id="longitude" name="longitude">
-
-                        <button type="submit" class="btn btn-primary">Register as a professional</button>
-                    </form>
-                </div>
-
-
-
-                <!-- <button type="button" class="btn-back"> -->
-                <a href="{% url 'home_module:home' %}" class="text-link">Back To Home </a>
-                <!-- </button> -->
+        
+        <!-- Form Section -->
+        <div class="form-section">
+            <div class="form-header">
+                <h2 class="form-title">Create Professional Account</h2>
+                <p class="form-subtitle">Fill in your details to get started</p>
             </div>
+            
+            <form method="post" enctype="multipart/form-data" id="signupForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    {% for field in form %}
+                    <div class="form-group {% if field.name in 'full_name,phone_number,email,skill,experience_years,rate,province,district,municipality,ward,profile_picture' %}{% elif field.name == 'id_proof' %}span-2{% elif field.name == 'bio' %}span-3{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {% if field.name == 'full_name' %}<i class="fas fa-user"></i>
+                            {% elif field.name == 'phone_number' %}<i class="fas fa-phone"></i>
+                            {% elif field.name == 'email' %}<i class="fas fa-envelope"></i>
+                            {% elif field.name == 'skill' %}<i class="fas fa-tools"></i>
+                            {% elif field.name == 'experience_years' %}<i class="fas fa-briefcase"></i>
+                            {% elif field.name == 'rate' %}<i class="fas fa-dollar-sign"></i>
+                            {% elif field.name == 'bio' %}<i class="fas fa-file-alt"></i>
+                            {% elif field.name == 'id_proof' %}<i class="fas fa-id-card"></i>
+                            {% elif field.name == 'profile_picture' %}<i class="fas fa-camera"></i>
+                            {% elif field.name == 'province' %}<i class="fas fa-map-marker-alt"></i>
+                            {% elif field.name == 'district' %}<i class="fas fa-map"></i>
+                            {% elif field.name == 'municipality' %}<i class="fas fa-building"></i>
+                            {% elif field.name == 'ward' %}<i class="fas fa-home"></i>
+                            {% else %}<i class="fas fa-edit"></i>
+                            {% endif %}
+                            {{ field.label }}
+                        </label>
+                        
+                        {% if field.field.widget.input_type == 'file' %}
+                        <div class="file-input-container">
+                            <label class="file-input-label">
+                                <span class="file-input-text">Choose file...</span>
+                                <i class="fas fa-upload file-input-icon"></i>
+                                {{ field }}
+                            </label>
+                        </div>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                        <div class="error-text">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ field.errors|join:", " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
+                
+                <div class="form-actions">
+                    <a href="{% url 'home_module:home' %}" class="back-link">
+                        <i class="fas fa-arrow-left"></i> Back to Homepage
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-user-plus"></i> Register Now
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Font Awesome for icons -->
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>

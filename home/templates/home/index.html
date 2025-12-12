@@ -453,20 +453,22 @@
             <p class="card-text">
               <i class="fas fa-star text-warning"></i> {{ manpower.average_rating|floatformat:1 }} ({{ manpower.total_reviews }} reviews)<br />
               <i class="fas fa-map-marker-alt"></i> 2 km away<br />
-                <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">रु {{manpower.rate}}</span> / hour
+                <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">Rs {{manpower.rate}}</span> / hour
 
          {% comment %} <div class = "card-body position-relative">        {% endcomment %}
-<span  class="availability badge position-absolute {% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
+<span  class="availability badge position-absolute ms-2{% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
       data-id="{{ manpower.id }}">
+      
     {% if manpower.is_available %}
-        <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Available
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i> 
     {% else %}
         <i class="fas fa-clock"style="margin-right: 8px;"></i> 
     {% endif %}
 </span>
 
 {% if not manpower.is_available %}
-<small class="d-block text-muted ">{{ manpower.availability_message }}</small>
+<small class="d-block text-muted">{{ manpower.availability_message }}</small>
+
 {% endif %}
 {% comment %} </div> {% endcomment %}
 
@@ -491,7 +493,7 @@
   </section>
 
   <!-- Bookings Section -->
-  <section id="bookings" class="mb-5">
+  {% comment %} <section id="bookings" class="mb-5">
     <h2 class="mb-4">Your Bookings</h2>
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item">
@@ -501,8 +503,8 @@
         <a class="nav-link" data-bs-toggle="tab" href="#past">Past</a>
       </li>
     </ul>
-    <div class="tab-content">
-      <div class="tab-pane fade show active" id="upcoming">
+    {% comment %} <div class="tab-content"> {% endcomment %}
+      {% comment %} <div class="tab-pane fade show active" id="upcoming">
         <div class="card booking-card mb-3">
           <div class="card-body">
             <h5 class="card-title">Plumbing Service</h5>
@@ -531,9 +533,11 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </div> {% endcomment %}
+  {% comment %} </section> {% endcomment %}
   <!-- Register as a Professional Section -->
+
+  {% if not is_professional%}
   <section id="register-professional" class="mb-5">
     <h2 class="mb-4">Register Yourself as a Professional</h2>
     <div class="card">
@@ -551,6 +555,7 @@
       </div>
     </div>
   </section>
+  {% endif %}
   <!-- Map Modal -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -670,31 +675,52 @@
 {% endblock %} {% block scripts %}
 
 <script>
-
-        
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/availability/')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(pro => {
-                const element = document.querySelector(`.availability[data-id='${pro.id}']`);
-                if (element) {
-                  if (pro.is_available) {
-    // Green badge with check icon
-    element.innerHTML = `<i class="fas fa-check-circle"></i> Available`;
-    element.className = 'availability badge bg-success '; // Changed mt-1 to mt-2, removed ms-2
-} else {
-    // Yellow badge with clock icon
-    element.innerHTML = `<i class="fas fa-clock me-1"></i>${pro.message}`;
-    element.className = 'availability badge bg-warning '; // Changed mt-1 to mt-2, removed ms-2
-}
-                }
-            });
-        })
-        .catch(error => console.error('Error fetching availability:', error));
+    function updateAvailability() {
+        fetch('/api/availability/')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(pro => {
+                    const element = document.querySelector(`.availability[data-id='${pro.id}']`);
+                    if (element) {
+                        if (pro.is_available) {
+                            // Green badge for available
+                            element.innerHTML = `<i class="fas fa-check-circle me-1"></i> Available`;
+                            element.className = 'availability badge bg-success ps-2';
+                            
+                            // Hide the message if it exists
+                            const messageElement = element.nextElementSibling;
+                            if (messageElement && messageElement.classList.contains('text-muted')) {
+                                messageElement.style.display = 'none';
+                            }
+                        } else {
+                            // Yellow badge for busy
+                            element.innerHTML = `<i class="fas fa-clock me-1"></i> Busy`;
+                            element.className = 'availability badge bg-warning ps-2';
+                            
+                            // Show/update the message
+                            let messageElement = element.nextElementSibling;
+                            if (!messageElement || !messageElement.classList.contains('text-muted')) {
+                                // Create message element if it doesn't exist
+                                messageElement = document.createElement('small');
+                                messageElement.className = 'd-block text-warning fw-semibold mt-1';
+                                element.parentNode.insertBefore(messageElement, element.nextSibling);
+                            }
+                            messageElement.textContent = pro.message;
+                            messageElement.style.display = 'block';
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching availability:', error));
+    }
+    
+    // Update immediately
+    updateAvailability();
+    
+    // Update every minute (for countdown)
+    setInterval(updateAvailability, 60000);
 });
-
-
   let selectedProfessionalId = null;
 
 

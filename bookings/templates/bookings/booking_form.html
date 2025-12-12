@@ -17,11 +17,12 @@
             </div>
 
             <div class="form-group icon-input">
-                <input type="date" id="date" name="date" class="form-control" placeholder=" " required>
-                <label for="date" class="form-label">Booking Date</label>
-                <i class="bi bi-calendar"></i>
-            </div>
-
+    <input type="date" id="date" name="date" class="form-control" 
+           placeholder=" " required 
+           min="{{ today|date:'Y-m-d' }}">
+    <label for="date" class="form-label">Booking Date</label>
+    <i class="bi bi-calendar"></i>
+</div>
             <div class="form-group icon-input">
                 <input type="time" id="time" name="time" class="form-control" placeholder=" " required>
                 <label for="time" class="form-label">Booking Time</label>
@@ -34,7 +35,8 @@
                 <label for="durationHours" class="form-label">Duration (Hours)</label>
                 <i class="bi bi-hourglass-split"></i>
             </div>
-            
+            <!-- In your HTML template -->
+<input type="hidden" id="professional_id" value="{{ professional.id }}">
             <button type="submit" class="btn-primary">Confirm Booking</button>
         </form>
     </div>
@@ -43,6 +45,7 @@
 <script>
 const lat = localStorage.getItem("userLat");
 const lng = localStorage.getItem("userLng");
+ const professionalId = document.getElementById("professional_id").value;
 let userLatitude = lat ? parseFloat(lat) : null;
 let userLongitude = lng ? parseFloat(lng) : null;
 // Handle form submit
@@ -56,6 +59,7 @@ function submitBooking() {
     const date = document.getElementById("date").value;
     const time = document.getElementById("time").value;
     const durationHours = document.getElementById("durationHours").value;
+    const professionalId = document.getElementById("professional_id").value;
 
     if (!userLatitude || !userLongitude) {
         alert("Waiting for your location...");
@@ -63,7 +67,18 @@ function submitBooking() {
     }
 
     // Combine date and time into ISO datetime
-    const bookingTime = `${date}T${time}:00`;
+    const localDate = new Date(`${date}T${time}:00`);
+    const bookingTime = localDate.toISOString();
+    
+    // Client-side validation: Check if booking is at least 1 hour from now
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + (60 * 60 * 1000)); // Add 1 hour
+    
+    if (localDate < oneHourFromNow) {
+        const minTime = oneHourFromNow.toLocaleString();
+        alert(`Bookings must be made at least 1 hour in advance.\nEarliest available time is: ${minTime}`);
+        return;
+    }
 
     fetch(window.location.href, {
         method: "POST",
@@ -73,6 +88,7 @@ function submitBooking() {
         },
         body: JSON.stringify({
             name: name,
+            professional_id: professionalId,
             booking_time: bookingTime,
             duration_hours: durationHours,
             latitude: userLatitude,
@@ -81,6 +97,7 @@ function submitBooking() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log("Server response:", data);
         if (data.success) {
             alert("Booking successful! Redirecting to payment...");
             window.location.href = `/bookings/checkout/${data.booking_id}/`;
@@ -93,7 +110,6 @@ function submitBooking() {
         alert("Something went wrong. Try again.");
     });
 }
-
 // Helper for CSRF token
 function getCookie(name) {
     let cookieValue = null;

@@ -117,7 +117,7 @@
 }
 
 #logoutModal .btn-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(135deg, #388dd3ff, #5165c9ff);
     border: none;
     transition: all 0.3s;
 }
@@ -170,9 +170,14 @@
           <div class="d-flex flex-wrap mt-3">
             <button class="btn btn-primary btn-custom me-2 mb-2" data-bs-toggle="modal" data-bs-target="#updateProfileModal">Update Profile</button>
           
- <button class="btn {% if manpower_profile.is_available %}btn-danger{% else %}btn-success{% endif %} btn-custom mb-2 ml-2 toggle-availability-btn" data-id="{{ manpower_profile.id }}">
+ <button class="btn {% if manpower_profile.is_available %}btn-danger{% else %}btn-success{% endif %} btn-custom mb-2 ml-2 me-2 toggle-availability-btn" data-id="{{ manpower_profile.id }}">
               {% if manpower_profile.is_available %}Set Unavailable{% else %}Set Available{% endif %}
             </button>
+
+           
+            <a href="{% url 'users:professional_dashboard' %}"><button class="btn btn-primary btn-custom me-2 mb-2">
+              <i class="fas fa-tachometer-alt me-2"></i> Dashboard</button></a>
+          
           </div>
         </div>
       </div>
@@ -248,7 +253,7 @@
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #3c86e7ff, #2b8cc0ff); color: white;">
                 <h5 class="modal-title">
                     <i class="fas fa-sign-out-alt me-2"></i>Confirm Logout
                 </h5>

@@ -5,8 +5,6 @@ import hmac
 import hashlib
 import logging
 from decimal import Decimal
-import requests
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -26,10 +24,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def booking_form(request, professional_id):
-    
     professional = get_object_or_404(ManpowerProfile, id=professional_id)
-
-    # Defaults if professional location is not set
     prof_lat = professional.latitude or 27.7
     prof_lng = professional.longitude or 85.3
 
@@ -43,7 +38,27 @@ def booking_form(request, professional_id):
             booking_time = parse_datetime(booking_time_str)
             if booking_time is None:
                 return JsonResponse({'success': False, 'error': 'Invalid booking time format'}, status=400)
-
+            
+            # Make timezone-aware UTC
+            if not timezone.is_aware(booking_time):
+                booking_time = timezone.make_aware(booking_time, timezone=timezone.utc)
+            
+            # ====== ADD THIS CHECK ======
+            # Check if booking is at least 1 hour from now
+            now_utc = timezone.now()
+            min_booking_time = now_utc + timedelta(hours=1)
+            
+            if booking_time < min_booking_time:
+                # Convert to user's local time for error message
+                user_tz = timezone.get_current_timezone()
+                local_min_time = timezone.localtime(min_booking_time, user_tz)
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Bookings must be made at least 1 hour in advance. '
+                            f'Earliest available time is {local_min_time.strftime("%Y-%m-%d %I:%M %p")}'
+                }, status=400)
+            # ====== END CHECK ======
+            
             # Parse duration
             duration_hours_raw = data.get('duration_hours') or 1
             duration_hours = float(duration_hours_raw)
@@ -53,7 +68,21 @@ def booking_form(request, professional_id):
 
             # Calculate end time
             end_time = booking_time + timedelta(hours=duration_hours)
+            
+            # Check for overlapping bookings (extra validation)
+            overlapping = Booking.objects.filter(
+                professional=professional,
+                booking_time__lt=end_time,
+                end_time__gt=booking_time
+            ).exists()
+            
+            if overlapping:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This professional is already booked for the selected time slot.'
+                }, status=400)
 
+            # ... rest of your code ...
             user_lat_raw = data.get('latitude')
             user_lng_raw = data.get('longitude')
 
@@ -99,6 +128,7 @@ def booking_form(request, professional_id):
         'prof_lat': prof_lat,
         'prof_lng': prof_lng
     })
+
 
 
 
@@ -228,42 +258,46 @@ def esewa_callback(request):
 def payment_failed(request):
     return render(request, 'bookings/payment_failed.html')
 
-
-# Create your views here.
 def bookings(request):
     user = request.user
-    now = timezone.now()
+    now_utc = timezone.now()  # This is in UTC when USE_TZ=True
 
-    # Upcoming bookings
+    # Upcoming bookings - filter in UTC
     upcoming_bookings = Booking.objects.filter(
         client=user,
-        booking_time__gte=now
+        booking_time__gte=now_utc
     ).select_related('professional__user').order_by('booking_time')
 
-    # Past bookings
+    # Past bookings - filter in UTC
     past_bookings = Booking.objects.filter(
         client=user,
-        booking_time__lt=now
+        booking_time__lt=now_utc
     ).select_related('professional__user').order_by('-booking_time')
-
-    # Attach payment and remaining balance
+    
+    # Process bookings - NO local time conversion here
     for booking in list(upcoming_bookings) + list(past_bookings):
+        # Determine status based on UTC comparison
+        if booking.booking_time < now_utc:  # Compare UTC with UTC
+            booking.status = 'completed'
+        else:
+            booking.status = 'upcoming'
+        
+        # Attach payment information
         try:
             booking.payment
         except Payment.DoesNotExist:
             booking.payment = None
 
-        # Remaining balance calculation (total minus deposit)
+        # Remaining balance calculation
         booking.remaining_balance = booking.total_fee - booking.deposit_amount
-
-        if booking.booking_time < now:
-            booking.status = 'completed'  # adjust if you have real status field
-        print("past booking:", booking.id, booking.booking_time, booking.status)
+        
+        print(f"Booking ID: {booking.id}, "
+              f"UTC Time: {booking.booking_time}, "
+              f"Status: {booking.status}")
 
     return render(request, 'bookings/bookings.html', {
         'upcoming_bookings': upcoming_bookings,
-        'past_bookings': past_bookings
+        'past_bookings': past_bookings,
     })
-
 def payment_Success(request):
     return render(request, 'bookings/payment_success.html')
