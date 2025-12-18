@@ -1,8 +1,8 @@
 
 import json
 from django.shortcuts import get_object_or_404, render
-from bookings.models import Booking
-from users.models import ManpowerProfile, CustomUser
+from bookings.models import Booking,RatingReview
+from users.models import ManpowerProfile
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ManpowerSerializer
@@ -11,27 +11,98 @@ from django.utils import timezone
 from django.conf import settings
 from django.http import JsonResponse   
 from django.contrib import messages
-# Create your views here.
 from django.db.models import Q
-from bookings.models import RatingReview
+from geopy.distance import great_circle
 
+
+def save_user_location(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        request.session['userLat'] = data.get("latitude")
+        request.session['userLng'] = data.get("longitude")
+        return JsonResponse({
+            'success': True,
+            'lat': request.session['userLat'],
+            'lng': request.session['userLng']})
 def home(request):
     query = request.GET.get('searchInput')
+
+    # First, check if user location exists in session
+    user_lat = request.session.get("userLat")
+    user_lon = request.session.get("userLng")
+    
+    # Debug print to see what's in session
+    print("User Location from session:", user_lat, user_lon)
+    
+    manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True)
+    print("Initial Manpower QuerySet count:", manpower_qs.count())
     
     if query:
-        manpower_list = ManpowerProfile.objects.select_related('user').filter(
-            Q(skill__icontains=query) | Q(user__full_name__icontains=query),
-            is_available=True
+        manpower_qs = manpower_qs.filter(
+            Q(skill__icontains=query) | Q(user__full_name__icontains=query)
         )
-        if not manpower_list.exists():
-            messages.info(request, "No professionals found matching your search criteria.")
-    else:
-        manpower_list = ManpowerProfile.objects.filter(is_available=True).select_related('user')
-        
+        print(f"After query filter: {manpower_qs.count()} results")
+    
+    # Check if we have user location for distance calculation
+    if user_lat and user_lon:
+        try:
+            user_lat = float(user_lat)
+            user_lon = float(user_lon)
+            print(f"Using user location for distance calculation: {user_lat}, {user_lon}")
+            
+            manpower_within_distance = []
+            
+            for manpower in manpower_qs:
+                if manpower.latitude and manpower.longitude:
+                    # Debug each professional's location
+                    print(f"Professional {manpower.user.full_name}: lat={manpower.latitude}, lon={manpower.longitude}")
+                    
+                    distance = great_circle(
+                        (user_lat, user_lon), 
+                        (float(manpower.latitude), float(manpower.longitude))
+                    ).km
+                    
+                    print(f"Distance to {manpower.user.full_name}: {distance} km")
+                    
+                    manpower.distance = distance
+                    manpower_within_distance.append(manpower)
+                else:
+                    print(f"Professional {manpower.user.full_name} has no location data")
+                    manpower.distance = float('inf')
+                    manpower_within_distance.append(manpower)
+            
+            # Sort by distance
+            manpower_within_distance.sort(key=lambda x: x.distance)
+            
+            # Check if nearest is beyond 10km
+            if manpower_within_distance and manpower_within_distance[0].distance > 10:
+                messages.info(request, "Here's the closest professionals to your location beyond 10 km.")
+                # You might want to show them anyway but with a message
+                # Or filter: manpower_within_distance = [m for m in manpower_within_distance if m.distance <= 10]
+            
+            # Check if no results at all
+            if not manpower_within_distance:
+                messages.info(request, "No professionals found matching your search criteria.")
+            
+            return render(request, 'home/index.html', {
+                'manpower_list': manpower_within_distance,
+                'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False),
+                'user_has_location': True
+            })
+            
+        except (ValueError, TypeError) as e:
+            print(f"Error converting location data: {e}")
+            # Fall through to non-location based display
+    
+    # If no location or error, show without distance sorting
+    print("Showing results without distance calculation")
+    if query and not manpower_qs.exists():
+        messages.info(request, "No professionals found matching your search criteria.")
+    
     return render(request, 'home/index.html', {
-        'ManpowerList': manpower_list,
-        'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False)
- 
+        'manpower_list': manpower_qs,
+        'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False),
+        'user_has_location': False
     })
 
 

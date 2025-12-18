@@ -299,5 +299,8 @@ def bookings(request):
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
     })
+
+
+
 def payment_Success(request):
     return render(request, 'bookings/payment_success.html')

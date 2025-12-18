@@ -14,11 +14,9 @@ urlpatterns = [
    path('review/<int:professional_id>/', views.submit_review, name='submit_review'),
     path('review-page/<int:professional_id>/', views.review_page, name='review_page'),
     path('api/availability/', views.professional_availability, name='professional_availability'),
+    path('save-user-location/', views.save_user_location, name='save_user_location'),
 
 
-    # path('professionals', views.professionals_list, name = "professionals_List")
-    # path('bookings/', views.bookings, name = 'bookings'),
-    # path('profile/', views.profile, name = 'profile'),
 
 
 ]
