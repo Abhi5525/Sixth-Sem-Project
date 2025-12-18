@@ -16,7 +16,8 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from bookings.models import Booking, Payment
+from django.views.decorators.http import require_POST
+from bookings.models import Booking, Payment    
 
 
 @login_required
@@ -349,22 +350,61 @@ def view_booking_route(request, booking_id):
         'cus_lat': booking.user_latitude or 0,
         'cus_lng': booking.user_longitude or 0,
     }
+  
+  
     return render(request, 'users/view_route.html', context)
 
 
+
 @login_required
-def mark_completed(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
-
-    booking.status = "completed"
-    booking.save()
-
-    # Make professional available
-    pro = booking.professional
-    pro.is_available = True
-    pro.save()
-
-    return JsonResponse({"success": True})
+@require_POST
+def mark_booking_completed(request, booking_id):
+    """Mark a booking as completed (set end_time = now, status = completed)"""
+    try:
+        # Get the booking
+        booking = get_object_or_404(Booking, id=booking_id)
+        
+        # Verify this professional owns the booking
+        if booking.professional.user != request.user:
+            return JsonResponse({
+                'success': False, 
+                'message': 'You do not have permission to complete this booking'
+            }, status=403)
+        
+        # Check if booking can be completed
+        now_utc = timezone.now()
+        
+        # Allow completion if booking is upcoming or ongoing
+        if booking.status not in ['upcoming', 'ongoing']:
+            return JsonResponse({
+                'success': False, 
+                'message': f'Cannot complete a {booking.status} booking'
+            })
+        if booking.booking_time > now_utc:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot complete booking before its start time'
+            })
+    # Update the booking
+        booking.end_time = now_utc
+        booking.status = 'completed'
+        booking.save()
+        
+        # Optional: Create a completion record or log
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking marked as completed successfully',
+            'booking_id': booking.id,
+            'completed_time': now_utc.isoformat(),
+            'new_status': booking.status
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'Error: {str(e)}'
+        }, status=500)
 
 
 def terms_and_conditions(request):

@@ -412,7 +412,11 @@
 </div>
 </div>
 
-{% endblock %} {% block scripts %}
+{% endblock %} 
+{% block footer %}
+
+{% endblock %}
+{% block scripts %}
 
 <script>
 
@@ -665,51 +669,6 @@ function getCookie(name) {
     }
   }
 
-  // Search functionality
-  // function searchProfessionals() {
-  //   const query = document.getElementById("searchInput").value.toLowerCase();
-  //   filterAndDisplay(query);
-  // }
-
-  // Category filter toggle
-  // function setupCategoryFilters() {
-  //   document.querySelectorAll(".category-filter").forEach((button) => {
-  //     button.addEventListener("click", function () {
-  //       const category = this.getAttribute("data-category");
-  //       if (activeFilters.has(category)) {
-  //         activeFilters.delete(category);
-  //         this.classList.remove("btn-primary");
-  //         this.classList.add("btn-outline-primary");
-  //       } else {
-  //         activeFilters.add(category);
-  //         this.classList.remove("btn-outline-primary");
-  //         this.classList.add("btn-primary");
-  //       }
-  //       searchProfessionals();
-  //     });
-  //   });
-  // }
-
-  // // Filter and display professionals
-  // function filterAndDisplay(query = "") {
-  //   let filtered = professionals;
-  //   if (activeFilters.size > 0) {
-  //     filtered = filtered.filter((pro) => activeFilters.has(pro.trade));
-  //   }
-  //   if (query) {
-  //     filtered = filtered.filter(
-  //       (p) => p.name.toLowerCase().includes(query) || p.trade.toLowerCase().includes(query)
-  //     );
-  //   }
-  //   displayProfessionals(filtered);
-  // }
-
-  // Initial setup
-  // document.addEventListener("DOMContentLoaded", () => {
-  //   setupCategoryFilters();
-  //   filterAndDisplay();
-  //   document.getElementById("searchInput").addEventListener("input", searchProfessionals);
-  // });
 </script>
 
 {% endblock %}

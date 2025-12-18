@@ -28,7 +28,7 @@ urlpatterns = [
 
     path('professional/dashboard/', views.prof_dashboard, name='professional_dashboard'),
 path('booking/<int:booking_id>/view_booking_route/', views.view_booking_route, name='view_route'),
-path('booking/<int:booking_id>/mark_completed/', views.mark_completed, name='mark_completed'),
+path('booking/<int:booking_id>/mark_completed/', views.mark_booking_completed, name='mark_completed'),
 
 
     

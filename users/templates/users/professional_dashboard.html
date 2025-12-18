@@ -495,23 +495,77 @@
   })
   
   function markCompleted(id) {
-    if (confirm('Are you sure you want to mark this booking as completed?')) {
-      fetch(`/booking/${id}/mark_completed/`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            alert('Booking marked as completed!')
-            location.reload()
-          } else {
-            alert('Error: ' + data.message)
-          }
-        })
-        .catch((error) => {
-          console.error('Error:', error)
-          alert('An error occurred. Please try again.')
-        })
+    if (!confirm('Are you sure you want to mark this booking as completed?\n\nThis will: \n• End the booking immediately \n• Update status to "Completed" \n• Make you available for new bookings')) {
+        return;
     }
-  }
+    
+    // Get button element to show loading state
+    const button = event.target;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Completing...';
+    button.disabled = true;
+    
+    fetch(`/booking/${id}/mark_completed/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // Make sure you have this function
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Show success message with details
+            alert(`✅ Booking #${id} marked as completed!\n\nCompleted at: ${new Date(data.completed_time).toLocaleString()}`);
+            
+            // Option 1: Reload the page
+            location.reload();
+            
+            // Option 2: Update UI without reloading
+            // updateBookingCard(id, data.new_status);
+        } else {
+            alert('❌ ' + data.message);
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('⚠️ An error occurred. Please try again.');
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+    });
+}
+
+// Helper function to update booking card without reloading
+function updateBookingCard(bookingId, newStatus) {
+    const bookingCard = document.querySelector(`[data-booking-id="${bookingId}"]`);
+    if (!bookingCard) return;
+    
+    // Update status badge
+    const statusBadge = bookingCard.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = newStatus;
+        statusBadge.className = `status-badge badge bg-success`;
+    }
+    
+    // Remove the "Mark as Completed" button
+    const completeButton = bookingCard.querySelector('.mark-complete-btn');
+    if (completeButton) {
+        completeButton.remove();
+    }
+    
+    // Update end time display
+    const endTimeElement = bookingCard.querySelector('.end-time');
+    if (endTimeElement) {
+        endTimeElement.textContent = 'Completed just now';
+    }
+}
 </script>
 
 {% endblock %}
