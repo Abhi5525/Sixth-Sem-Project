@@ -200,3 +200,13 @@
     .was-validated .form-control:invalid ~ .invalid-feedback {
         display: block;
     }
+
+    
+     .toggle-password {
+            position: absolute;
+            top: 76%; /* vertically center relative to page or parent */
+            left: calc(50% + 165px); /* input left + half input width */
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+        }

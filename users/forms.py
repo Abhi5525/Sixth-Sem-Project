@@ -18,8 +18,8 @@ class UserSignupForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         if 'usable_password' in self.fields:
             self.fields.pop('usable_password')
-        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm Password'})
+        self.fields['password1'].widget.attrs.update({'class': 'form-control','id': 'password1', 'placeholder': 'Password'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control','id': 'password2', 'placeholder': 'Confirm Password'})
 
 
     def clean_phone_number(self):
@@ -109,7 +109,8 @@ class LoginForm(forms.Form):
         required=True,
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Password'
+            'placeholder': 'Password',
+            'id': 'password',
         })
     )
     
