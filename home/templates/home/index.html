@@ -411,11 +411,10 @@
   </div>
 </div>
 </div>
+{% include "home/footer.html" %}
 
 {% endblock %} 
-{% block footer %}
 
-{% endblock %}
 {% block scripts %}
 
 <script>
@@ -471,6 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
   function fetchProfile(id) {
+    alert("Fetching profile for ID:", id);
     fetch(`/api/manpower/${id}/`)
       .then(res => res.json())
       .then(pro => {
