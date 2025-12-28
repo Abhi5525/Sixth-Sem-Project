@@ -80,14 +80,14 @@ class Booking(models.Model):
                 self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
             
             # Calculate minimum allowed booking time (1 hour from now)
-            min_booking_time = now_utc + timezone.timedelta(hours=1)
+            min_booking_time = now_utc + timezone.timedelta(hours=0.5)
             
             if self.booking_time < min_booking_time:
                 # Convert to local time for error message
                 user_tz = timezone.get_current_timezone()
                 local_min_time = timezone.localtime(min_booking_time, user_tz)
                 raise ValidationError(
-                    f"Bookings must be made at least 1 hour in advance. "
+                    f"Bookings must be made at least 30 mins in advance. "
                     f"Earliest available time is {local_min_time.strftime('%Y-%m-%d %I:%M %p')}"
                 )
 

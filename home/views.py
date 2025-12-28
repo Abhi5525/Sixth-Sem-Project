@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ManpowerSerializer
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 from django.conf import settings
 from django.http import JsonResponse   
@@ -24,6 +25,8 @@ def save_user_location(request):
             'success': True,
             'lat': request.session['userLat'],
             'lng': request.session['userLng']})
+    
+    
 def home(request):
     query = request.GET.get('searchInput')
 
@@ -35,74 +38,61 @@ def home(request):
     print("User Location from session:", user_lat, user_lon)
     
     manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True)
-    print("Initial Manpower QuerySet count:", manpower_qs.count())
-    
     if query:
         manpower_qs = manpower_qs.filter(
             Q(skill__icontains=query) | Q(user__full_name__icontains=query)
         )
-        print(f"After query filter: {manpower_qs.count()} results")
-    
-    # Check if we have user location for distance calculation
+
+    manpower_list = None
+    user_has_location = False
+
+    # If we have a user location, compute distances and sort
     if user_lat and user_lon:
         try:
             user_lat = float(user_lat)
             user_lon = float(user_lon)
-            print(f"Using user location for distance calculation: {user_lat}, {user_lon}")
-            
             manpower_within_distance = []
-            
             for manpower in manpower_qs:
                 if manpower.latitude and manpower.longitude:
-                    # Debug each professional's location
-                    print(f"Professional {manpower.user.full_name}: lat={manpower.latitude}, lon={manpower.longitude}")
-                    
-                    distance = great_circle(
-                        (user_lat, user_lon), 
-                        (float(manpower.latitude), float(manpower.longitude))
-                    ).km
-                    
-                    print(f"Distance to {manpower.user.full_name}: {distance} km")
-                    
+                    distance = great_circle((user_lat, user_lon), (float(manpower.latitude), float(manpower.longitude))).km
                     manpower.distance = distance
-                    manpower_within_distance.append(manpower)
                 else:
-                    print(f"Professional {manpower.user.full_name} has no location data")
                     manpower.distance = float('inf')
-                    manpower_within_distance.append(manpower)
-            
-            # Sort by distance
+                manpower_within_distance.append(manpower)
+
             manpower_within_distance.sort(key=lambda x: x.distance)
-            
-            # Check if nearest is beyond 10km
+            manpower_list = manpower_within_distance
+            user_has_location = True
             if manpower_within_distance and manpower_within_distance[0].distance > 10:
                 messages.info(request, "Here's the closest professionals to your location beyond 10 km.")
-                # You might want to show them anyway but with a message
-                # Or filter: manpower_within_distance = [m for m in manpower_within_distance if m.distance <= 10]
-            
-            # Check if no results at all
             if not manpower_within_distance:
                 messages.info(request, "No professionals found matching your search criteria.")
-            
-            return render(request, 'home/index.html', {
-                'manpower_list': manpower_within_distance,
-                'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False),
-                'user_has_location': True
-            })
-            
         except (ValueError, TypeError) as e:
             print(f"Error converting location data: {e}")
-            # Fall through to non-location based display
-    
-    # If no location or error, show without distance sorting
-    print("Showing results without distance calculation")
-    if query and not manpower_qs.exists():
-        messages.info(request, "No professionals found matching your search criteria.")
-    
+
+    # Fallback: no location or error
+    if manpower_list is None:
+        manpower_list = manpower_qs
+        if query and not manpower_qs.exists():
+            messages.info(request, "No professionals found matching your search criteria.")
+
+    # Paginate the manpower_list (works for lists and querysets)
+    per_page = 9
+    paginator = Paginator(manpower_list, per_page)
+    page = request.GET.get('page')
+    try:
+        manpower_page = paginator.page(page)
+    except PageNotAnInteger:
+        manpower_page = paginator.page(1)
+    except EmptyPage:
+        manpower_page = paginator.page(paginator.num_pages)
+
     return render(request, 'home/index.html', {
-        'manpower_list': manpower_qs,
+        'manpower_list': manpower_page,
         'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False),
-        'user_has_location': False
+        'user_has_location': user_has_location,
+        'page_obj': manpower_page,
+        'is_paginated': manpower_page.has_other_pages(),
     })
 
 
@@ -117,25 +107,6 @@ def update_professional_location(request):
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
 
-# @login_required
-# def find_professionals(request):
-#     if request.method == 'POST':
-#         latitude = float(request.POST.get('latitude'))
-#         longitude = float(request.POST.get('longitude'))
-#         skill = request.POST.get('skill')
-
-#         user_location = Point(longitude, latitude, srid=4326)
-#         professionals = CustomUser.objects.filter(
-#             user_type='professional',
-#             manpowerprofile__is_available=True,
-#             manpowerprofile__skill=skill,
-#             manpowerprofile__location__distance_lte=(user_location, D(km=10))
-#         ).annotate(
-#             distance=Distance('manpowerprofile__location', user_location)
-#         ).order_by('distance')
-
-#         return render(request, 'home/index.html', {'professionals': professionals})
-#     return render(request, 'home/index.html')
 
 @api_view(['GET'])
 def manpower_list_api(request):

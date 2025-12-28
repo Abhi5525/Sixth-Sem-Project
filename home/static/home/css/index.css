@@ -371,3 +371,18 @@
     background-color: #f8f9ff !important;
     border-color: #667eea !important;
   }
+
+  .page-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(9, 96, 209, 0.2);
+  }
+  
+  .page-item.active .page-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(9, 96, 209, 0.4);
+  }
+  
+  .page-item:not(.disabled) .page-link:hover {
+    background-color: #e3f2fd !important;
+    border-color: #0960d1 !important;
+  }

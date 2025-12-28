@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import RegexValidator
+import re
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 # Custom User Manager (unchanged)
 class CustomUserManager(BaseUserManager):
@@ -40,7 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('client', 'Client'),
         ('professional', 'Professional'),
     )
-    phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    phone_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     is_client = models.BooleanField(default=True)
@@ -55,8 +57,24 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
+    def check_phone_number(self):
+        if not self.phone_number:
+            raise ValueError("Phone number is required.")
+        # must be exactly 10 digits and start with '98'
+        pattern = r'^98\d{8}$'
+        if not re.match(pattern, str(self.phone_number)):
+            raise ValueError("Phone number must be 10 digits and start with '98'.")
+    def check_password(self, raw_password):
+        if not raw_password:
+            raise ValueError("Password cannot be empty.")
+        if len(raw_password) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+        pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'  # At least one letter and one number
+        if not re.match(pattern, raw_password):
+            raise ValueError("Password must contain at least one letter and one number.")
+
     def __str__(self):
-        return self.email or self.phone_number
+        return self.full_name or self.phone_number
 
 # Manpower Profile (with GPS and availability)
 class ManpowerProfile(models.Model):
@@ -67,7 +85,8 @@ class ManpowerProfile(models.Model):
     district = models.CharField(max_length=100, default="Kathmandu")
     municipality = models.CharField(max_length=100)
     ward = models.IntegerField()
-    experience = models.CharField(max_length=200, default="no experience")
+    experience = models.IntegerField(default=0)
+    about_yourself = models.TextField(blank=True, null=True)
     citizenship_front = models.ImageField(upload_to='manpower/citizenship/front/', blank=True, null=True)
     citizenship_back = models.ImageField(upload_to='manpower/citizenship/back/', blank=True, null=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Changed to DecimalField for precision
@@ -80,6 +99,24 @@ class ManpowerProfile(models.Model):
     longitude = models.FloatField(null=True, blank=True)
     def __str__(self):
         return f"{self.user.full_name}'s Manpower Profile"
+
+    def check_rate(self):
+        if self.experience < 1:
+            self.rate = range(0, 200)
+            if not self.rate:
+                raise ValueError("Rate must be between 0 and 200 for experience less than 1 year.")
+        elif 1 <= self.experience < 3:
+            self.rate = range(0, 300)
+            if not self.rate:
+                raise ValueError("Rate must be between 0 and 300 for experience between 1 and 3 years.")
+        elif 3 <= self.experience < 5:
+            self.rate = range(0, 400)
+            if not self.rate:
+                raise ValueError("Rate must be between 0 and 400 for experience between 3 and 5 years.")
+        else:
+            self.rate = range(0, 600)
+            if not self.rate:
+                raise ValueError("Rate must be between 0 and 600 for experience 5 years or more.")
     
 
 class Province(models.Model):

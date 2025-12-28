@@ -298,6 +298,9 @@ def bookings(request):
     return render(request, 'bookings/bookings.html', {
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
+        'booking_time': booking.booking_time,
+        'end_time': booking.end_time
+        
     })
 
 

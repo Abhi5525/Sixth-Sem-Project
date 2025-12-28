@@ -1,6 +1,7 @@
 
 # users/views.py
 from datetime import datetime, date
+import re
 # At the top of views.py
 from django.utils import timezone
 from django.contrib import messages
@@ -66,7 +67,12 @@ def signup(request):
         form = UserSignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit= False)
-            # user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count())
+            # user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count()
+            phone = form.cleaned_data['phone_number']
+            pattern = r'^98\d{8}$'
+            if not re.match(pattern, str(phone)):
+                raise ValueError("Phone number must be 10 digits and start with '98'.")
+            
             user.set_password(form.cleaned_data['password1'])
             user.save()
             messages.success(request, "Account created successfully. Please log in.")

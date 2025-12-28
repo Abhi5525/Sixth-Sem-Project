@@ -138,9 +138,6 @@
               onclick="fetchProfile('{{ manpower.id }}')">
               View Profile
             </button>
-      
-
-
           </div>
         </div>
       </div>
@@ -148,6 +145,88 @@
 
     </div>
 </div>
+
+<!-- Styled pagination: matches site colors and layout -->
+
+{% if page_obj and page_obj.has_other_pages %}
+<div class="d-flex justify-content-center mt-5 pt-4">
+  <nav aria-label="Professionals pagination">
+    <ul class="pagination shadow-lg" style="border-radius: 12px; overflow: hidden;">
+
+      {# Previous #}
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link d-flex align-items-center justify-content-center"
+             href="?{% if request.GET.searchInput %}searchInput={{ request.GET.searchInput|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+             style="background-color: #f8f9fa; color: #0960d1; border: none; padding: 12px 20px; min-width: 120px; font-weight: 600; transition: all 0.3s ease;">
+            <i class="fas fa-chevron-left me-2"></i>
+            <span>Previous</span>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link d-flex align-items-center justify-content-center text-muted"
+                style="background-color: #f8f9fa; border: none; padding: 12px 20px; min-width: 120px; font-weight: 600;">
+            <i class="fas fa-chevron-left me-2"></i>
+            <span>Previous</span>
+          </span>
+        </li>
+      {% endif %}
+
+      {# Page numbers #}
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+          <li class="page-item active mx-1" aria-current="page">
+            <span class="page-link px-4 py-2 fw-bold"
+                  style="background: linear-gradient(135deg, #0960d1, #00c6ff); border: none; border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(9, 96, 209, 0.3); min-width: 45px; text-align: center;">
+              {{ num }}
+            </span>
+          </li>
+        {% else %}
+          {% if num <= 5 or num >= page_obj.paginator.num_pages|add:"-4" or num == page_obj.number|add:"-1" or num == page_obj.number|add:"1" %}
+            <li class="page-item mx-1">
+              <a class="page-link px-4 py-2 fw-semibold"
+                 href="?{% if request.GET.searchInput %}searchInput={{ request.GET.searchInput|urlencode }}&{% endif %}page={{ num }}"
+                 style="background-color: #ffffff; color: #0960d1; border: 2px solid #e3f2fd; border-radius: 8px; min-width: 45px; text-align: center; transition: all 0.3s ease;">
+                {{ num }}
+              </a>
+            </li>
+          {% elif num == page_obj.number|add:"-2" or num == page_obj.number|add:"2" %}
+            <li class="page-item disabled mx-1">
+              <span class="page-link px-2 py-2"
+                    style="background: transparent; border: none; color: #6c757d; min-width: 45px; text-align: center;">
+                ...
+              </span>
+            </li>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {# Next #}
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link d-flex align-items-center justify-content-center"
+             href="?{% if request.GET.searchInput %}searchInput={{ request.GET.searchInput|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+             style="background-color: #f8f9fa; color: #0960d1; border: none; padding: 12px 20px; min-width: 120px; font-weight: 600; transition: all 0.3s ease;">
+            <span>Next</span>
+            <i class="fas fa-chevron-right ms-2"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <span class="page-link d-flex align-items-center justify-content-center text-muted"
+                style="background-color: #f8f9fa; border: none; padding: 12px 20px; min-width: 120px; font-weight: 600;">
+            <span>Next</span>
+            <i class="fas fa-chevron-right ms-2"></i>
+          </span>
+        </li>
+      {% endif %}
+
+    </ul>
+  </nav>
+</div>
+
+{% endif %}
 
   </section>
 
@@ -524,15 +603,22 @@ function generateStars(rating) {
     return `<span style="color: #ffc107; font-size: 1.1rem;">${stars}</span>`;
 }
 
+let userLat = parseFloat(localStorage.getItem("userLat")) || 27.7172;
+let userLng = parseFloat(localStorage.getItem("userLng")) || 85.3240;
 
-  let userLat = 27.7, userLng = 85.3; // default Kathmandu
-
-// Ask for geolocation
+// If browser geolocation gives new value, update immediately
 if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
         pos => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
+            localStorage.setItem("userLat", userLat);
+            localStorage.setItem("userLng", userLng);
+            // If map & marker already exist, move them
+            if (marker && map) {
+                marker.setLatLng([userLat, userLng]);
+                map.setView([userLat, userLng], 13);
+            }
         },
         err => console.warn("Location denied:", err)
     );
@@ -555,6 +641,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 userLat = pos.lat;
                 userLng = pos.lng;
                 storeLocation(userLat, userLng);
+                window.location.href = `/`;
+                
             });
 
             // Update on click
@@ -563,6 +651,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 userLat = e.latlng.lat;
                 userLng = e.latlng.lng;
                 storeLocation(userLat, userLng);
+                window.location.href = `/`;
+
             });
         } else {
             map.invalidateSize(); // fix display bug on modal reopen

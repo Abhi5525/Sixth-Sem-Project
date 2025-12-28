@@ -24,8 +24,8 @@
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
                      data-service-name="{{ booking.professional.skill|title }}"
-                     data-start-time="{{ booking.booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
-                     data-end-time="{{ booking.end_time|localtime|date:'M d, Y \a\t g:i A' }}"
+                     data-start-time="{{ booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ end_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
                      data-professional-skill="{{ booking.professional.skill|title }}"
@@ -81,8 +81,8 @@
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
                      data-service-name="{{ booking.professional.skill|title }}"
-                     data-start-time="{{ booking.local_booking_time|date:'M d, Y \a\t g:i A' }}"
-                     data-end-time="{{ booking.local_end_time|date:'M d, Y \a\t g:i A' }}"
+                     data-start-time="{{ booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
+                     data-end-time="{{ end_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
                      data-professional-skill="{{ booking.professional.skill|title }}"
@@ -111,7 +111,7 @@
                         <div class="booking-details">
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-calendar"></i> Service Date</div>
-                                <div class="detail-value">{{ booking.local_booking_time|date:"M d, Y \a\t g:i A" }}</div>
+                                <div class="detail-value">{{ booking_time|localtime|date:"M d, Y \a\t g:i A" }}</div>
                             </div>
                             <div class="detail-group">
                                 <div class="detail-label"><i class="fas fa-clock"></i> Duration</div>

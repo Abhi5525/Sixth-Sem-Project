@@ -31,7 +31,7 @@ class UserSignupForm(UserCreationForm):
 class ManpowerSignupForm(forms.ModelForm):
     class Meta:
         model = ManpowerProfile
-        fields = [ 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate']
+        fields = [ 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate', 'about_yourself']
         widgets = {
             'email':forms.EmailInput(attrs={'class':'form-control' ,'id':'email', 'placeholder':'Enter your email'}),
             'province': forms.Select(attrs={'class': 'form-control', 'id': 'province', 'placeholder': "e.g: Bagmati"}),
@@ -39,10 +39,11 @@ class ManpowerSignupForm(forms.ModelForm):
             'municipality': forms.Select(attrs={'class': 'form-control', 'id': 'municipality', 'placeholder': 'e.g: Budhanilkantha'}),
             'ward': forms.Select(attrs={'class': 'form-control', 'id': 'ward', 'placeholder': 'e.g: 1'}),
             'skill': forms.TextInput(attrs={'class': 'form-control','id':'skill', 'placeholder': 'Enter your Skills'}),
-            'experience': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'experience'}),
+            'experience': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'years of experience'}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'rate':forms.NumberInput(attrs={'class':'form-control',  'id':'rate', 'placeholder': 'Enter your rate per hour'})
+            'rate':forms.NumberInput(attrs={'class':'form-control',  'id':'rate', 'placeholder': 'Enter your rate per hour'}),
+            'about_yourself': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Tell us about your experience and skills'}),
         }
         labels = {
             'rate': 'Rate/Hour',

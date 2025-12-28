@@ -23,4 +23,4 @@ class ManpowerSerializer(serializers.ModelSerializer):
         return obj.profile_picture.url if obj.profile_picture else "https://via.placeholder.com/100"
 
     def get_about(self, obj):
-        return f"Experienced professional specializing in {obj.skill}. Committed to providing high-quality services."
+        return f"{obj.about_yourself}" if obj.about_yourself else "I am a professional manpower registered to Mistri Nepal."
