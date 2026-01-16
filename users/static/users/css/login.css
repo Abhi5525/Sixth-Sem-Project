@@ -54,7 +54,8 @@
     font-size: 2rem;
     font-weight: 700;
     color: #194178;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1rem;
+    margin-top: 7px;
     text-align: center;
 }
 
@@ -204,8 +205,8 @@
     
      .toggle-password {
             position: absolute;
-            top: 76%; /* vertically center relative to page or parent */
-            left: calc(50% + 165px); /* input left + half input width */
+            top: 73%; /* vertically center relative to page or parent */
+            left: calc(50% + 154px); /* input left + half input width */
             transform: translateY(-50%);
             cursor: pointer;
             user-select: none;

@@ -140,24 +140,16 @@ def professional_signup(request):
         
 #     except (ManpowerProfile.DoesNotExist, CustomUser.DoesNotExist):
 #         raise Http404("Profile not found")
-
 def login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            phone = form.cleaned_data.get('phone_number')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=phone, password=password)
-            if user:
-                auth_login(request, user)
-                next_page = request.POST.get('next') or request.GET.get('next')
-                if next_page:
-                    return redirect(next_page)
-                return redirect('home_module:home')
-            else:
-                form.add_error(None, 'Invalid phone number or password')
+            auth_login(request, form.user)
+            next_page = request.POST.get('next') or request.GET.get('next')
+            return redirect(next_page or 'home_module:home')
     else:
         form = LoginForm()
+
     return render(request, 'users/login.html', {
         'form': form,
         'next': request.GET.get('next', '')

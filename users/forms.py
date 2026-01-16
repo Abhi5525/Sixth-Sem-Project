@@ -1,3 +1,4 @@
+import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -20,6 +21,20 @@ class UserSignupForm(UserCreationForm):
             self.fields.pop('usable_password')
         self.fields['password1'].widget.attrs.update({'class': 'form-control','id': 'password1', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control','id': 'password2', 'placeholder': 'Confirm Password'})
+
+    def clean_password1(self):
+        password = self.cleaned_data.get('password1')
+
+        if len(password) < 8:
+            raise forms.ValidationError("Password must be at least 8 characters long.")
+
+        if not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password):
+            raise forms.ValidationError(
+                "Password must contain at least one letter and one number."
+            )
+
+        return password
+
 
 
     def clean_phone_number(self):
@@ -122,7 +137,7 @@ class LoginForm(forms.Form):
         
         if phone_number and password:
             # Validate phone number format
-            user = authenticate(phone_number=phone_number, password=password)
+            user = authenticate(username=phone_number, password=password)
             if not user:
                 raise forms.ValidationError("Invalid credentials")
             self.user = user

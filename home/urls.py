@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.urls  import path
 from . import views
-
+from django.views.generic.base import RedirectView
+from django.conf.urls.static import static
 
 app_name = 'home_module'
 urlpatterns = [
@@ -19,6 +20,11 @@ urlpatterns = [
     path('save-user-location/', views.save_user_location, name='save_user_location'),
 
 
-
-
+ path(
+        "favicon.ico",
+        RedirectView.as_view(
+            url="/static/home/favicon.ico",
+            permanent=True
+        ),
+    ),
 ]

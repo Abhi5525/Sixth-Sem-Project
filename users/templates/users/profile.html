@@ -79,7 +79,14 @@
             <dt class="col-sm-4 text-muted">Email</dt>
             <dd class="col-sm-8">{{ user.email }}</dd>
           </dl>
-          <button class="btn btn-primary btn-custom mt-3" data-bs-toggle="modal" data-bs-target="#updateProfileModal">Update Profile</button>
+          <button class="btn btn-primary btn-custom mt-3 mb-3" data-bs-toggle="modal" data-bs-target="#updateProfileModal">Update Profile</button>
+          <div>
+            {% if user.is_authenticated and not user.email %}
+  <div class="alert alert-info">
+    Please add an email to your profile to recover your account in case you lose access.
+  </div>
+{% endif %}
+          </div>
         </div>
       </div>
       {% endif %}

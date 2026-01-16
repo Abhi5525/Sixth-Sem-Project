@@ -64,15 +64,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         pattern = r'^98\d{8}$'
         if not re.match(pattern, str(self.phone_number)):
             raise ValueError("Phone number must be 10 digits and start with '98'.")
-    def check_password(self, raw_password):
-        if not raw_password:
-            raise ValueError("Password cannot be empty.")
-        if len(raw_password) < 8:
-            raise ValueError("Password must be at least 8 characters long.")
-        pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'  # At least one letter and one number
-        if not re.match(pattern, raw_password):
-            raise ValueError("Password must contain at least one letter and one number.")
-
+    
     def __str__(self):
         return self.full_name or self.phone_number
 
