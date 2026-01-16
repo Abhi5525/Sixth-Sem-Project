@@ -70,7 +70,7 @@ rel="stylesheet"
                         </div>
                     {% endfor %}
                     <div>
-                        <a href="#" class="text-primary fw-semibold">Forgot Password?</a>
+                        <a href="{% url 'password_reset' %}" class="text-primary fw-semibold">Forgot Password?</a>
                     </div>
                     
                     <button type="submit" class="btn btn-login w-50" style="margin-left: 100px;">Login</button>

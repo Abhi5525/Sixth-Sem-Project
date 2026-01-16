@@ -132,7 +132,18 @@ TIME_ZONE = 'Asia/Kathmandu'  # Or your local timezone
 USE_TZ = True  # This is CRITICAL
 USE_I18N = True
 
+# Email Configuration (for development/testing)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Prints emails to console
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
 
+SITE_ID = 1  # This tells Django which site to use
+
+# Add these settings for better security
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours (token expires after this time)
 
 
 # Static files (CSS, JavaScript, Images)

@@ -6,7 +6,7 @@ body {
 .left-section {
     background-image: url("/static/images/skillpeople.png");
     background-size: cover;
-    background-position: center;
+    /* background-position: center; */
     min-height: 100vh;
     position: relative;
 }
