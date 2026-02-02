@@ -14,28 +14,32 @@
             {% csrf_token %}
             
             <div class="form-group icon-input">
-                <input type="text" id="name" name="name" class="form-control" placeholder="Name" required>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Name">
                 <label for="name" class="form-label">Your Name</label>
+                <span class="error-message" id="nameError"></span>
                 <i class="bi bi-person"></i>
             </div>
 
             <div class="form-group icon-input">
     <input type="date" id="date" name="date" class="form-control" 
-           placeholder=" " required 
+           placeholder=" " 
            min="{{ today|date:'Y-m-d' }}">
     <label for="date" class="form-label">Booking Date</label>
+    <span class="error-message" id="dateError"></span>
     <i class="bi bi-calendar"></i>
 </div>
             <div class="form-group icon-input">
-                <input type="time" id="time" name="time" class="form-control" placeholder=" " required>
+                <input type="time" id="time" name="time" class="form-control" placeholder=" ">
                 <label for="time" class="form-label">Booking Time</label>
+                <span class="error-message" id="timeError"></span>
                 <i class="bi bi-clock"></i>
             </div>
 
             <!-- New Duration Field -->
             <div class="form-group icon-input">
-                <input type="number" id="durationHours" name="duration_hours" class="form-control" placeholder=" " min="1" step="0.5" required>
+                <input type="number" id="durationHours" name="duration_hours" class="form-control" placeholder=" " min="1" step="0.5">
                 <label for="durationHours" class="form-label">Duration (Hours)</label>
+                <span class="error-message" id="durationError"></span>
                 <i class="bi bi-hourglass-split"></i>
             </div>
             <!-- In your HTML template -->
@@ -54,11 +58,62 @@ let userLongitude = lng ? parseFloat(lng) : null;
 // Handle form submit
 document.getElementById("bookingForm").addEventListener("submit", function(e) {
     e.preventDefault(); // Stop normal submission
-    submitBooking();
+    if (validateBookingForm()) {
+        submitBooking();
+    }
 });
 
+function validateBookingForm() {
+    let isValid = true;
+    
+    // Clear previous errors
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+    
+    const name = document.getElementById("name").value.trim();
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const durationHours = document.getElementById("durationHours").value;
+    
+    // Validate name
+    if (!name) {
+        showError('name', 'Name is required');
+        isValid = false;
+    } else if (name.length < 2) {
+        showError('name', 'Name must be at least 2 characters');
+        isValid = false;
+    }
+    
+    // Validate date
+    if (!date) {
+        showError('date', 'Booking date is required');
+        isValid = false;
+    }
+    
+    // Validate time
+    if (!time) {
+        showError('time', 'Booking time is required');
+        isValid = false;
+    }
+    
+    // Validate duration
+    if (!durationHours || parseFloat(durationHours) < 1) {
+        showError('duration', 'Duration must be at least 1 hour');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+function showError(fieldId, message) {
+    const errorElement = document.getElementById(fieldId + 'Error');
+    const inputElement = document.getElementById(fieldId === 'duration' ? 'durationHours' : fieldId);
+    if (errorElement) errorElement.textContent = message;
+    if (inputElement) inputElement.classList.add('is-invalid');
+}
+
 function submitBooking() {
-    const name = document.getElementById("name").value;
+    const name = document.getElementById("name").value.trim();
     const date = document.getElementById("date").value;
     const time = document.getElementById("time").value;
     const durationHours = document.getElementById("durationHours").value;
@@ -73,13 +128,13 @@ function submitBooking() {
     const localDate = new Date(`${date}T${time}:00`);
     const bookingTime = localDate.toISOString();
     
-    // Client-side validation: Check if booking is at least 1 hour from now
+    // Client-side validation: Check if booking is at least 30 minutes from now
     const now = new Date();
-    const oneHourFromNow = new Date(now.getTime() + (60 * 60 * 1000)); // Add 1 hour
+    const minTimeFromNow = new Date(now.getTime() + (30 * 60 * 1000)); // Add 30 minutes
     
-    if (localDate < oneHourFromNow) {
-        const minTime = oneHourFromNow.toLocaleString();
-        alert(`Bookings must be made at least 1 hour in advance.\nEarliest available time is: ${minTime}`);
+    if (localDate < minTimeFromNow) {
+        const minTime = minTimeFromNow.toLocaleString();
+        alert(`Bookings must be made at least 30 minutes in advance.\nEarliest available time is: ${minTime}`);
         return;
     }
 

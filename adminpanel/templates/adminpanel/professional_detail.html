@@ -1,0 +1,269 @@
+{% extends 'adminpanel/base.html' %}
+{% load static %}
+
+{% block page_title %}Professional Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{% url 'adminpanel:all_professionals' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+    
+    <div class="row g-3">
+        <!-- Professional Info Card -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    {% if professional.profile_picture %}
+                    <img src="{{ professional.profile_picture.url }}" alt="{{ professional.user.full_name }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-4x text-white"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <h4>{{ professional.user.full_name }}</h4>
+                    <p class="text-muted mb-2">{{ professional.skill }}</p>
+                    
+                    {% if professional.verification_status == 'APPROVED' %}
+                    <span class="badge bg-success mb-3">Verified Professional</span>
+                    {% elif professional.verification_status == 'PENDING' %}
+                    <span class="badge bg-warning mb-3">Pending Verification</span>
+                    {% else %}
+                    <span class="badge bg-danger mb-3">Rejected</span>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="text-start">
+                        <p><i class="fas fa-envelope text-primary me-2"></i> {{ professional.email }}</p>
+                        <p><i class="fas fa-phone text-primary me-2"></i> {{ professional.user.phone_number }}</p>
+                        <p><i class="fas fa-map-marker-alt text-primary me-2"></i> {{ professional.municipality }}, {{ professional.district }}, {{ professional.province }}</p>
+                        <p><i class="fas fa-briefcase text-primary me-2"></i> {{ professional.experience }} years experience</p>
+                        <p><i class="fas fa-money-bill text-primary me-2"></i> Rs {{ professional.rate }}/hour</p>
+                        <p><i class="fas fa-star text-warning me-2"></i> {{ professional.average_rating|floatformat:1 }} ({{ professional.total_reviews }} reviews)</p>
+                    </div>
+                    
+                    {% if professional.about_yourself %}
+                    <hr>
+                    <h6 class="text-start">About:</h6>
+                    <p class="text-start text-muted">{{ professional.about_yourself }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Actions Card -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if not rate_valid %}
+                    <div class="alert alert-danger mb-3">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Rate Validation Error:</strong><br>
+                        {{ rate_error }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if professional.verification_status == 'PENDING' %}
+                    <button class="btn btn-success w-100 mb-2" onclick="approveProfessional()" {% if not rate_valid %}disabled title="Cannot approve: Rate validation failed"{% endif %}>
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    {% elif professional.verification_status == 'REJECTED' %}
+                    <button class="btn btn-success w-100" onclick="approveProfessional()" {% if not rate_valid %}disabled title="Cannot approve: Rate validation failed"{% endif %}>
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Documents and Bookings -->
+        <div class="col-lg-8">
+            <!-- Documents Card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Citizenship Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6>Front</h6>
+                            {% if professional.citizenship_front %}
+                            <a href="{{ professional.citizenship_front.url }}" target="_blank">
+                                <img src="{{ professional.citizenship_front.url }}" alt="Citizenship Front" class="img-fluid rounded shadow-sm">
+                            </a>
+                            {% else %}
+                            <p class="text-muted">Not uploaded</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6>Back</h6>
+                            {% if professional.citizenship_back %}
+                            <a href="{{ professional.citizenship_back.url }}" target="_blank">
+                                <img src="{{ professional.citizenship_back.url }}" alt="Citizenship Back" class="img-fluid rounded shadow-sm">
+                            </a>
+                            {% else %}
+                            <p class="text-muted">Not uploaded</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Verification Info -->
+            {% if professional.verified_by %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6>Verification Information</h6>
+                    <p><strong>Verified By:</strong> {{ professional.verified_by.full_name }}</p>
+                    <p><strong>Verified At:</strong> {{ professional.verified_at|date:"M d, Y H:i" }}</p>
+                    {% if professional.rejection_reason %}
+                    <p><strong>Rejection Reason:</strong> {{ professional.rejection_reason }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Recent Bookings -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.client.full_name }}</td>
+                                    <td>{{ booking.booking_time|date:"M d, Y H:i" }}</td>
+                                    <td>{{ booking.duration_hours }} hrs</td>
+                                    <td>
+                                        {% if booking.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif booking.is_confirmed %}
+                                        <span class="badge bg-info">Confirmed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <p class="mb-0">No bookings yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Professional</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label">Reason for Rejection:</label>
+                    <textarea class="form-control" id="rejectionReason" rows="3"></textarea>
+                    <span class="error-message" id="reasonError" style="color: #dc3545; font-size: 0.875rem; display: none; margin-top: 0.25rem;"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="rejectProfessional()">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function approveProfessional() {
+        if (confirm('Are you sure you want to approve this professional?')) {
+            fetch(`/adminpanel/professionals/{{ professional.id }}/approve/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error approving professional');
+                }
+            });
+        }
+    }
+    
+    function rejectProfessional() {
+        const reason = document.getElementById('rejectionReason').value.trim();
+        const reasonError = document.getElementById('reasonError');
+        const reasonTextarea = document.getElementById('rejectionReason');
+        
+        // Clear previous error
+        reasonError.style.display = 'none';
+        reasonTextarea.classList.remove('is-invalid');
+        
+        if (!reason) {
+            reasonError.textContent = 'Please provide a reason for rejection';
+            reasonError.style.display = 'block';
+            reasonTextarea.classList.add('is-invalid');
+            return;
+        }
+        
+        if (reason.length < 10) {
+            reasonError.textContent = 'Reason must be at least 10 characters';
+            reasonError.style.display = 'block';
+            reasonTextarea.classList.add('is-invalid');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('rejection_reason', reason);
+        
+        fetch(`/adminpanel/professionals/{{ professional.id }}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error rejecting professional');
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -11,28 +11,32 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 
-GDAL_LIBRARY_PATH = r"C:\Users\DELL\miniconda3\envs\geodjango310\Library\bin\gdal.dll"
-os.environ['GDAL_LIBRARY_PATH'] = GDAL_LIBRARY_PATH
+# GDAL/GEOS Configuration (optional, only if using GeoDjango)
+GDAL_LIBRARY_PATH = config('GDAL_LIBRARY_PATH', default='')
+if GDAL_LIBRARY_PATH:
+    os.environ['GDAL_LIBRARY_PATH'] = GDAL_LIBRARY_PATH
 
-GEOS_LIBRARY_PATH = r"C:\Users\DELL\miniconda3\envs\geodjango310\Library\bin\geos_c.dll"
-os.environ['GEOS_LIBRARY_PATH'] = GEOS_LIBRARY_PATH
+GEOS_LIBRARY_PATH = config('GEOS_LIBRARY_PATH', default='')
+if GEOS_LIBRARY_PATH:
+    os.environ['GEOS_LIBRARY_PATH'] = GEOS_LIBRARY_PATH
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4pe#3_=n+8ggda0@iucfh7jkd5*5eolst^!1or9_ptf@%6my%!'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -41,6 +45,7 @@ INSTALLED_APPS = [
     'home.apps.HomeConfig',
     'bookings.apps.BookingsConfig',
     'users.apps.UsersConfig',
+    'adminpanel.apps.AdminpanelConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -92,11 +97,11 @@ WSGI_APPLICATION = 'Service_Manpower.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'manpowerweb',     # Your PostgreSQL database name
-        'USER': 'postgres',        # Your PostgreSQL username
-        'PASSWORD': 'root123',     # Your PostgreSQL password
-        'HOST': 'localhost',       # Set to the database server IP if remote
-        'PORT': '5432',            # Default PostgreSQL port
+        'NAME': config('DB_NAME', default='manpowerweb'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 
@@ -162,9 +167,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# LOGIN_REDIRECT_URL = 'users:profile'  # Redirect to profile after login
-LOGOUT_REDIRECT_URL='users:login'
-LOGIN_URL='users:login'
+LOGIN_REDIRECT_URL = 'home:home'
+LOGOUT_REDIRECT_URL = 'users:login'
+LOGIN_URL = 'users:login'
 
 AUTH_USER_MODEL = 'users.CustomUser'  # Use the custom user model
 
@@ -175,14 +180,15 @@ REST_FRAMEWORK = {
     )
 }
 # eSewa Settings
-ESEWA_MERCHANT_CODE = "EPAYTEST"
-ESEWA_TEST_URL = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
-ESEWA_VERIFY_URL = "https://rc.esewa.com.np/api/epay/transaction/status"
-ESEWA_SECRET_KEY = "8gBm/:&EnhH.1/q"
+ESEWA_MERCHANT_CODE = config('ESEWA_MERCHANT_CODE', default='EPAYTEST')
+ESEWA_TEST_URL = config('ESEWA_TEST_URL', default='https://rc-epay.esewa.com.np/api/epay/main/v2/form')
+ESEWA_VERIFY_URL = config('ESEWA_VERIFY_URL', default='https://rc.esewa.com.np/api/epay/transaction/status')
+ESEWA_SECRET_KEY = config('ESEWA_SECRET_KEY', default='')
 
 
 # settings.py
-GALLIMAPS_API_KEY = "fcc76e0a-38eb-449e-8386-218b935bc95c"
+GALLIMAPS_API_KEY = config('GALLIMAPS_API_KEY', default='')
+OPENROUTESERVICE_API_KEY = config('OPENROUTESERVICE_API_KEY', default='')
 
 LOGGING = {
     'version': 1,

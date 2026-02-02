@@ -1,12 +1,43 @@
 {% extends 'home/base-navbar.html' %}
 {% block title %} Home Page {% endblock %}
 {% load static %}
+{% load tz %}
 
  {% block main-content %} 
 <!-- Main Content -->
 <link rel="stylesheet" href="{% static 'home/css/index.css' %}">
 
 <div class="container py-5 position-relative ">
+  
+  <!-- Professional Verification Status -->
+  {% if user.is_authenticated and user.is_professional and professional_status %}
+    {% if professional_status.status == 'PENDING' %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" style="border-left: 5px solid #ffc107;">
+      <div class="d-flex align-items-start">
+        <i class="fas fa-clock fa-2x me-3 mt-1"></i>
+        <div>
+          <h5 class="alert-heading mb-1"><i class="fas fa-hourglass-half"></i> Verification Pending</h5>
+          <p class="mb-0">Your professional profile is under review by our admin team. You will be visible to clients once approved.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+    {% elif professional_status.status == 'REJECTED' %}
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-left: 5px solid #dc3545;">
+      <div class="d-flex align-items-start">
+        <i class="fas fa-times-circle fa-2x me-3 mt-1"></i>
+        <div>
+          <h5 class="alert-heading mb-1"><i class="fas fa-exclamation-triangle"></i> Profile Rejected</h5>
+          <p class="mb-1">Your profile was reviewed and needs corrections:</p>
+          <p class="mb-2"><strong>Reason: {{ professional_status.rejection_reason }}</strong></p>
+          <p class="mb-0">Please <a href="{% url 'users:profile' %}" class="alert-link">update your profile</a> and contact admin at <strong>1234567890</strong> for re-verification.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+  
   <!-- Home Section -->
   <section id="home" class="mb-5">
     <div class="hero-section text-center py-5 rounded">
@@ -110,8 +141,9 @@
             </div>
             <p class="card-text">
               <i class="fas fa-star text-warning"></i> {{ manpower.average_rating|floatformat:1 }} ({{ manpower.total_reviews }} reviews)<br />
+              {% if user.is_authenticated %}
               <i class="fas fa-map-marker-alt"></i> {{manpower.distance|floatformat:2}} km away<br />
-      
+              {% endif %}
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">Rs {{manpower.rate}}</span> / hour
 
          {% comment %} <div class = "card-body position-relative">        {% endcomment %}
@@ -605,15 +637,35 @@ function generateStars(rating) {
 
 let userLat = parseFloat(localStorage.getItem("userLat")) || 27.7172;
 let userLng = parseFloat(localStorage.getItem("userLng")) || 85.3240;
+let hasManualLocation = localStorage.getItem("userLat") !== null;
 
-// If browser geolocation gives new value, update immediately
-if (navigator.geolocation) {
+// Only use browser geolocation if user hasn't manually set a location
+if (navigator.geolocation && !hasManualLocation) {
     navigator.geolocation.getCurrentPosition(
         pos => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
             localStorage.setItem("userLat", userLat);
             localStorage.setItem("userLng", userLng);
+            
+            // Send location to backend session
+            fetch("{% url 'home_module:save_user_location' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken')
+                },
+                body: JSON.stringify({ latitude: userLat, longitude: userLng })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to recalculate distances
+                    window.location.reload();
+                }
+            })
+            .catch(err => console.error("Error saving location:", err));
+            
             // If map & marker already exist, move them
             if (marker && map) {
                 marker.setLatLng([userLat, userLng]);
@@ -629,6 +681,15 @@ document.addEventListener("DOMContentLoaded", function() {
     // When modal opens
     const mapModal = document.getElementById("mapModal");
     mapModal.addEventListener("shown.bs.modal", function () {
+        // Update coordinates from localStorage before displaying map
+        const savedLat = parseFloat(localStorage.getItem("userLat"));
+        const savedLng = parseFloat(localStorage.getItem("userLng"));
+        
+        if (savedLat && savedLng) {
+            userLat = savedLat;
+            userLng = savedLng;
+        }
+        
         if (!map) {
             map = L.map('map').setView([userLat, userLng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -641,8 +702,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 userLat = pos.lat;
                 userLng = pos.lng;
                 storeLocation(userLat, userLng);
-                window.location.href = `/`;
-                
             });
 
             // Update on click
@@ -651,10 +710,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 userLat = e.latlng.lat;
                 userLng = e.latlng.lng;
                 storeLocation(userLat, userLng);
-                window.location.href = `/`;
-
             });
         } else {
+            // Update existing map and marker to saved location
+            map.setView([userLat, userLng], 13);
+            marker.setLatLng([userLat, userLng]);
             map.invalidateSize(); // fix display bug on modal reopen
         }
     });
@@ -664,8 +724,7 @@ const updateUrl = "{% url 'home_module:update_location' %}";
 
 
 function storeLocation(lat, lng) {
-  console.log("🔵 storeLocation CALLED with lat:", lat, "lng:", lng);
-    
+    console.log("🔵 storeLocation CALLED with lat:", lat, "lng:", lng);
     console.log("=== storeLocation called ===");
     console.log("Coordinates:", lat, lng);
     console.log("isProfessional value:", isProfessional);
@@ -681,39 +740,91 @@ function storeLocation(lat, lng) {
             body: JSON.stringify({ latitude: lat, longitude: lng })
         })
         .then(r => r.json())
-        .then(data => console.log("✓ Backend response:", data))
+        .then(data => {
+            console.log("✓ Backend response:", data);
+            if (data.success) {
+                alert("Location updated successfully!");
+            }
+        })
         .catch(err => console.error("✗ Backend error:", err));
     } else {
-        console.log("✓ CUSTOMER PATH - Storing in localStorage");
+        console.log("✓ CUSTOMER PATH - Storing in localStorage and session");
         localStorage.setItem("userLat", lat);
         localStorage.setItem("userLng", lng);
         console.log("✓ Stored in localStorage:", lat, lng);
-        fetch("{% url 'home_module:save_user_location' %}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            latitude: lat,
-            longitude: lng
-        })
-    })
-    .then(res => res.json())
-    .then(data => console.log("✓ Session updated:", data))
-    .catch(err => console.error("✗ Session update failed:", err));
-}
-
         
-        // Verify it was stored
-        console.log("✓ Verify - userLat from localStorage:", localStorage.getItem("userLat"));
-        console.log("✓ Verify - userLng from localStorage:", localStorage.getItem("userLng"));
+        fetch("{% url 'home_module:save_user_location' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lng
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log("✓ Session updated:", data);
+            if (data.success) {
+                // Show success message and reload to update distances
+                alert("Location updated! Refreshing to show updated distances...");
+                window.location.reload();
+            }
+        })
+        .catch(err => console.error("✗ Session update failed:", err));
     }
+    
+    // Verify it was stored
+    console.log("✓ Verify - userLat from localStorage:", localStorage.getItem("userLat"));
+    console.log("✓ Verify - userLng from localStorage:", localStorage.getItem("userLng"));
+}
 
 // Save button (only exists for professionals)
 document.getElementById("saveLocationBtn")?.addEventListener("click", function() {
-    storeLocation(userLat, userLng);
-    alert("Location saved!");
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
+    
+    // Call storeLocation and handle response
+    if (isProfessional) {
+        fetch(updateUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify({ latitude: userLat, longitude: userLng })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Saved!';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('mapModal'));
+                    if (modal) modal.hide();
+                    alert("Location updated successfully!");
+                }, 1000);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert("Failed to save location. Please try again.");
+            }
+        })
+        .catch(err => {
+            console.error("Error saving location:", err);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            alert("Error saving location. Please try again.");
+        });
+    }
 });
 // Helper for CSRF
 function getCookie(name) {

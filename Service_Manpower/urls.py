@@ -21,6 +21,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('adminpanel/', include('adminpanel.urls')),
     # path('home/', include('home.urls')),
     path('', include('home.urls')),
     path('users/', include('users.urls', namespace= 'users')),

@@ -34,10 +34,37 @@ def home(request):
     user_lat = request.session.get("userLat")
     user_lon = request.session.get("userLng")
     
-    # Debug print to see what's in session
-    print("User Location from session:", user_lat, user_lon)
+    # Get today's bookings for logged-in users
+    todays_bookings = []
+    professional_status = None
+    if request.user.is_authenticated:
+        today = timezone.now().date()
+        if request.user.is_professional:
+            # Get professional's bookings for today
+            try:
+                pro_profile = ManpowerProfile.objects.get(user=request.user)
+                todays_bookings = Booking.objects.filter(
+                    professional=pro_profile,
+                    booking_time__date=today,
+                    is_confirmed=True
+                ).order_by('booking_time')
+                # Pass verification status to template
+                professional_status = {
+                    'status': pro_profile.verification_status,
+                    'rejection_reason': pro_profile.rejection_reason
+                }
+            except ManpowerProfile.DoesNotExist:
+                pass
+        elif request.user.is_client:
+            # Get client's bookings for today
+            todays_bookings = Booking.objects.filter(
+                client=request.user,
+                booking_time__date=today,
+                is_confirmed=True
+            ).order_by('booking_time')
     
-    manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True)
+    # Only show APPROVED professionals
+    manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True, verification_status='APPROVED')
     if query:
         manpower_qs = manpower_qs.filter(
             Q(skill__icontains=query) | Q(user__full_name__icontains=query)
@@ -67,8 +94,8 @@ def home(request):
                 messages.info(request, "Here's the closest professionals to your location beyond 10 km.")
             if not manpower_within_distance:
                 messages.info(request, "No professionals found matching your search criteria.")
-        except (ValueError, TypeError) as e:
-            print(f"Error converting location data: {e}")
+        except (ValueError, TypeError):
+            pass  # Location data conversion failed, fallback to unsorted list
 
     # Fallback: no location or error
     if manpower_list is None:
@@ -93,6 +120,8 @@ def home(request):
         'user_has_location': user_has_location,
         'page_obj': manpower_page,
         'is_paginated': manpower_page.has_other_pages(),
+        'todays_bookings': todays_bookings,
+        'professional_status': professional_status,
     })
 
 
@@ -110,7 +139,7 @@ def update_professional_location(request):
 
 @api_view(['GET'])
 def manpower_list_api(request):
-    queryset = ManpowerProfile.objects.select_related('user').all()
+    queryset = ManpowerProfile.objects.select_related('user').filter(verification_status='APPROVED')
     serializer = ManpowerSerializer(queryset, many=True)
     return Response(serializer.data)
 
@@ -126,9 +155,6 @@ def manpower_detail_api(request, pk):
     return Response(serializer.data)
 
 
-def maps(request):
-    return render(request, 'home/index_POC.html')
-
 def professional_availability(request):
     now_utc = timezone.now()
     user_tz = timezone.get_current_timezone()
@@ -142,7 +168,7 @@ def professional_availability(request):
     
     booking_dict = {b.professional_id: b for b in active_bookings}
     
-    professionals = ManpowerProfile.objects.select_related('user').all()
+    professionals = ManpowerProfile.objects.select_related('user').filter(verification_status='APPROVED')
     data = []
     
     for prof in professionals:
@@ -200,6 +226,15 @@ def submit_review(request, professional_id):
         try:
             rating = int(request.POST.get('rating'))
             comment = request.POST.get('comment', '').strip()
+            
+            # Validate rating range
+            if not (1 <= rating <= 5):
+                return JsonResponse({'error': 'Rating must be between 1 and 5'}, status=400)
+            
+            # Validate comment length
+            if len(comment) > 500:
+                return JsonResponse({'error': 'Comment cannot exceed 500 characters'}, status=400)
+                
         except (TypeError, ValueError):
             return JsonResponse({'error': 'Invalid rating value'}, status=400)
 

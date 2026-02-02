@@ -27,11 +27,10 @@
 
                 <!-- If user is authenticated -->
                 <form id="reviewForm" data-professional-id="{{ professional.id }}">
-                    <!-- Star Rating -->
                     <div class="star-rating">
                         <label>Your Rating</label>
                         <div class="stars">
-                            <input type="radio" name="rating" value="5" id="star5" required>
+                            <input type="radio" name="rating" value="5" id="star5">
                             <label for="star5">★</label>
                             <input type="radio" name="rating" value="4" id="star4">
                             <label for="star4">★</label>
@@ -43,6 +42,7 @@
                             <label for="star1">★</label>
                         </div>
                         <div class="rating-text" id="ratingText"></div>
+                        <span class="error-message" id="ratingError" style="color: #dc3545; font-size: 0.875rem; display: none;"></span>
                     </div>
 
                     <!-- Review Textarea -->
@@ -98,13 +98,18 @@ document.addEventListener("DOMContentLoaded", () => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Clear previous error
+            const ratingError = document.getElementById('ratingError');
+            ratingError.style.display = 'none';
+            
             const professionalId = this.dataset.professionalId;
             const formData = new FormData(this);
             
             // Check if rating is selected
             const rating = formData.get('rating');
             if (!rating) {
-                alert('Please select a rating');
+                ratingError.textContent = 'Please select a rating';
+                ratingError.style.display = 'block';
                 return;
             }
             

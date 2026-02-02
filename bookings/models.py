@@ -70,7 +70,7 @@ class Booking(models.Model):
                     f"{self.professional.user.full_name} is already booked for this time slot."
                 )
         
-        # Check 4: Minimum 1 hour advance booking
+        # Check 4: Minimum 30 minutes advance booking
         if self.booking_time:
             # Get current time in UTC
             now_utc = timezone.now()
@@ -79,7 +79,7 @@ class Booking(models.Model):
             if not timezone.is_aware(self.booking_time):
                 self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
             
-            # Calculate minimum allowed booking time (1 hour from now)
+            # Calculate minimum allowed booking time (30 minutes from now)
             min_booking_time = now_utc + timezone.timedelta(hours=0.5)
             
             if self.booking_time < min_booking_time:

@@ -34,6 +34,7 @@ path('booking/<int:booking_id>/mark_completed/', views.mark_booking_completed, n
     
     # URL to handle client profile updates
    
+    path('provinces/', views.get_provinces, name="get_provinces"),
     path('district/', views.get_districts, name="get_districts"),  # Changed to handle GET param
     path('municipality/', views.get_municipality, name="get_municipality"),
     path('ward/', views.get_wards, name="get_ward"),

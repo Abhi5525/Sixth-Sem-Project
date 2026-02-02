@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - Mistri Nepal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'adminpanel/css/admin.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-user-shield"></i>
+                <h5>Admin Panel</h5>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{% url 'adminpanel:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{% url 'adminpanel:pending_verifications' %}" class="nav-link {% if request.resolver_match.url_name == 'pending_verifications' %}active{% endif %}">
+                    <i class="fas fa-clock"></i> Pending Verifications
+                    {% if pending_count %}
+                    <span class="badge bg-warning">{{ pending_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'adminpanel:all_professionals' %}" class="nav-link {% if request.resolver_match.url_name == 'all_professionals' %}active{% endif %}">
+                    <i class="fas fa-users"></i> All Professionals
+                </a>
+                <a href="{% url 'adminpanel:all_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'all_bookings' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> All Bookings
+                </a>
+                
+                <hr class="sidebar-divider">
+                
+                <a href="{% url 'home_module:home' %}" class="nav-link">
+                    <i class="fas fa-home"></i> View Site
+                </a>
+                <form method="post" action="{% url 'users:logout' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p class="mb-0">Logged in as:</p>
+                <strong>{{ user.full_name }}</strong>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="btn btn-link mobile-menu-toggle d-lg-none" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="top-bar-content">
+                    <h4 class="page-title mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                    <div class="user-info">
+                        <span>{{ user.full_name }}</span>
+                        <i class="fas fa-user-circle fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="container-fluid mt-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        });
+        
+        // CSRF token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

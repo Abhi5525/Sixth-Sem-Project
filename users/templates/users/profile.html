@@ -22,6 +22,38 @@
       </div>
 
       {% if user.is_professional %}
+      
+      <!-- Verification Status Alert -->
+      {% if manpower_profile %}
+      {% if manpower_profile.verification_status == 'PENDING' %}
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="fas fa-clock fa-2x me-3"></i>
+        <div>
+          <h5 class="alert-heading mb-1">Verification Pending</h5>
+          <p class="mb-0">Your professional profile is under review by our admin team. You will be notified once approved.</p>
+        </div>
+      </div>
+      {% elif manpower_profile.verification_status == 'REJECTED' %}
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="fas fa-times-circle fa-2x me-3"></i>
+        <div>
+          <h5 class="alert-heading mb-1">Profile Rejected</h5>
+          <p class="mb-1">Your profile was reviewed and rejected. Reason:</p>
+          <p class="mb-2"><strong>{{ manpower_profile.rejection_reason }}</strong></p>
+          <p class="mb-0 small">Please update your profile to fix the issues and contact support to request re-verification.</p>
+        </div>
+      </div>
+      {% elif manpower_profile.verification_status == 'APPROVED' %}
+      <div class="alert alert-success d-flex align-items-center" role="alert">
+        <i class="fas fa-check-circle fa-2x me-3"></i>
+        <div>
+          <h5 class="alert-heading mb-1">✓ Verified Professional</h5>
+          <p class="mb-0">Your profile has been verified and is now visible to clients!</p>
+        </div>
+      </div>
+      {% endif %}
+      {% endif %}
+      
       <div class="card mb-4">
         <div class="card-body">
           <h5 class="card-title fw-bold mb-3">Professional Details</h5>

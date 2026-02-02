@@ -276,4 +276,106 @@
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
 
+<script>
+    // Professional signup form validation
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear previous custom errors
+        document.querySelectorAll('.custom-error').forEach(el => el.remove());
+        document.querySelectorAll('.form-control, select, textarea').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Get form fields
+        const email = document.getElementById('email');
+        const skill = document.getElementById('skill');
+        const province = document.getElementById('province');
+        const district = document.getElementById('district');
+        const municipality = document.getElementById('municipality');
+        const ward = document.getElementById('ward');
+        const experience = document.getElementById('experience');
+        const rate = document.getElementById('rate');
+        const citizenshipFront = document.getElementById('citizenship_front');
+        const citizenshipBack = document.getElementById('citizenship_back');
+        
+        // Validate email
+        if (email && !email.value.trim()) {
+            showError(email, 'Email is required');
+            isValid = false;
+        } else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+            showError(email, 'Please enter a valid email address');
+            isValid = false;
+        }
+        
+        // Validate skill
+        if (skill && !skill.value.trim()) {
+            showError(skill, 'Skill is required');
+            isValid = false;
+        } else if (skill && skill.value.trim().length < 2) {
+            showError(skill, 'Skill must be at least 2 characters');
+            isValid = false;
+        }
+        
+        // Validate location fields
+        if (province && !province.value) {
+            showError(province, 'Province is required');
+            isValid = false;
+        }
+        if (district && !district.value) {
+            showError(district, 'District is required');
+            isValid = false;
+        }
+        if (municipality && !municipality.value) {
+            showError(municipality, 'Municipality is required');
+            isValid = false;
+        }
+        if (ward && !ward.value) {
+            showError(ward, 'Ward is required');
+            isValid = false;
+        }
+        
+        // Validate experience
+        if (experience && experience.value && (parseFloat(experience.value) < 0 || parseFloat(experience.value) > 50)) {
+            showError(experience, 'Experience must be between 0 and 50 years');
+            isValid = false;
+        }
+        
+        // Validate rate
+        if (rate && !rate.value) {
+            showError(rate, 'Rate per hour is required');
+            isValid = false;
+        } else if (rate && (parseFloat(rate.value) <= 0 || parseFloat(rate.value) > 10000)) {
+            showError(rate, 'Rate must be between 1 and 10000');
+            isValid = false;
+        }
+        
+        // Validate citizenship documents
+        if (citizenshipFront && !citizenshipFront.files.length && !citizenshipFront.value) {
+            showError(citizenshipFront, 'Citizenship front image is required');
+            isValid = false;
+        }
+        if (citizenshipBack && !citizenshipBack.files.length && !citizenshipBack.value) {
+            showError(citizenshipBack, 'Citizenship back image is required');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+    });
+    
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'custom-error text-danger small mt-1';
+        errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
+        field.closest('.form-group').appendChild(errorDiv);
+    }
+</script>
+
 {% endblock %}

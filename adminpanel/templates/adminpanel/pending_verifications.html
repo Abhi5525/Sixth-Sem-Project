@@ -1,0 +1,217 @@
+{% extends 'adminpanel/base.html' %}
+{% load static %}
+
+{% block page_title %}Pending Verifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Pending Professional Verifications</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_professionals %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Skill</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Location</th>
+                            <th>Experience</th>
+                            <th>Rate/hr</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prof in pending_professionals %}
+                        <tr>
+                            <td>{{ prof.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if prof.profile_picture %}
+                                    <img src="{{ prof.profile_picture.url }}" alt="{{ prof.user.full_name }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <strong>{{ prof.user.full_name }}</strong>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ prof.skill }}</span></td>
+                            <td>{{ prof.email }}</td>
+                            <td>{{ prof.user.phone_number }}</td>
+                            <td>{{ prof.district }}, {{ prof.province }}</td>
+                            <td>{{ prof.experience }} years</td>
+                            <td>Rs {{ prof.rate }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'adminpanel:professional_detail' prof.id %}" class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-success approve-btn" data-id="{{ prof.id }}" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger reject-btn" data-id="{{ prof.id }}" data-name="{{ prof.user.full_name }}" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="p-5 text-center">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h4>All Clear!</h4>
+                <p class="text-muted">No pending verifications at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Professional</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reject <strong id="rejectName"></strong>?</p>
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label">Reason for Rejection:</label>
+                    <textarea class="form-control" id="rejectionReason" rows="3"></textarea>
+                    <span class="error-message" id="reasonError" style="color: #dc3545; font-size: 0.875rem; display: none; margin-top: 0.25rem;"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmReject">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let rejectProfId = null;
+    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    
+    // Approve professional
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const profId = this.dataset.id;
+            if (confirm('Are you sure you want to approve this professional?')) {
+                fetch(`/adminpanel/professionals/${profId}/approve/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error approving professional');
+                    }
+                });
+            }
+        });
+    });
+    
+    // Show reject modal
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            rejectProfId = this.dataset.id;
+            document.getElementById('rejectName').textContent = this.dataset.name;
+            document.getElementById('rejectionReason').value = '';
+            rejectModal.show();
+        });
+    });
+    
+    // Confirm rejection
+    document.getElementById('confirmReject').addEventListener('click', function() {
+        const reason = document.getElementById('rejectionReason').value.trim();
+        const reasonError = document.getElementById('reasonError');
+        const reasonTextarea = document.getElementById('rejectionReason');
+        
+        // Clear previous error
+        reasonError.style.display = 'none';
+        reasonTextarea.classList.remove('is-invalid');
+        
+        if (!reason) {
+            reasonError.textContent = 'Please provide a reason for rejection';
+            reasonError.style.display = 'block';
+            reasonTextarea.classList.add('is-invalid');
+            return;
+        }
+        
+        if (reason.length < 10) {
+            reasonError.textContent = 'Reason must be at least 10 characters';
+            reasonError.style.display = 'block';
+            reasonTextarea.classList.add('is-invalid');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('rejection_reason', reason);
+        
+        fetch(`/adminpanel/professionals/${rejectProfId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                rejectModal.hide();
+                location.reload();
+            } else {
+                alert('Error rejecting professional');
+            }
+        });
+    });
+</script>
+{% endblock %}

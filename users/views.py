@@ -95,56 +95,21 @@ def professional_signup(request):
             return redirect('users:profile')  # Adjust to your profile URL
         else:
             messages.error(request, "Please correct the errors below.")
-            print(form.errors)
     else:
         form = ManpowerSignupForm(user=request.user)
     return render(request, 'users/professional_signup.html', {'form': form})
 
 
-# @login_required
-# def profile_update(request):
-#     user = request.user
-#     # profile_type = request.GET.get.is_client  # Default to user profile
-    
-#     try:
-#         # Determine which profile to update
-#         if profile_type == 
-#             profile = ManpowerProfile.objects.get(user=user)
-#             form_class = ManpowerProfileUpdateForm
-#             # success_url = reverse('users:manpower_profile')
-#         else:
-#             profile = user
-#             form_class = UserProfileUpdateForm
-        
-#         success_url = reverse('users:profile')
-#         if request.method == 'POST':
-#             form = form_class(request.POST, request.FILES, instance=profile)
-#             if form.is_valid():
-#                 form.save()
-                
-#                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#                     return JsonResponse({
-#                         'success': True,
-#                         'message': "Profile updated successfully."
-#                     })
-#                 messages.success(request, "Profile updated successfully.")
-#                 return redirect(success_url)
-#         else:
-#             form = form_class(instance=profile)
-            
-#         # For AJAX requests, return just the form HTML
-#         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#             return render(request, 'users/profile.html', {'form': form})
-            
-#         return render(request, 'users/profile.html', {'form': form})
-        
-#     except (ManpowerProfile.DoesNotExist, CustomUser.DoesNotExist):
-#         raise Http404("Profile not found")
 def login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             auth_login(request, form.user)
+            
+            # Redirect admin users to admin panel
+            if form.user.is_staff or form.user.is_superuser:
+                return redirect('adminpanel:dashboard')
+            
             next_page = request.POST.get('next') or request.GET.get('next')
             return redirect(next_page or 'home_module:home')
     else:
@@ -162,6 +127,12 @@ class CustomLogoutView(LogoutView):
         messages.success(request, "You have been logged out successfully.")
         return super().post(request, *args, **kwargs)
 
+
+def get_provinces(request):
+    """Return all provinces for dropdown population."""
+    provinces = Province.objects.all().values('name')
+    provinces_list = [{'name': p['name']} for p in provinces]
+    return JsonResponse({'provinces': provinces_list})
 
 def get_districts(request):
     province_name = request.GET.get('province_name', '')
@@ -331,14 +302,6 @@ def view_booking_route(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     pro = booking.professional
     
-    # Debug print
-    print(f"DEBUG - Booking ID: {booking_id}")
-    print(f"DEBUG - Professional: {pro.user.full_name}")
-    print(f"DEBUG - Pro coordinates: {pro.latitude}, {pro.longitude}")
-    print(f"DEBUG - Customer coordinates: {booking.user_latitude}, {booking.user_longitude}")
-    print(f"DEBUG - Pro coordinates exist: {pro.latitude is not None}, {pro.longitude is not None}")
-    print(f"DEBUG - Customer coordinates exist: {booking.user_latitude is not None}, {booking.user_longitude is not None}")
-    
     context = {
         'booking': booking,
         'pro': pro,
@@ -416,7 +379,8 @@ import requests
 def call_openrouteservice_api(pro_lat, pro_lng, cus_lat, cus_lng):
     """Call OpenRouteService API to get route data between two coordinates."""
     try:
-        api_key = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiMzFlMDA4NTA3NzQ3ZTM5MTBiZTZiNzBiZDNmYmQ0IiwiaCI6Im11cm11cjY0In0="  # Replace with your actual API key
+        from django.conf import settings
+        api_key = settings.OPENROUTESERVICE_API_KEY
         url = f"https://api.openrouteservice.org/v2/directions/driving?api_key={api_key}&start={pro_lng},{pro_lat}&end={cus_lng},{cus_lat}"
         
         response = requests.get(url)

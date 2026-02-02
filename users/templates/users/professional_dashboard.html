@@ -29,6 +29,35 @@
 </div>
 
 <div class="content">
+  <!-- Verification Status Alert -->
+  {% if pro.verification_status == 'PENDING' %}
+  <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-clock fa-2x me-3"></i>
+    <div>
+      <h5 class="alert-heading mb-1">⏳ Verification Pending</h5>
+      <p class="mb-0">Your profile is under review. You will appear in client searches once approved by admin.</p>
+    </div>
+  </div>
+  {% elif pro.verification_status == 'REJECTED' %}
+  <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-times-circle fa-2x me-3"></i>
+    <div>
+      <h5 class="alert-heading mb-1">❌ Profile Rejected</h5>
+      <p class="mb-1">Your profile was reviewed and needs corrections:</p>
+      <p class="mb-2"><strong>Reason: {{ pro.rejection_reason }}</strong></p>
+      <p class="mb-0 small">Please update your profile and contact support at <strong>1234567890</strong> for re-verification.</p>
+    </div>
+  </div>
+  {% elif pro.verification_status == 'APPROVED' %}
+  <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-check-circle fa-2x me-3"></i>
+    <div>
+      <h5 class="alert-heading mb-1">✓ Verified Professional</h5>
+      <p class="mb-0">Your profile is live and visible to clients!</p>
+    </div>
+  </div>
+  {% endif %}
+  
   <!-- Professional Header -->
   <div class="welcome-header">
     <h2>Hello, {{ pro.user.full_name }}</h2>

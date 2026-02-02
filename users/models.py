@@ -70,6 +70,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 # Manpower Profile (with GPS and availability)
 class ManpowerProfile(models.Model):
+    VERIFICATION_STATUS_CHOICES = [
+        ('PENDING', 'Pending Verification'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
     email = models.EmailField(unique=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     skill = models.CharField(max_length=100)  # e.g., "Plumber", "Carpenter"
@@ -89,25 +95,33 @@ class ManpowerProfile(models.Model):
     is_available = models.BooleanField(default=True)  # Availability status
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    
+    # Verification fields
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='PENDING')
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_professionals')
+    rejection_reason = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.user.full_name}'s Manpower Profile"
 
+    def save(self, *args, **kwargs):
+        # Only validate if this is a new save or rate/experience changed
+        if not self.pk or 'update_fields' not in kwargs:
+            self.check_rate()
+        super().save(*args, **kwargs)
+
     def check_rate(self):
         if self.experience < 1:
-            self.rate = range(0, 200)
-            if not self.rate:
+            if not (0 <= self.rate <= 200):
                 raise ValueError("Rate must be between 0 and 200 for experience less than 1 year.")
         elif 1 <= self.experience < 3:
-            self.rate = range(0, 300)
-            if not self.rate:
+            if not (0 <= self.rate <= 300):
                 raise ValueError("Rate must be between 0 and 300 for experience between 1 and 3 years.")
         elif 3 <= self.experience < 5:
-            self.rate = range(0, 400)
-            if not self.rate:
+            if not (0 <= self.rate <= 400):
                 raise ValueError("Rate must be between 0 and 400 for experience between 3 and 5 years.")
         else:
-            self.rate = range(0, 600)
-            if not self.rate:
+            if not (0 <= self.rate <= 600):
                 raise ValueError("Rate must be between 0 and 600 for experience 5 years or more.")
     
 
@@ -134,10 +148,3 @@ class Municipality(models.Model):
 
     def __str__(self):
         return self.name
-    
-# class Ward(models.Model):
-#     number = models.PositiveSmallIntegerField()
-#     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="ward")
-
-#     def __str__(self):
-#         return f"Ward no - {self.number}"

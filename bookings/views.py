@@ -43,10 +43,9 @@ def booking_form(request, professional_id):
             if not timezone.is_aware(booking_time):
                 booking_time = timezone.make_aware(booking_time, timezone=timezone.utc)
             
-            # ====== ADD THIS CHECK ======
-            # Check if booking is at least 1 hour from now
+            # Check if booking is at least 30 minutes from now
             now_utc = timezone.now()
-            min_booking_time = now_utc + timedelta(hours=1)
+            min_booking_time = now_utc + timedelta(hours=0.5)
             
             if booking_time < min_booking_time:
                 # Convert to user's local time for error message
@@ -54,10 +53,9 @@ def booking_form(request, professional_id):
                 local_min_time = timezone.localtime(min_booking_time, user_tz)
                 return JsonResponse({
                     'success': False,
-                    'error': f'Bookings must be made at least 1 hour in advance. '
+                    'error': f'Bookings must be made at least 30 minutes in advance. '
                             f'Earliest available time is {local_min_time.strftime("%Y-%m-%d %I:%M %p")}'
                 }, status=400)
-            # ====== END CHECK ======
             
             # Parse duration
             duration_hours_raw = data.get('duration_hours') or 1
@@ -255,20 +253,22 @@ def esewa_callback(request):
 
     return render(request, 'bookings/payment_success.html', {'booking': booking})
 
+@login_required
 def payment_failed(request):
     return render(request, 'bookings/payment_failed.html')
 
+@login_required
 def bookings(request):
     user = request.user
     now_utc = timezone.now()  # This is in UTC when USE_TZ=True
 
-    # Upcoming bookings - filter in UTC
+    # Upcoming bookings - filter in UTC and ensure they belong to current user
     upcoming_bookings = Booking.objects.filter(
         client=user,
         booking_time__gte=now_utc
     ).select_related('professional__user').order_by('booking_time')
 
-    # Past bookings - filter in UTC
+    # Past bookings - filter in UTC and ensure they belong to current user
     past_bookings = Booking.objects.filter(
         client=user,
         booking_time__lt=now_utc
@@ -290,17 +290,10 @@ def bookings(request):
 
         # Remaining balance calculation
         booking.remaining_balance = booking.total_fee - booking.deposit_amount
-        
-        print(f"Booking ID: {booking.id}, "
-              f"UTC Time: {booking.booking_time}, "
-              f"Status: {booking.status}")
 
     return render(request, 'bookings/bookings.html', {
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
-        'booking_time': booking.booking_time,
-        'end_time': booking.end_time
-        
     })
 
 

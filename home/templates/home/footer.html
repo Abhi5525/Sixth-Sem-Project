@@ -134,13 +134,14 @@
                     <p class="newsletter-subtitle">Get the latest updates on new services and special offers</p>
                 </div>
                 <div class="col-lg-6">
-                    <form class="newsletter-form">
+                    <form class="newsletter-form" id="newsletterForm">
                         <div class="input-group">
-                            <input type="email" class="form-control" placeholder="Enter your email" required>
+                            <input type="email" class="form-control" id="newsletterEmail" placeholder="Enter your email">
                             <button class="btn btn-newsletter" type="submit">
                                 <i class="fas fa-paper-plane"></i> Subscribe
                             </button>
                         </div>
+                        <span class="error-message" id="newsletterError" style="color: #dc3545; font-size: 0.875rem; display: none; margin-top: 0.25rem;"></span>
                         <small class="form-text">We respect your privacy. Unsubscribe at any time.</small>
                     </form>
                 </div>
@@ -233,11 +234,33 @@
         stats.forEach(stat => observer.observe(stat));
         
         // Newsletter form submission
-        const newsletterForm = document.querySelector('.newsletter-form');
+        const newsletterForm = document.getElementById('newsletterForm');
         if (newsletterForm) {
             newsletterForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                const email = this.querySelector('input[type="email"]').value;
+                const emailInput = document.getElementById('newsletterEmail');
+                const email = emailInput.value.trim();
+                const errorMsg = document.getElementById('newsletterError');
+                
+                // Clear previous error
+                errorMsg.style.display = 'none';
+                emailInput.classList.remove('is-invalid');
+                
+                // Validate email
+                if (!email) {
+                    errorMsg.textContent = 'Email is required';
+                    errorMsg.style.display = 'block';
+                    emailInput.classList.add('is-invalid');
+                    return;
+                }
+                
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errorMsg.textContent = 'Please enter a valid email address';
+                    errorMsg.style.display = 'block';
+                    emailInput.classList.add('is-invalid');
+                    return;
+                }
                 
                 // Show success message
                 const button = this.querySelector('.btn-newsletter');

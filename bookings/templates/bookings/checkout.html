@@ -1,7 +1,10 @@
 {% extends "home/base-navbar.html" %}
-{% load tz %}  <!-- Add this line! -->
+{% load tz %}
 {% load static %}
+
+{% block styles %}
 <link rel="stylesheet" href="{% static 'bookings/css/checkout.css' %}">
+{% endblock %}
 
 {% block main-content %}
 <div class="container-fluid py-5 checkout-bg">
@@ -82,9 +85,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block styles %}
-<style>
-</style>
 {% endblock %}

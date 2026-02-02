@@ -108,10 +108,34 @@ class ManpowerSignupForm(forms.ModelForm):
             try:
                 municipality_obj = Municipality.objects.get(name=municipality)
                 if int(ward) not in range(1, municipality_obj.ward + 1):
-                    raise forms.ValidationError("Select a valid ward number.")
+                    raise forms.ValidationError(f"Ward number must be between 1 and {municipality_obj.ward}.")
             except Municipality.DoesNotExist:
-                raise forms.ValidationError("Invalid municipality.")
+                raise forms.ValidationError("Invalid municipality selected.")
+            except (ValueError, TypeError):
+                raise forms.ValidationError("Invalid ward number format.")
         return ward
+    
+    def clean_experience(self):
+        experience = self.cleaned_data.get('experience')
+        if experience is not None and experience < 0:
+            raise forms.ValidationError("Experience cannot be negative.")
+        if experience is not None and experience > 50:
+            raise forms.ValidationError("Experience seems unrealistic. Please enter a valid number.")
+        return experience
+    
+    def clean_rate(self):
+        rate = self.cleaned_data.get('rate')
+        if rate is not None and rate <= 0:
+            raise forms.ValidationError("Rate must be greater than 0.")
+        if rate is not None and rate > 10000:
+            raise forms.ValidationError("Rate seems too high. Please enter a realistic hourly rate.")
+        return rate
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already registered.")
+        return email
 
 class LoginForm(forms.Form):
     phone_number = forms.CharField(
@@ -153,6 +177,24 @@ class UserProfileUpdateForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+    
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number')
+        if phone:
+            if not phone.isdigit() or len(phone) != 10:
+                raise forms.ValidationError("Enter a valid 10-digit phone number.")
+            # Check if phone number is taken by another user
+            if CustomUser.objects.exclude(pk=self.instance.pk).filter(phone_number=phone).exists():
+                raise forms.ValidationError("This phone number is already registered.")
+        return phone
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # Check if email is taken by another user
+            if CustomUser.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
+                raise forms.ValidationError("This email is already registered.")
+        return email
 
 
 class ManpowerProfileUpdateForm(forms.ModelForm):
@@ -169,9 +211,30 @@ class ManpowerProfileUpdateForm(forms.ModelForm):
             'district': forms.TextInput(attrs={'class': 'form-control'}),
             'municipality': forms.TextInput(attrs={'class': 'form-control'}),
             'ward': forms.NumberInput(attrs={'class': 'form-control'}),
-            'experience': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'experience': forms.NumberInput(attrs={'class': 'form-control'}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'rate': forms.NumberInput(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-        }
+        }    
+    def clean_experience(self):
+        experience = self.cleaned_data.get('experience')
+        if experience is not None and experience < 0:
+            raise forms.ValidationError("Experience cannot be negative.")
+        if experience is not None and experience > 50:
+            raise forms.ValidationError("Experience seems unrealistic. Please enter a valid number.")
+        return experience
+    
+    def clean_rate(self):
+        rate = self.cleaned_data.get('rate')
+        if rate is not None and rate <= 0:
+            raise forms.ValidationError("Rate must be greater than 0.")
+        if rate is not None and rate > 10000:
+            raise forms.ValidationError("Rate seems too high. Please enter a realistic hourly rate.")
+        return rate
+    
+    def clean_ward(self):
+        ward = self.cleaned_data.get('ward')
+        if ward is not None and (ward < 1 or ward > 50):
+            raise forms.ValidationError("Ward number must be between 1 and 50.")
+        return ward
