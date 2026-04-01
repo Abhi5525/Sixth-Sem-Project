@@ -1,9 +1,8 @@
 import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from .models import Province, District, Municipality, CustomUser, ManpowerProfile
 from django.contrib.auth import get_user_model, authenticate
+from .models import Province, District, Municipality, CustomUser, ManpowerProfile
 
 User = get_user_model()
 
@@ -12,7 +11,7 @@ class UserSignupForm(UserCreationForm):
     phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}))
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('full_name', 'phone_number', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
@@ -39,8 +38,11 @@ class UserSignupForm(UserCreationForm):
 
     def clean_phone_number(self):
         phone = self.cleaned_data['phone_number']
+        phone = re.sub(r'\s+', '', phone)
         if not phone.isdigit() or len(phone) != 10:
             raise forms.ValidationError("Enter a valid phone number (10 digits).")
+        if CustomUser.objects.filter(phone_number=phone).exists():
+            raise forms.ValidationError("This phone number is already registered.")
         return phone
 
 class ManpowerSignupForm(forms.ModelForm):
@@ -160,11 +162,21 @@ class LoginForm(forms.Form):
         password = cleaned_data.get('password')
         
         if phone_number and password:
-            # Validate phone number format
-            user = authenticate(username=phone_number, password=password)
-            if not user:
-                raise forms.ValidationError("Invalid credentials")
-            self.user = user
+            normalized_phone = re.sub(r'\s+', '', phone_number).strip()
+            cleaned_data['phone_number'] = normalized_phone
+
+            if not normalized_phone.isdigit() or len(normalized_phone) != 10:
+                raise forms.ValidationError("Enter a valid 10-digit phone number.")
+
+            try:
+                user = authenticate(username=normalized_phone, password=password)
+                if not user:
+                    raise forms.ValidationError("Phone number or password is incorrect.")
+                if not user.is_active:
+                    raise forms.ValidationError("This account has been deactivated.")
+                self.user = user
+            except Exception as e:
+                raise forms.ValidationError(f"Login error: {str(e)}")
              
         return cleaned_data
     

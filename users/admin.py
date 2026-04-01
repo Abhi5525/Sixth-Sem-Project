@@ -14,20 +14,22 @@ class UserAdmin(BaseUserAdmin):
 
     fieldsets = (
         (None, {'fields': ('phone_number', 'password')}),
-        # ('Personal Info', {'fields': ('full_name', 'phone_number', 'username')}),
+            ('Personal Info', {'fields': ('full_name', 'email', 'is_client', 'is_professional')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('phone_number', 'password1', 'password2', 'is_staff', 'is_active')}
+            'fields': ('phone_number', 'password1', 'password2', 'is_staff', 'is_active','is_client','is_professional', 'full_name', 'email'),
+        }
+
         ),
     )
 
 
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'full_name', 'is_staff', 'is_active')
+    list_display = ('phone_number', 'full_name', 'is_staff', 'is_active', 'email', 'is_client', 'is_professional')
     search_fields = ('phone_number', 'full_name')
     list_filter = ('is_staff', 'is_active')
 

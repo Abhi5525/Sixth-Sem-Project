@@ -14,19 +14,28 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q
 from geopy.distance import great_circle
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 def save_user_location(request):
-    if request.method == "POST":
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+    try:
         data = json.loads(request.body)
-        request.session['userLat'] = data.get("latitude")
-        request.session['userLng'] = data.get("longitude")
-        return JsonResponse({
-            'success': True,
-            'lat': request.session['userLat'],
-            'lng': request.session['userLng']})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON payload'}, status=400)
+
+    request.session['userLat'] = data.get("latitude")
+    request.session['userLng'] = data.get("longitude")
+    return JsonResponse({
+        'success': True,
+        'lat': request.session['userLat'],
+        'lng': request.session['userLng']
+    })
     
     
+@ensure_csrf_cookie
 def home(request):
     query = request.GET.get('searchInput')
 

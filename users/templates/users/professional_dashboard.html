@@ -70,51 +70,76 @@
 
     <!-- For Today's Bookings -->
 {% for b in today_bookings %}
-<div class="booking-card">
-    <div class="d-flex justify-content-between align-items-start">
+<div class="booking-card" style="border-left: 4px solid #10b981; padding: 16px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+        <!-- Left Column: Customer & Service Info -->
         <div>
-    <h5>{{ b.client.full_name }}</h5>
-    <!-- Display DATE separately using local time -->
-    <p class="mb-1"><strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}</p>
-    <!-- Display TIME separately using local time -->
-    <p class="mb-1">
-        <strong>Time:</strong> 
-        {{ b.booking_time|localtime|time:"g:i A" }} - 
-        {% if b.end_time|localtime %}
-            {{ b.end_time|localtime|time:"g:i A" }}
-        {% else %}
-            {{ b.end_time|localtime|time:"g:i A" }}
-        {% endif %}
-    </p>
-    <p class="mb-2"><strong>Status:</strong> <span class="badge bg-info">{{ b.status|title }}</span></p>
-</div>
-        <div class="card shadow-sm p-1">
-    <div class="d-flex flex-column gap-2">
-
-        <div class="p-2 rounded bg-primary text-white">
-            <strong>Total Fee:</strong><b> Rs {{ b.total_fee }}</b>
+            <h5 style="margin: 0 0 8px 0; color: #1f2937;">{{ b.client.full_name }}</h5>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-tools" style="color: #10b981; margin-right: 6px;"></i>
+                <strong>Service:</strong> {{ b.professional.skill }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-phone" style="color: #10b981; margin-right: 6px;"></i>
+                <strong>Contact:</strong> {{ b.client.phone_number|default:"N/A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-clock" style="color: #10b981; margin-right: 6px;"></i>
+                <strong>Duration:</strong> {{ b.duration_hours }} hours
+            </p>
         </div>
 
-        <div class="p-2 rounded bg-warning text-dark">
-            <strong>Deposit Paid:</strong><b> Rs {{ b.deposit_amount }}</b>
+        <!-- Right Column: Date, Time, Status -->
+        <div>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-calendar" style="color: #10b981; margin-right: 6px;"></i>
+                <strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-hourglass-start" style="color: #10b981; margin-right: 6px;"></i>
+                <strong>Time:</strong> {{ b.booking_time|localtime|time:"g:i A" }} - {{ b.end_time|localtime|time:"g:i A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem;">
+                <strong>Status:</strong> <span class="badge bg-success" style="margin-left: 6px;">{{ b.status|title }}</span>
+            </p>
         </div>
-
-        <div class="p-2 rounded bg-success text-white">
-            <strong>Remaining Payment:</strong> <b>Rs {{ b.remaining_payment }}</b>
-        </div>
-
     </div>
-</div>
 
+    <!-- Payment & Fee Information -->
+    <div style="background: #f8f9fa; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; border-left: 3px solid #10b981;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-tag" style="margin-right: 6px;"></i><strong>Total Fee:</strong></p>
+                <p style="margin: 0; font-size: 1.1rem; color: #10b981; font-weight: 700;">Rs {{ b.total_fee }}</p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-info-circle" style="margin-right: 6px;"></i><strong>Payment:</strong></p>
+                <p style="margin: 0; font-weight: 600;">
+                    {% if b.payment.is_paid %}
+                        <span style="color: #2f855a;"><i class="fas fa-check-circle"></i> Paid</span>
+                    {% else %}
+                        <span style="color: #e74c3c;"><i class="fas fa-exclamation-circle"></i> Pending</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-money-bill" style="margin-right: 6px;"></i><strong>Deposit:</strong></p>
+                <p style="margin: 0; color: #7c3aed; font-weight: 600;">Rs {{ b.deposit_amount }}</p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-balance-scale" style="margin-right: 6px;"></i><strong>Remaining:</strong></p>
+                <p style="margin: 0; color: #f97316; font-weight: 600;">Rs {{ b.remaining_payment }}</p>
+            </div>
+        </div>
     </div>
-    
-    <div class="mt-3">
-        <!-- View Route button with correct field names -->
-        <a href="{% url 'users:view_route' b.id %}" class="btn btn-sm btn-primary" target="_blank">
-    <i class="fas fa-map-marked-alt"></i> View Route
-</a>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="{% url 'users:view_route' b.id %}" class="btn btn-sm btn-primary" target="_blank" style="flex: 1; min-width: 160px;">
+            <i class="fas fa-map-marked-alt"></i> View Route
+        </a>
         {% if b.status != 'completed' %}
-        <button class="btn btn-sm btn-success" onclick="markCompleted({{ b.id }})">
+        <button class="btn btn-sm btn-success" onclick="markCompleted({{ b.id }})" style="flex: 1; min-width: 160px;">
             <i class="fas fa-check-circle"></i> Mark Completed
         </button>
         {% endif %}
@@ -135,17 +160,80 @@
 
    <!-- For Upcoming Bookings -->
 {% for b in upcoming_bookings %}
-<div class="booking-card">
-    <h5>{{ b.client.full_name }}</h5>
-    <!-- Display DATE separately -->
-    <p class="mb-1"><strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}</p>
-    <!-- Display TIME separately -->
-    <p class="mb-1"><strong>Time:</strong> {{ b.booking_time|time:"g:i A" }} - {{ b.end_time|localtime|time:"g:i A" }}</p>
-    <p class="mb-3"><strong>Status:</strong> <span class="badge bg-warning">{{ b.status|title }}</span></p>
+<div class="booking-card" style="border-left: 4px solid #0062cc; padding: 16px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+        <!-- Left Column: Customer & Service Info -->
+        <div>
+            <h5 style="margin: 0 0 8px 0; color: #1f2937;">{{ b.client.full_name }}</h5>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-tools" style="color: #0062cc; margin-right: 6px;"></i>
+                <strong>Service:</strong> {{ b.professional.skill }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-phone" style="color: #0062cc; margin-right: 6px;"></i>
+                <strong>Contact:</strong> {{ b.client.phone_number|default:"N/A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-clock" style="color: #0062cc; margin-right: 6px;"></i>
+                <strong>Duration:</strong> {{ b.duration_hours }} hours
+            </p>
+        </div>
 
-    <a href="{% url 'users:view_route' b.id %}" class="btn btn-sm btn-primary" target="_blank">
-    <i class="fas fa-map-marked-alt"></i> View Route
-</a>
+        <!-- Right Column: Date, Time, Status -->
+        <div>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-calendar" style="color: #0062cc; margin-right: 6px;"></i>
+                <strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-hourglass-start" style="color: #0062cc; margin-right: 6px;"></i>
+                <strong>Time:</strong> {{ b.booking_time|time:"g:i A" }} - {{ b.end_time|localtime|time:"g:i A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem;">
+                <strong>Status:</strong> <span class="badge bg-warning" style="margin-left: 6px;">{{ b.status|title }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Payment & Fee Information -->
+    <div style="background: #f8f9fa; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; border-left: 3px solid #0062cc;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-tag" style="margin-right: 6px;"></i><strong>Total Fee:</strong></p>
+                <p style="margin: 0; font-size: 1.1rem; color: #0062cc; font-weight: 700;">Rs {{ b.total_fee }}</p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-info-circle" style="margin-right: 6px;"></i><strong>Payment:</strong></p>
+                <p style="margin: 0; font-weight: 600;">
+                    {% if b.payment.is_paid %}
+                        <span style="color: #2f855a;"><i class="fas fa-check-circle"></i> Paid</span>
+                    {% else %}
+                        <span style="color: #e74c3c;"><i class="fas fa-exclamation-circle"></i> Pending</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-money-bill" style="margin-right: 6px;"></i><strong>Deposit:</strong></p>
+                <p style="margin: 0; color: #7c3aed; font-weight: 600;">Rs {{ b.deposit_amount }}</p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-balance-scale" style="margin-right: 6px;"></i><strong>Remaining:</strong></p>
+                <p style="margin: 0; color: #f97316; font-weight: 600;">Rs {{ b.remaining_payment }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="{% url 'users:view_route' b.id %}" class="btn btn-sm btn-primary" target="_blank" style="flex: 1; min-width: 160px;">
+            <i class="fas fa-map-marked-alt"></i> View Route
+        </a>
+        {% if b.status != 'completed' %}
+        <button class="btn btn-sm btn-success" onclick="markCompleted({{ b.id }})" style="flex: 1; min-width: 160px;">
+            <i class="fas fa-check-circle"></i> Mark Completed
+        </button>
+        {% endif %}
+    </div>
 </div>
 {% empty %}
 <div class="alert alert-info">
@@ -160,19 +248,89 @@
     <h3 class="section-title">🕘 Booking History</h3>
 
     {% for b in history %}
-      <div class="booking-card">
-        <h5>{{ b.client.full_name }}</h5>
-        <!-- FIXED: Use booking_time and end_time instead of date, start_time -->
-        <p class="mb-1">
-          <strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}
-        </p>
-        <p class="mb-1">
-          <strong>Time:</strong> {{ b.booking_time|localtime|time:"g:i A" }} - {{ b.end_time|localtime|time:"g:i A" }}
-        </p>
-        <p>
-          <strong>Status:</strong> <span class="badge bg-success">Completed</span>
-        </p>
-      </div>
+<div class="booking-card" style="border-left: 4px solid #6366f1; padding: 16px; opacity: 0.95;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+        <!-- Left Column: Customer & Service Info -->
+        <div>
+            <h5 style="margin: 0 0 8px 0; color: #1f2937;">{{ b.client.full_name }}</h5>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-tools" style="color: #6366f1; margin-right: 6px;"></i>
+                <strong>Service:</strong> {{ b.professional.skill }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-phone" style="color: #6366f1; margin-right: 6px;"></i>
+                <strong>Contact:</strong> {{ b.client.phone_number|default:"N/A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-clock" style="color: #6366f1; margin-right: 6px;"></i>
+                <strong>Duration:</strong> {{ b.duration_hours }} hours
+            </p>
+        </div>
+
+        <!-- Right Column: Date, Time, Status -->
+        <div>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-calendar" style="color: #6366f1; margin-right: 6px;"></i>
+                <strong>Date:</strong> {{ b.booking_time|localtime|date:"F d, Y" }}
+            </p>
+            <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-hourglass-end" style="color: #6366f1; margin-right: 6px;"></i>
+                <strong>Time:</strong> {{ b.booking_time|localtime|time:"g:i A" }} - {{ b.end_time|localtime|time:"g:i A" }}
+            </p>
+            <p style="margin: 0; font-size: 0.9rem;">
+                <strong>Status:</strong> <span class="badge bg-success" style="margin-left: 6px;">Completed</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Earnings Information -->
+    <div style="background: #f8f9fa; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; border-left: 3px solid #6366f1;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-coins" style="margin-right: 6px;"></i><strong>Amount Earned:</strong></p>
+                <p style="margin: 0; font-size: 1.1rem; color: #059669; font-weight: 700;">Rs {{ b.total_fee }}</p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-check-circle" style="margin-right: 6px;"></i><strong>Payment Status:</strong></p>
+                <p style="margin: 0; font-weight: 600;">
+                    {% if b.payment.is_paid %}
+                        <span style="color: #2f855a;"><i class="fas fa-check-circle"></i> Paid</span>
+                    {% else %}
+                        <span style="color: #e74c3c;"><i class="fas fa-times-circle"></i> Unpaid</span>
+                    {% endif %}
+                </p>
+            </div>
+            {% if b.review %}
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-star" style="margin-right: 6px;"></i><strong>Rating:</strong></p>
+                <p style="margin: 0; font-weight: 600; color: #f59e0b;">
+                    {% for i in "12345" %}
+                        {% if i|add:"0" <= b.review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                    {% endfor %}
+                    <span style="margin-left: 6px;">{{ b.review.rating }}/5</span>
+                </p>
+            </div>
+            <div>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-note-sticky" style="margin-right: 6px;"></i><strong>Review:</strong></p>
+                <p style="margin: 0; font-size: 0.85rem; color: #555; font-style: italic;">
+                    {% if b.review.comment %}
+                        "{{ b.review.comment|truncatewords:12 }}"
+                    {% else %}
+                        No comment
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 8px;">
+        <a href="{% url 'users:view_route' b.id %}" class="btn btn-sm btn-secondary" target="_blank" style="flex: 1; min-width: 160px;">
+            <i class="fas fa-map-marked-alt"></i> View Route
+        </a>
+    </div>
+</div>
     {% empty %}
       <div class="alert alert-info">
         <i class="fas fa-info-circle"></i> No booking history yet.

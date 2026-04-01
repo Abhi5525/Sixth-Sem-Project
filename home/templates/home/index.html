@@ -692,7 +692,11 @@ document.addEventListener("DOMContentLoaded", function() {
         
         if (!map) {
             map = L.map('map').setView([userLat, userLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+              subdomains: 'abcd',
+              maxZoom: 20,
+              attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+            }).addTo(map);
 
             marker = L.marker([userLat, userLng], {draggable:true}).addTo(map);
 

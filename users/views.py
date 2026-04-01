@@ -66,17 +66,24 @@ def signup(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
         if form.is_valid():
-            user = form.save(commit= False)
-            # user.username = form.cleaned_data['email'].split('@')[0]+ str(User.objects.count()
-            phone = form.cleaned_data['phone_number']
-            pattern = r'^98\d{8}$'
-            if not re.match(pattern, str(phone)):
-                raise ValueError("Phone number must be 10 digits and start with '98'.")
-            
-            user.set_password(form.cleaned_data['password1'])
-            user.save()
-            messages.success(request, "Account created successfully. Please log in.")
-            return redirect('users:login')
+            try:
+                user = form.save(commit=False)
+                phone = form.cleaned_data['phone_number'].strip()
+                # Normalize phone number
+                phone = re.sub(r'\s+', '', phone)
+                user.phone_number = phone
+                user.is_client = True
+                user.is_professional = False
+                user.save()
+                messages.success(request, "Account created successfully. Please log in.")
+                return redirect('users:login')
+            except Exception as e:
+                messages.error(request, f"Signup error: {str(e)}")
+        else:
+            # Show form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = UserSignupForm()
     return render(request, 'users/signup.html', {'form': form})

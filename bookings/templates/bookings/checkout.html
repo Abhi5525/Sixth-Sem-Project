@@ -1,88 +1,79 @@
-{% extends "home/base-navbar.html" %}
+{% extends 'home/base-navbar.html' %}
 {% load tz %}
 {% load static %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'bookings/css/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'bookings/css/checkout.css' %}" />
 {% endblock %}
 
 {% block main-content %}
 <div class="container-fluid py-5 checkout-bg">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-            <div class="booking-card shadow-lg">
-                <h2 class="text-primary fw-bold text-center">
-                    <i class="bi bi-credit-card"></i> Checkout
-                </h2>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+      <div class="booking-card shadow-lg">
+        <h2 class="text-primary fw-bold text-center"><i class="bi bi-credit-card"></i> Checkout</h2>
 
-                <!-- Booking Summary -->
-                <div class="checkout-details mb-4">
-                    <div class="detail-section">
-                        <div class="detail-item">
-                            <span class="detail-label">Professional:</span>
-                            <span class="detail-value">{{ booking.professional.user.full_name }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Client:</span>
-                            <span class="detail-value">{{ booking.client_name }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Booking Start:</span>
-                            <span class="detail-value">{{ booking.booking_time|localtime|date:"M d, Y H:i" }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Duration:</span>
-                            <span class="detail-value">{{ booking.duration_hours }} hour(s)</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Booking End:</span>
-                            <span class="detail-value">{{ booking.end_time|localtime|date:"M d, Y H:i" }}</span>
-                        </div>
-                    </div>
-
-                    <div class="pricing-section">
-                        <div class="pricing-item">
-                            <span class="pricing-label">Charge per Hour:</span>
-                            <span class="pricing-value">Rs {{ booking.professional.rate }}</span>
-                        </div>
-                        <div class="pricing-item total-fee">
-                            <span class="pricing-label">Total Fee:</span>
-                            <span class="pricing-value">Rs {{ booking.total_fee }}</span>
-                        </div>
-                        <div class="pricing-item deposit">
-                            <span class="pricing-label">Deposit (10%):</span>
-                            <span class="pricing-value">Rs {{ booking.deposit_amount }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- eSewa Payment Form -->
-                <div class="payment-section">
-                    <form method="POST" action="{{ esewa_url }}">
-                        <input type="hidden" name="amount" value="{{ form_data.amount }}">
-                        <input type="hidden" name="tax_amount" value="{{ form_data.tax_amount }}">
-                        <input type="hidden" name="total_amount" value="{{ form_data.total_amount }}">
-                        <input type="hidden" name="transaction_uuid" value="{{ form_data.transaction_uuid }}">
-                        <input type="hidden" name="product_code" value="{{ form_data.product_code }}">
-                        <input type="hidden" name="product_service_charge"
-                            value="{{ form_data.product_service_charge }}">
-                        <input type="hidden" name="product_delivery_charge"
-                            value="{{ form_data.product_delivery_charge }}">
-                        <input type="hidden" name="success_url" value="{{ form_data.success_url }}">
-                        <input type="hidden" name="failure_url" value="{{ form_data.failure_url }}">
-                        <input type="hidden" name="signed_field_names" value="{{ form_data.signed_field_names }}">
-                        <input type="hidden" name="signature" value="{{ form_data.signature }}">
-
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            Pay via eSewa
-                        </button>
-                    </form>
-
-
-                </div>
-
+        <!-- Booking Summary -->
+        <div class="checkout-details mb-4">
+          <div class="detail-section">
+            <div class="detail-item">
+              <span class="detail-label">Professional:</span>
+              <span class="detail-value">{{ booking.professional.user.full_name }}</span>
             </div>
+            <div class="detail-item">
+              <span class="detail-label">Client:</span>
+              <span class="detail-value">{{ booking.client_name }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Booking Start:</span>
+              <span class="detail-value">{{ booking.booking_time|localtime|date:'M d, Y H:i' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Duration:</span>
+              <span class="detail-value">{{ booking.duration_hours }} hour(s)</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Booking End:</span>
+              <span class="detail-value">{{ booking.end_time|localtime|date:'M d, Y H:i' }}</span>
+            </div>
+          </div>
+
+          <div class="pricing-section">
+            <div class="pricing-item">
+              <span class="pricing-label">Charge per Hour:</span>
+              <span class="pricing-value">Rs {{ booking.professional.rate }}</span>
+            </div>
+            <div class="pricing-item total-fee">
+              <span class="pricing-label">Total Fee:</span>
+              <span class="pricing-value">Rs {{ booking.total_fee }}</span>
+            </div>
+            <div class="pricing-item deposit">
+              <span class="pricing-label">Deposit (10%):</span>
+              <span class="pricing-value">Rs {{ booking.deposit_amount }}</span>
+            </div>
+          </div>
         </div>
+
+        <!-- eSewa Payment Form -->
+        <div class="payment-section">
+          <form method="POST" action="{{ esewa_url }}">
+            <input type="hidden" name="amount" value="{{ form_data.amount }}" />
+            <input type="hidden" name="tax_amount" value="{{ form_data.tax_amount }}" />
+            <input type="hidden" name="total_amount" value="{{ form_data.total_amount }}" />
+            <input type="hidden" name="transaction_uuid" value="{{ form_data.transaction_uuid }}" />
+            <input type="hidden" name="product_code" value="{{ form_data.product_code }}" />
+            <input type="hidden" name="product_service_charge" value="{{ form_data.product_service_charge }}" />
+            <input type="hidden" name="product_delivery_charge" value="{{ form_data.product_delivery_charge }}" />
+            <input type="hidden" name="success_url" value="{{ form_data.success_url }}" />
+            <input type="hidden" name="failure_url" value="{{ form_data.failure_url }}" />
+            <input type="hidden" name="signed_field_names" value="{{ form_data.signed_field_names }}" />
+            <input type="hidden" name="signature" value="{{ form_data.signature }}" />
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Pay via eSewa</button>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
