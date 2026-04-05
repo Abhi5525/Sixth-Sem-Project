@@ -68,6 +68,27 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.full_name or self.phone_number
 
+# Skill Model
+class Skill(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    category = models.CharField(max_length=50, default="General", choices=[
+        ('Plumbing', 'Plumbing'),
+        ('Electrical', 'Electrical'),
+        ('Carpentry', 'Carpentry'),
+        ('Cleaning', 'Cleaning'),
+        ('Painting', 'Painting'),
+        ('Masonry', 'Masonry'),
+        ('General', 'General'),
+        ('Other', 'Other'),
+    ])
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['category', 'name']
+
+    def __str__(self):
+        return self.name
+
 # Manpower Profile (with GPS and availability)
 class ManpowerProfile(models.Model):
     VERIFICATION_STATUS_CHOICES = [
@@ -78,7 +99,8 @@ class ManpowerProfile(models.Model):
     
     email = models.EmailField(unique=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    skill = models.CharField(max_length=100)  # e.g., "Plumber", "Carpenter"
+    skill = models.CharField(max_length=100, null=True, blank=True)  # Deprecated: Use 'skills' ManyToMany instead
+    skills = models.ManyToManyField(Skill, blank=True, related_name='professionals')  # New: Multiple skills
     province = models.CharField(max_length=100)
     district = models.CharField(max_length=100, default="Kathmandu")
     municipality = models.CharField(max_length=100)

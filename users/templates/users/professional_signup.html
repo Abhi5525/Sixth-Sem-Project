@@ -1,381 +1,692 @@
-
-{% block content %}
+{% extends 'home/base-navbar.html' %}
 {% load static %}
+{% block main-content %}
+<link rel="stylesheet" href="{% static 'users/css/prosignup.css' %}?v=20260405">
+<link rel="stylesheet" href="{% static 'users/css/skills.css' %}?v=20260405">
+<link rel="stylesheet" href="{% static 'users/css/camera-capture.css' %}?v=20260405">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link rel="stylesheet" href="{% static 'users/css/prosignup.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<main class="pro-signup-page">
+    <!-- Background blobs -->
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
 
+    <div class="pro-signup-shell">
+        <!-- Left: Brand Panel -->
+        <aside class="pro-visual" aria-hidden="true">
+            <div class="visual-content">
+                <div class="brand-badge">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <p class="eyebrow">Mistri Nepal — Professionals</p>
+                <h1>Showcase Your Skills.<br>Get Booked Locally.</h1>
+                <p>Join 500+ verified professionals managing bookings, payments, and clients — all in one place.</p>
 
+                <div class="visual-steps">
+                    <div class="step-item">
+                        <span class="step-num">1</span>
+                        <span class="step-text">Register with your skills & documents</span>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">2</span>
+                        <span class="step-text">Admin verifies your identity (KYC)</span>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">3</span>
+                        <span class="step-text">Clients find & book you instantly</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="float-element float-1" aria-hidden="true"><i class="fas fa-wrench"></i></div>
+            <div class="float-element float-2" aria-hidden="true"><i class="fas fa-bolt"></i></div>
+            <div class="float-element float-3" aria-hidden="true"><i class="fas fa-paint-roller"></i></div>
+        </aside>
+
+        <!-- Right: Form Panel -->
+        <section class="pro-form-panel">
+            <div class="pro-form-shell">
+                <!-- Progress Header -->
+                <header class="pro-form-header">
+                    <div class="header-badge">
+                        <span class="badge-dot"></span>
+                        <span class="badge-text">Professional Registration</span>
+                    </div>
+                    <h2>Create your professional account</h2>
+                    <p>Complete all 4 steps to submit your registration.</p>
+                </header>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar-wrap">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step active" data-step="1">
+                            <span class="step-dot"></span>
+                            <span class="step-label">Personal</span>
+                        </div>
+                        <div class="progress-step" data-step="2">
+                            <span class="step-dot"></span>
+                            <span class="step-label">Location</span>
+                        </div>
+                        <div class="progress-step" data-step="3">
+                            <span class="step-dot"></span>
+                            <span class="step-label">Skills</span>
+                        </div>
+                        <div class="progress-step" data-step="4">
+                            <span class="step-dot"></span>
+                            <span class="step-label">KYC</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server Messages -->
+                {% if messages %}
+                    <div class="server-messages" role="status" aria-live="polite">
+                        {% for message in messages %}
+                            <div class="server-message {{ message.tags }}">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" enctype="multipart/form-data" id="signupForm" novalidate>
+                    {% csrf_token %}
+
+                    <!-- ===================== STEP 1: Personal Info ===================== -->
+                    <div class="form-step" data-step="1">
+                        <div class="step-header">
+                            <i class="fas fa-user-circle"></i>
+                            <h3>Personal Information</h3>
+                            <p>Basic details clients will see when they find you.</p>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="field-group {% if form.email.errors %}has-error{% endif %}" data-section="step1">
+                            <div class="field-wrapper">
+                                <i class="fa-solid fa-envelope field-icon" aria-hidden="true"></i>
+                                {{ form.email }}
+                                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                            </div>
+                            {% if form.email.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.email.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Rate -->
+                        <div class="field-group {% if form.rate.errors %}has-error{% endif %}" data-section="step1">
+                            <div class="field-wrapper">
+                                <span class="input-prefix"><i class="fas fa-tag"></i></span>
+                                {{ form.rate }}
+                                <label for="{{ form.rate.id_for_label }}">Hourly Rate (NPR)</label>
+                            </div>
+                            {% if form.rate.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.rate.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- About Yourself -->
+                        <div class="field-group {% if form.about_yourself.errors %}has-error{% endif %}" data-section="step1">
+                            <div class="field-wrapper field-wrapper--textarea">
+                                <i class="fa-solid fa-file-alt field-icon" aria-hidden="true"></i>
+                                {{ form.about_yourself }}
+                                <label for="{{ form.about_yourself.id_for_label }}">About Yourself</label>
+                            </div>
+                            {% if form.about_yourself.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.about_yourself.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ===================== STEP 2: Location ===================== -->
+                    <div class="form-step" data-step="2" style="display:none;">
+                        <div class="step-header">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <h3>Service Location</h3>
+                            <p>Where do you provide your services?</p>
+                        </div>
+
+                        <div class="location-grid">
+                            <!-- Province -->
+                            <div class="field-group {% if form.province.errors %}has-error{% endif %}" data-section="step2">
+                                <div class="field-wrapper">
+                                    <i class="fa-solid fa-map field-icon" aria-hidden="true"></i>
+                                    {{ form.province }}
+                                    <label for="province">Province</label>
+                                </div>
+                                {% if form.province.errors %}
+                                    <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.province.errors|join:", " }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- District -->
+                            <div class="field-group {% if form.district.errors %}has-error{% endif %}" data-section="step2">
+                                <div class="field-wrapper">
+                                    <i class="fa-solid fa-map-pin field-icon" aria-hidden="true"></i>
+                                    {{ form.district }}
+                                    <label for="district">District</label>
+                                </div>
+                                {% if form.district.errors %}
+                                    <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.district.errors|join:", " }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Municipality -->
+                            <div class="field-group {% if form.municipality.errors %}has-error{% endif %}" data-section="step2">
+                                <div class="field-wrapper">
+                                    <i class="fa-solid fa-building field-icon" aria-hidden="true"></i>
+                                    {{ form.municipality }}
+                                    <label for="municipality">Municipality</label>
+                                </div>
+                                {% if form.municipality.errors %}
+                                    <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.municipality.errors|join:", " }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ward -->
+                            <div class="field-group {% if form.ward.errors %}has-error{% endif %}" data-section="step2">
+                                <div class="field-wrapper">
+                                    <i class="fa-solid fa-home field-icon" aria-hidden="true"></i>
+                                    {{ form.ward }}
+                                    <label for="ward">Ward Number</label>
+                                </div>
+                                {% if form.ward.errors %}
+                                    <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.ward.errors|join:", " }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===================== STEP 3: Skills ===================== -->
+                    <div class="form-step" data-step="3" style="display:none;">
+                        <div class="step-header">
+                            <i class="fas fa-tools"></i>
+                            <h3>Skills & Experience</h3>
+                            <p>Select 1–3 skills you're proficient in.</p>
+                        </div>
+
+                        <!-- Skills -->
+                        <div class="field-group {% if form.skills.errors %}has-error{% endif %}" data-section="step3">
+                            <div class="skills-search-wrap">
+                                <div class="skills-search">
+                                    <i class="fa-solid fa-search"></i>
+                                    <input type="text" id="skillSearch" placeholder="Search skills (e.g. Plumbing, Electrician...)" autocomplete="off" />
+                                </div>
+                                <div class="skills-count" id="skillsCount">0 / 3 selected</div>
+                            </div>
+                            <div class="skills-options" id="skillsOptions">
+                                {{ form.skills }}
+                            </div>
+                            {% if form.skills.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.skills.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Experience -->
+                        <div class="field-group {% if form.experience.errors %}has-error{% endif %}" data-section="step3">
+                            <div class="field-wrapper">
+                                <span class="input-prefix"><i class="fas fa-briefcase"></i></span>
+                                {{ form.experience }}
+                                <label for="experience">Years of Experience</label>
+                            </div>
+                            {% if form.experience.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.experience.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ===================== STEP 4: KYC Documents ===================== -->
+                    <div class="form-step" data-step="4" style="display:none;">
+                        <div class="step-header">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Identity Verification (KYC)</h3>
+                            <p>Upload your citizenship documents and capture a profile photo. This is required for trust & safety.</p>
+                        </div>
+
+                        <!-- Citizenship Front -->
+                        <div class="field-group {% if form.citizenship_front.errors %}has-error{% endif %}" data-section="step4">
+                            <div class="file-upload-card">
+                                <div class="file-card-icon"><i class="fas fa-id-card"></i></div>
+                                <div class="file-card-label">Citizenship — Front Side</div>
+                                <div class="file-input-container">
+                                    <label class="file-input-label">
+                                        <span class="file-input-text" id="citFrontText">Choose file...</span>
+                                        <i class="fas fa-upload file-input-icon"></i>
+                                        {{ form.citizenship_front }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% if form.citizenship_front.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.citizenship_front.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Citizenship Back -->
+                        <div class="field-group {% if form.citizenship_back.errors %}has-error{% endif %}" data-section="step4">
+                            <div class="file-upload-card">
+                                <div class="file-card-icon"><i class="fas fa-id-card"></i></div>
+                                <div class="file-card-label">Citizenship — Back Side</div>
+                                <div class="file-input-container">
+                                    <label class="file-input-label">
+                                        <span class="file-input-text" id="citBackText">Choose file...</span>
+                                        <i class="fas fa-upload file-input-icon"></i>
+                                        {{ form.citizenship_back }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% if form.citizenship_back.errors %}
+                                <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.citizenship_back.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Profile Photo (Camera) -->
+                        <div class="field-group" data-section="step4">
+                            <div class="file-upload-card">
+                                <div class="file-card-icon"><i class="fas fa-camera"></i></div>
+                                <div class="file-card-label">Profile Photo (KYC Verification)</div>
+                                <div class="file-input-container">
+                                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" style="display:none !important;" required>
+                                    <button type="button" class="camera-btn" id="cameraBtn">
+                                        <i class="fas fa-camera"></i> Capture with Camera
+                                    </button>
+                                    <small class="d-block mt-2 text-muted">
+                                        <i class="fas fa-info-circle"></i> Camera capture required. After admin verification, you can change your photo later.
+                                    </small>
+                                    <div id="captureStatus" class="alert alert-success mt-2" style="display:none;">
+                                        <i class="fas fa-check-circle"></i> Photo captured successfully!
+                                    </div>
+                                    <div id="cameraFallback" class="alert alert-warning mt-2" style="display:none;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Camera not available.</strong> Please use a device with camera access.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+
+                    <!-- Navigation Buttons -->
+                    <div class="form-nav">
+                        <button type="button" class="btn-prev" id="prevBtn" style="display:none;">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Previous</span>
+                        </button>
+                        <button type="button" class="btn-next" id="nextBtn">
+                            <span>Next Step</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="submit" class="btn-submit" id="submitBtn" style="display:none;">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Submit Registration</span>
+                        </button>
+                    </div>
+                </form>
+
+                <p class="account-link">Already have an account? <a href="{% url 'users:login' %}">Log in</a></p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Camera Modal -->
+{% include 'users/camera_modal.html' %}
+
+<!-- Scripts -->
+<script src="{% static 'users/js/camera-capture.js' %}"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ============================
+    // Wizard State
+    // ============================
+    let currentStep = 1;
+    const totalSteps = 4;
+    const progressFill = document.getElementById('progressFill');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function updateWizard() {
+        // Show/hide steps
+        document.querySelectorAll('.form-step').forEach((step) => {
+            step.style.display = parseInt(step.dataset.step) === currentStep ? 'block' : 'none';
+        });
+
+        // Update progress bar
+        const pct = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        progressFill.style.width = pct + '%';
+
+        // Update step dots
+        document.querySelectorAll('.progress-step').forEach((dot) => {
+            const s = parseInt(dot.dataset.step);
+            dot.classList.toggle('active', s === currentStep);
+            dot.classList.toggle('completed', s < currentStep);
+        });
+
+        // Buttons
+        prevBtn.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+        nextBtn.style.display = currentStep < totalSteps ? 'inline-flex' : 'none';
+        submitBtn.style.display = currentStep === totalSteps ? 'inline-flex' : 'none';
+
+        // Scroll to top of form
+        document.querySelector('.pro-form-shell').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    nextBtn.addEventListener('click', function () {
+        if (validateStep(currentStep)) {
+            currentStep++;
+            updateWizard();
+        }
+    });
+
+    prevBtn.addEventListener('click', function () {
+        currentStep--;
+        updateWizard();
+    });
+
+    // ============================
+    // Per-Step Validation
+    // ============================
+    function validateStep(step) {
+        clearAllErrors();
+        let valid = true;
+
+        if (step === 1) {
+            const email = document.getElementById('email');
+            const rate = document.getElementById('rate');
+
+            if (!email || !email.value.trim()) {
+                showFieldError(email, 'Email is required'); valid = false;
+            } else if (!/^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.value.trim())) {
+                showFieldError(email, 'Enter a valid email (must start with a letter)'); valid = false;
+            }
+
+            if (!rate || !rate.value) {
+                showFieldError(rate, 'Hourly rate is required'); valid = false;
+            } else if (parseFloat(rate.value) <= 0 || parseFloat(rate.value) > 10000) {
+                showFieldError(rate, 'Rate must be between 1 and 10,000'); valid = false;
+            }
+        }
+
+        if (step === 2) {
+            ['province', 'district', 'municipality', 'ward'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el || !el.value) {
+                    showFieldError(el, 'This field is required'); valid = false;
+                }
+            });
+        }
+
+        if (step === 3) {
+            const checked = document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked');
+            if (checked.length === 0) {
+                showSkillsError('Select at least one skill'); valid = false;
+            } else if (checked.length > 3) {
+                showSkillsError('Maximum 3 skills allowed'); valid = false;
+            }
+
+            const exp = document.getElementById('experience');
+            if (exp && exp.value && (parseFloat(exp.value) < 0 || parseFloat(exp.value) > 50)) {
+                showFieldError(exp, 'Experience must be between 0 and 50'); valid = false;
+            }
+        }
+
+        if (step === 4) {
+            const citFront = document.getElementById('citizenship_front');
+            const citBack = document.getElementById('citizenship_back');
+            const profilePic = document.getElementById('profile_picture');
+
+            if (!citFront || !citFront.value) {
+                showFieldError(citFront, 'Citizenship front is required'); valid = false;
+            }
+            if (!citBack || !citBack.value) {
+                showFieldError(citBack, 'Citizenship back is required'); valid = false;
+            }
+            if (!profilePic || !profilePic.files || profilePic.files.length === 0) {
+                showFieldError(document.getElementById('cameraBtn'), 'Profile photo is required — please capture with camera'); valid = false;
+            }
+        }
+
+        if (!valid) {
+            const firstError = document.querySelector('.form-step[style*="block"] .is-invalid');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        return valid;
+    }
+
+    function showFieldError(el, msg) {
+        if (!el) return;
+        el.classList.add('is-invalid');
+        const group = el.closest('.field-group') || el.closest('.file-upload-card');
+        if (!group) return;
+        let err = group.querySelector('.client-error');
+        if (!err) {
+            err = document.createElement('p');
+            err.className = 'error-text client-error';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span></span>';
+            group.appendChild(err);
+        }
+        err.querySelector('span').textContent = msg;
+    }
+
+    function showSkillsError(msg) {
+        const wrap = document.querySelector('.skills-options');
+        if (wrap) wrap.classList.add('has-error');
+        const group = document.querySelector('[data-section="step3"].field-group');
+        if (!group) return;
+        let err = group.querySelector('.client-error');
+        if (!err) {
+            err = document.createElement('p');
+            err.className = 'error-text client-error';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span></span>';
+            group.appendChild(err);
+        }
+        err.querySelector('span').textContent = msg;
+    }
+
+    function clearAllErrors() {
+        document.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.client-error').forEach((el) => el.remove());
+        document.querySelectorAll('.skills-options').forEach((el) => el.classList.remove('has-error'));
+    }
+
+    // Clear error on user interaction
+    document.querySelectorAll('.field-wrapper input, .field-wrapper select, .field-wrapper textarea').forEach((input) => {
+        input.addEventListener('input', () => {
+            input.classList.remove('is-invalid');
+            const group = input.closest('.field-group');
+            if (group) group.querySelector('.client-error')?.remove();
+        });
+    });
+
+    // ============================
+    // Skill Search & Counter
+    // ============================
+    const skillSearch = document.getElementById('skillSearch');
+    const skillsOptions = document.getElementById('skillsOptions');
+    const skillsCount = document.getElementById('skillsCount');
+
+    if (skillSearch && skillsOptions) {
+        skillSearch.addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            const items = skillsOptions.querySelectorAll('.skill-item');
+            items.forEach((item) => {
+                const label = item.textContent.toLowerCase();
+                item.style.display = label.includes(q) ? '' : 'none';
+            });
+        });
+    }
+
+    function updateSkillsCount() {
+        const checked = document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked');
+        if (skillsCount) {
+            skillsCount.textContent = checked.length + ' / 3 selected';
+            skillsCount.style.color = checked.length > 3 ? '#e53e3e' : checked.length > 0 ? '#2f855a' : '#a0aec0';
+        }
+    }
+
+    document.querySelectorAll('#skillsOptions input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener('change', function () {
+            const checked = document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked');
+            if (checked.length > 3) {
+                this.checked = false;
+                alert('Maximum 3 skills allowed.');
+            }
+            updateSkillsCount();
+        });
+    });
+
+    updateSkillsCount();
+
+    // ============================
+    // File Upload Labels
+    // ============================
+    const citFront = document.getElementById('citizenship_front');
+    const citBack = document.getElementById('citizenship_back');
+    if (citFront) {
+        citFront.addEventListener('change', function () {
+            const t = document.getElementById('citFrontText');
+            if (t) { t.textContent = this.files[0]?.name || 'Choose file...'; t.style.color = this.files[0] ? '#006fc2' : ''; }
+        });
+    }
+    if (citBack) {
+        citBack.addEventListener('change', function () {
+            const t = document.getElementById('citBackText');
+            if (t) { t.textContent = this.files[0]?.name || 'Choose file...'; t.style.color = this.files[0] ? '#006fc2' : ''; }
+        });
+    }
+
+    // ============================
+    // Cascading Dropdowns
+    // ============================
+    const csrftoken = getCookie('csrftoken');
+    const selProvince = document.getElementById('province');
+    const selDistrict = document.getElementById('district');
+    const selMunicipality = document.getElementById('municipality');
+    const selWard = document.getElementById('ward');
+
+    function setLoading(el, isLoading) {
+        if (!el) return;
+        el.disabled = isLoading;
+        if (isLoading) el.innerHTML = '<option value="">Loading...</option>';
+    }
+
+    // Load provinces
+    setLoading(selProvince, true);
+    fetch('/users/provinces/', { method: 'GET', headers: { 'X-CSRFToken': csrftoken } })
+        .then(r => r.json())
+        .then(data => {
+            setLoading(selProvince, false);
+            selProvince.innerHTML = '<option value="">--- Select Province ---</option>';
+            data.provinces.forEach(p => { selProvince.innerHTML += `<option value="${p.name}">${p.name}</option>`; });
+        })
+        .catch(() => { setLoading(selProvince, false); selProvince.innerHTML = '<option value="">Error loading</option>'; });
+
+    selProvince?.addEventListener('change', function () {
+        if (!this.value) return;
+        setLoading(selDistrict, true);
+        selMunicipality.innerHTML = '<option value="">Select Municipality</option>';
+        selWard.innerHTML = '<option value="">Select Ward</option>';
+        fetch(`/users/district/?province_name=${encodeURIComponent(this.value)}`, { method: 'GET', headers: { 'X-CSRFToken': csrftoken } })
+            .then(r => r.json())
+            .then(data => {
+                setLoading(selDistrict, false);
+                selDistrict.innerHTML = '<option value="">--- Select District ---</option>';
+                data.districts.forEach(d => { selDistrict.innerHTML += `<option value="${d.name}">${d.name}</option>`; });
+            })
+            .catch(() => { setLoading(selDistrict, false); selDistrict.innerHTML = '<option value="">Error loading</option>'; });
+    });
+
+    selDistrict?.addEventListener('change', function () {
+        if (!this.value) return;
+        setLoading(selMunicipality, true);
+        selWard.innerHTML = '<option value="">Select Ward</option>';
+        fetch(`/users/municipality/?district_name=${encodeURIComponent(this.value)}`, { method: 'GET', headers: { 'X-CSRFToken': csrftoken } })
+            .then(r => r.json())
+            .then(data => {
+                setLoading(selMunicipality, false);
+                selMunicipality.innerHTML = '<option value="">--- Select Municipality ---</option>';
+                data.municipality.forEach(m => { selMunicipality.innerHTML += `<option value="${m.name}">${m.name}</option>`; });
+            })
+            .catch(() => { setLoading(selMunicipality, false); selMunicipality.innerHTML = '<option value="">Error loading</option>'; });
+    });
+
+    selMunicipality?.addEventListener('change', function () {
+        if (!this.value) return;
+        setLoading(selWard, true);
+        fetch(`/users/ward/?municipality_name=${encodeURIComponent(this.value)}`, { method: 'GET', headers: { 'X-CSRFToken': csrftoken } })
+            .then(r => r.json())
+            .then(data => {
+                setLoading(selWard, false);
+                selWard.innerHTML = '<option value="">--- Select Ward ---</option>';
+                data.wards.forEach(w => { selWard.innerHTML += `<option value="${w}">${w}</option>`; });
+            })
+            .catch(() => { setLoading(selWard, false); selWard.innerHTML = '<option value="">Error loading</option>'; });
+    });
+
+    // ============================
+    // Geolocation
+    // ============================
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
             document.getElementById('latitude').value = pos.coords.latitude;
             document.getElementById('longitude').value = pos.coords.longitude;
         });
     }
-    
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+
+    // ============================
+    // Real-time Email Validation
+    // ============================
+    const emailField = document.getElementById('email');
+    emailField?.addEventListener('blur', function () {
+        const email = this.value.trim();
+        if (!email) return;
+        if (/^\d/.test(email)) {
+            showFieldError(this, 'Email cannot start with a number'); return;
         }
-        return cookieValue;
-    }
-    
-    const csrftoken = getCookie('csrftoken');
-    
-    document.addEventListener('DOMContentLoaded', function () {
-        const selectedProvince = document.getElementById('province');
-        const selectedDistrict = document.getElementById('district');
-        const selectedMunicipality = document.getElementById('municipality');
-        const selectedWard = document.getElementById('ward');
-        
-        function setLoading(element, isLoading) {
-            if (isLoading) {
-                element.disabled = true;
-                element.innerHTML = '<option value="">Loading...</option>';
-            } else {
-                element.disabled = false;
-            }
+        if (!/^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+            showFieldError(this, 'Please enter a valid email address'); return;
         }
-        
-        // Initialize province dropdown
-        setLoading(selectedProvince, true);
-        fetch('/users/provinces/', {
-            method: 'GET',
-            headers: { 'X-CSRFToken': csrftoken }
-        })
-        .then(res => res.json())
-        .then(data => {
-            setLoading(selectedProvince, false);
-            selectedProvince.innerHTML = '<option value="">--- Select Province ---</option>';
-            data.provinces.forEach(p => {
-                selectedProvince.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            selectedProvince.innerHTML = '<option value="">Error loading</option>';
-        });
-        
-        selectedProvince.addEventListener('change', function () {
-            const provinceName = this.value;
-            if (!provinceName) return;
-            
-            setLoading(selectedDistrict, true);
-            fetch(`/users/district/?province_name=${encodeURIComponent(provinceName)}`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => res.json())
-            .then(data => {
-                setLoading(selectedDistrict, false);
-                selectedDistrict.innerHTML = '<option value="">Select District</option>';
-                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.districts.forEach(d => {
-                    selectedDistrict.innerHTML += `<option value="${d.name}">${d.name}</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                selectedDistrict.innerHTML = '<option value="">Error loading</option>';
-            });
-        });
-        
-        selectedDistrict.addEventListener('change', function () {
-            const districtName = this.value;
-            if (!districtName) return;
-            
-            setLoading(selectedMunicipality, true);
-            fetch(`/users/municipality/?district_name=${encodeURIComponent(districtName)}`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => res.json())
-            .then(data => {
-                setLoading(selectedMunicipality, false);
-                selectedMunicipality.innerHTML = '<option value="">Select Municipality</option>';
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.municipality.forEach(m => {
-                    selectedMunicipality.innerHTML += `<option value="${m.name}">${m.name}</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                selectedMunicipality.innerHTML = '<option value="">Error loading</option>';
-            });
-        });
-        
-        selectedMunicipality.addEventListener('change', function () {
-            const municipalityName = this.value;
-            if (!municipalityName) return;
-            
-            setLoading(selectedWard, true);
-            fetch(`/users/ward/?municipality_name=${encodeURIComponent(municipalityName)}`, {
-                method: 'GET',
-                headers: { 'X-CSRFToken': csrftoken }
-            })
-            .then(res => res.json())
-            .then(data => {
-                setLoading(selectedWard, false);
-                selectedWard.innerHTML = '<option value="">Select Ward</option>';
-                data.wards.forEach(w => {
-                    selectedWard.innerHTML += `<option value="${w}">${w}</option>`;
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                selectedWard.innerHTML = '<option value="">Error loading</option>';
-            });
-        });
-        
-        // File input preview
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        fileInputs.forEach(input => {
-            const container = input.closest('.file-input-container');
-            if (container) {
-                const textSpan = container.querySelector('.file-input-text');
-                input.addEventListener('change', function() {
-                    if (this.files.length > 0) {
-                        textSpan.textContent = this.files[0].name;
-                        textSpan.style.color = 'var(--primary-blue)';
-                    } else {
-                        textSpan.textContent = 'Choose file...';
-                        textSpan.style.color = 'var(--text-light)';
-                    }
-                });
-            }
-        });
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
     });
-</script>
 
-<div class="signup-wrapper">
-    <div class="main-container">
-        <!-- Left Sidebar -->
-        <div class="info-sidebar">
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <i class="fas fa-user-tie"></i>
-                </div>
-                <h1 class="info-title">Join Our Professional Network</h1>
-                <p class="info-subtitle">Connect with clients who need your expertise</p>
-            </div>
-            
-            <div class="features-list">
-                <div class="feature-item">
-                    <div class="feature-icon-wrapper">
-                        <i class="fas fa-briefcase"></i>
-                    </div>
-                    <div class="feature-text">Showcase your skills & experience</div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon-wrapper">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="feature-text">Connect with local clients</div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon-wrapper">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="feature-text">Easy booking management</div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon-wrapper">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="feature-text">Secure payments & protection</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Form Section -->
-        <div class="form-section">
-            <div class="form-header">
-                <h2 class="form-title">Create Professional Account</h2>
-                <p class="form-subtitle">Fill in your details to get started</p>
-            </div>
-            
-            <form method="post" enctype="multipart/form-data" id="signupForm">
-                {% csrf_token %}
-                
-                <div class="form-grid">
-                    {% for field in form %}
-                    <div class="form-group {% if field.name in 'full_name,phone_number,email,skill,experience_years,rate,province,district,municipality,ward,profile_picture' %}{% elif field.name == 'id_proof' %}span-2{% elif field.name == 'bio' %}span-3{% endif %}">
-                        <label for="{{ field.id_for_label }}" class="form-label">
-                            {% if field.name == 'full_name' %}<i class="fas fa-user"></i>
-                            {% elif field.name == 'phone_number' %}<i class="fas fa-phone"></i>
-                            {% elif field.name == 'email' %}<i class="fas fa-envelope"></i>
-                            {% elif field.name == 'skill' %}<i class="fas fa-tools"></i>
-                            {% elif field.name == 'experience_years' %}<i class="fas fa-briefcase"></i>
-                            {% elif field.name == 'rate' %}<i class="fas fa-dollar-sign"></i>
-                            {% elif field.name == 'bio' %}<i class="fas fa-file-alt"></i>
-                            {% elif field.name == 'id_proof' %}<i class="fas fa-id-card"></i>
-                            {% elif field.name == 'profile_picture' %}<i class="fas fa-camera"></i>
-                            {% elif field.name == 'province' %}<i class="fas fa-map-marker-alt"></i>
-                            {% elif field.name == 'district' %}<i class="fas fa-map"></i>
-                            {% elif field.name == 'municipality' %}<i class="fas fa-building"></i>
-                            {% elif field.name == 'ward' %}<i class="fas fa-home"></i>
-                            {% else %}<i class="fas fa-edit"></i>
-                            {% endif %}
-                            {{ field.label }}
-                        </label>
-                        
-                        {% if field.field.widget.input_type == 'file' %}
-                        <div class="file-input-container">
-                            <label class="file-input-label">
-                                <span class="file-input-text">Choose file...</span>
-                                <i class="fas fa-upload file-input-icon"></i>
-                                {{ field }}
-                            </label>
-                        </div>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                        
-                        {% if field.errors %}
-                        <div class="error-text">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ field.errors|join:", " }}
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <input type="hidden" id="latitude" name="latitude">
-                <input type="hidden" id="longitude" name="longitude">
-                
-                <div class="form-actions">
-                    <a href="{% url 'home_module:home' %}" class="back-link">
-                        <i class="fas fa-arrow-left"></i> Back to Homepage
-                    </a>
-                    <button type="submit" class="submit-btn">
-                        <i class="fas fa-user-plus"></i> Register Now
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
-
-<script>
-    // Professional signup form validation
-    document.getElementById('signupForm').addEventListener('submit', function(e) {
-        let isValid = true;
-        
-        // Clear previous custom errors
-        document.querySelectorAll('.custom-error').forEach(el => el.remove());
-        document.querySelectorAll('.form-control, select, textarea').forEach(el => el.classList.remove('is-invalid'));
-        
-        // Get form fields
-        const email = document.getElementById('email');
-        const skill = document.getElementById('skill');
-        const province = document.getElementById('province');
-        const district = document.getElementById('district');
-        const municipality = document.getElementById('municipality');
-        const ward = document.getElementById('ward');
-        const experience = document.getElementById('experience');
-        const rate = document.getElementById('rate');
-        const citizenshipFront = document.getElementById('citizenship_front');
-        const citizenshipBack = document.getElementById('citizenship_back');
-        
-        // Validate email
-        if (email && !email.value.trim()) {
-            showError(email, 'Email is required');
-            isValid = false;
-        } else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-            showError(email, 'Please enter a valid email address');
-            isValid = false;
-        }
-        
-        // Validate skill
-        if (skill && !skill.value.trim()) {
-            showError(skill, 'Skill is required');
-            isValid = false;
-        } else if (skill && skill.value.trim().length < 2) {
-            showError(skill, 'Skill must be at least 2 characters');
-            isValid = false;
-        }
-        
-        // Validate location fields
-        if (province && !province.value) {
-            showError(province, 'Province is required');
-            isValid = false;
-        }
-        if (district && !district.value) {
-            showError(district, 'District is required');
-            isValid = false;
-        }
-        if (municipality && !municipality.value) {
-            showError(municipality, 'Municipality is required');
-            isValid = false;
-        }
-        if (ward && !ward.value) {
-            showError(ward, 'Ward is required');
-            isValid = false;
-        }
-        
-        // Validate experience
-        if (experience && experience.value && (parseFloat(experience.value) < 0 || parseFloat(experience.value) > 50)) {
-            showError(experience, 'Experience must be between 0 and 50 years');
-            isValid = false;
-        }
-        
-        // Validate rate
-        if (rate && !rate.value) {
-            showError(rate, 'Rate per hour is required');
-            isValid = false;
-        } else if (rate && (parseFloat(rate.value) <= 0 || parseFloat(rate.value) > 10000)) {
-            showError(rate, 'Rate must be between 1 and 10000');
-            isValid = false;
-        }
-        
-        // Validate citizenship documents
-        if (citizenshipFront && !citizenshipFront.files.length && !citizenshipFront.value) {
-            showError(citizenshipFront, 'Citizenship front image is required');
-            isValid = false;
-        }
-        if (citizenshipBack && !citizenshipBack.files.length && !citizenshipBack.value) {
-            showError(citizenshipBack, 'Citizenship back image is required');
-            isValid = false;
-        }
-        
-        if (!isValid) {
+    // ============================
+    // Final Submit
+    // ============================
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+        if (!validateStep(currentStep)) {
             e.preventDefault();
-            // Scroll to first error
-            const firstError = document.querySelector('.is-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
             return false;
         }
     });
-    
-    function showError(field, message) {
-        field.classList.add('is-invalid');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'custom-error text-danger small mt-1';
-        errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
-        field.closest('.form-group').appendChild(errorDiv);
-    }
-</script>
 
+    // ============================
+    // Helpers
+    // ============================
+    function getCookie(name) {
+        let val = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.substring(0, name.length + 1) === name + '=') val = decodeURIComponent(c.substring(name.length + 1));
+            });
+        }
+        return val;
+    }
+
+    // Init
+    updateWizard();
+});
+</script>
 {% endblock %}

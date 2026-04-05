@@ -14,14 +14,14 @@
       {% csrf_token %}
 
       <div class="form-group icon-input">
-        <input type="text" id="name" name="name" class="form-control" placeholder="Name" />
+        <input type="text" id="name" name="name" class="form-control" placeholder=" " autocomplete="name" />
         <label for="name" class="form-label">Your Name</label>
         <span class="error-message" id="nameError"></span>
         <i class="bi bi-person"></i>
       </div>
 
       <div class="form-group icon-input">
-        <input type="date" id="date" name="date" class="form-control" placeholder=" " min="{{ today|date:'Y-m-d' }}" />
+        <input type="date" id="date" name="date" class="form-control" placeholder=" " />
         <label for="date" class="form-label">Booking Date</label>
         <span class="error-message" id="dateError"></span>
         <i class="bi bi-calendar"></i>
@@ -33,14 +33,13 @@
         <i class="bi bi-clock"></i>
       </div>
 
-      <!-- New Duration Field -->
       <div class="form-group icon-input">
-        <input type="number" id="durationHours" name="duration_hours" class="form-control" placeholder=" " min="1" step="0.5" />
+        <input type="text" id="durationHours" name="duration_hours" class="form-control" placeholder=" " inputmode="decimal" />
         <label for="durationHours" class="form-label">Duration (Hours)</label>
         <span class="error-message" id="durationError"></span>
         <i class="bi bi-hourglass-split"></i>
       </div>
-      <!-- In your HTML template -->
+
       <input type="hidden" id="professional_id" value="{{ professional.id }}" />
       <button type="submit" class="btn-primary">Confirm Booking</button>
     </form>
@@ -48,94 +47,191 @@
 </div>
 
 <script>
-  const lat = localStorage.getItem('userLat')
-  const lng = localStorage.getItem('userLng')
-  const professionalId = document.getElementById('professional_id').value
-  let userLatitude = lat ? parseFloat(lat) : null
-  let userLongitude = lng ? parseFloat(lng) : null
-  // Handle form submit
+  // ============================
+  // Helpers
+  // ============================
+  function pad(n) {
+    return n.toString().padStart(2, '0');
+  }
+
+  function getTodayStr() {
+    const now = new Date();
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
+
+  // ============================
+  // Date/Time Dynamic Constraints
+  // ============================
+  const dateInput = document.getElementById('date');
+  const timeInput = document.getElementById('time');
+  const nameInput = document.getElementById('name');
+  const durationInput = document.getElementById('durationHours');
+
+  // NOTE: No HTML5 min/step attributes — all constraints enforced via JS
+
+  function updateMinTime() {
+    const now = new Date();
+    const selectedDate = dateInput.value;
+    if (!selectedDate) return;
+
+    if (selectedDate === getTodayStr()) {
+      const minTime = new Date(now.getTime() + 30 * 60 * 1000);
+      const minTimeString = pad(minTime.getHours()) + ':' + pad(minTime.getMinutes());
+      timeInput.setAttribute('min', minTimeString);
+
+      // Clear previously selected time if it's now invalid
+      if (timeInput.value && timeInput.value < minTimeString) {
+        timeInput.value = '';
+        clearError('time');
+      }
+    } else {
+      // Future date — no time restriction
+      timeInput.removeAttribute('min');
+    }
+  }
+
+  dateInput.addEventListener('change', function () {
+    updateMinTime();
+    // Validate date field on change
+    validateField('date');
+  });
+
+  // Clear error on user interaction
+  [nameInput, dateInput, timeInput, durationInput].forEach((input) => {
+    if (input) {
+      input.addEventListener('input', () => {
+        const fieldId = input === durationInput ? 'duration' : input.id;
+        clearError(fieldId);
+      });
+      input.addEventListener('change', () => {
+        const fieldId = input === durationInput ? 'duration' : input.id;
+        validateField(fieldId);
+      });
+    }
+  });
+
+  // ============================
+  // Field-level Validation
+  // ============================
+  function validateField(fieldId) {
+    switch (fieldId) {
+      case 'name': {
+        const val = nameInput.value.trim();
+        if (!val) return showFieldError('name', 'Name is required');
+        if (val.length < 2) return showFieldError('name', 'Name must be at least 2 characters');
+        if (!/^[a-zA-Z\s\-'.]+$/.test(val)) return showFieldError('name', 'Name can only contain letters, spaces, hyphens, and apostrophes');
+        return true;
+      }
+      case 'date': {
+        const val = dateInput.value;
+        if (!val) return showFieldError('date', 'Booking date is required');
+        if (val < getTodayStr()) return showFieldError('date', 'You cannot book a past date. Please select today or a future date.');
+        return true;
+      }
+      case 'time': {
+        const val = timeInput.value;
+        if (!val) return showFieldError('time', 'Booking time is required');
+
+        // If date is today, time must be ≥ 30 min from now
+        if (dateInput.value === getTodayStr()) {
+          const now = new Date();
+          const minTime = new Date(now.getTime() + 30 * 60 * 1000);
+          const [h, m] = val.split(':').map(Number);
+          const selected = new Date();
+          selected.setHours(h, m, 0, 0);
+          if (selected < minTime) {
+            const minStr = pad(minTime.getHours()) + ':' + pad(minTime.getMinutes());
+            return showFieldError('time', `Time must be at least 30 min from now. Earliest: ${minStr}`);
+          }
+        }
+        return true;
+      }
+      case 'duration': {
+        const val = durationInput.value.trim();
+        if (!val) return showFieldError('duration', 'Duration is required');
+        const num = parseFloat(val);
+        if (isNaN(num)) return showFieldError('duration', 'Enter a valid number (e.g. 1, 1.5, 2)');
+        if (num < 0.5) return showFieldError('duration', 'Minimum duration is 0.5 hours');
+        if (num > 24) return showFieldError('duration', 'Maximum duration is 24 hours');
+        return true;
+      }
+    }
+  }
+
+  function showFieldError(fieldId, message) {
+    const errorEl = document.getElementById(fieldId + 'Error');
+    const inputEl = document.getElementById(fieldId === 'duration' ? 'durationHours' : fieldId);
+    if (errorEl) errorEl.textContent = message;
+    if (inputEl) inputEl.classList.add('is-invalid');
+    return false;
+  }
+
+  function clearError(fieldId) {
+    const errorEl = document.getElementById(fieldId + 'Error');
+    const inputEl = document.getElementById(fieldId === 'duration' ? 'durationHours' : fieldId);
+    if (errorEl) errorEl.textContent = '';
+    if (inputEl) inputEl.classList.remove('is-invalid');
+  }
+
+  function clearAllErrors() {
+    ['name', 'date', 'time', 'duration'].forEach(clearError);
+  }
+
+  // ============================
+  // Form Submit Handler
+  // ============================
   document.getElementById('bookingForm').addEventListener('submit', function (e) {
-    e.preventDefault() // Stop normal submission
-    if (validateBookingForm()) {
-      submitBooking()
+    e.preventDefault();
+    clearAllErrors();
+
+    // Validate all fields
+    const nameOk = validateField('name');
+    const dateOk = validateField('date');
+    const timeOk = validateField('time');
+    const durationOk = validateField('duration');
+
+    if (nameOk && dateOk && timeOk && durationOk) {
+      submitBooking();
+    } else {
+      // Scroll to first error field
+      const firstError = document.querySelector('.form-control.is-invalid');
+      if (firstError) firstError.focus();
     }
-  })
-  
-  function validateBookingForm() {
-    let isValid = true
-  
-    // Clear previous errors
-    document.querySelectorAll('.error-message').forEach((el) => (el.textContent = ''))
-    document.querySelectorAll('.form-control').forEach((el) => el.classList.remove('is-invalid'))
-  
-    const name = document.getElementById('name').value.trim()
-    const date = document.getElementById('date').value
-    const time = document.getElementById('time').value
-    const durationHours = document.getElementById('durationHours').value
-  
-    // Validate name
-    if (!name) {
-      showError('name', 'Name is required')
-      isValid = false
-    } else if (name.length < 2) {
-      showError('name', 'Name must be at least 2 characters')
-      isValid = false
-    }
-  
-    // Validate date
-    if (!date) {
-      showError('date', 'Booking date is required')
-      isValid = false
-    }
-  
-    // Validate time
-    if (!time) {
-      showError('time', 'Booking time is required')
-      isValid = false
-    }
-  
-    // Validate duration
-    if (!durationHours || parseFloat(durationHours) < 1) {
-      showError('duration', 'Duration must be at least 1 hour')
-      isValid = false
-    }
-  
-    return isValid
-  }
-  
-  function showError(fieldId, message) {
-    const errorElement = document.getElementById(fieldId + 'Error')
-    const inputElement = document.getElementById(fieldId === 'duration' ? 'durationHours' : fieldId)
-    if (errorElement) errorElement.textContent = message
-    if (inputElement) inputElement.classList.add('is-invalid')
-  }
-  
+  });
+
+  // ============================
+  // AJAX Submit
+  // ============================
   function submitBooking() {
-    const name = document.getElementById('name').value.trim()
-    const date = document.getElementById('date').value
-    const time = document.getElementById('time').value
-    const durationHours = document.getElementById('durationHours').value
-    const professionalId = document.getElementById('professional_id').value
-  
-    if (!userLatitude || !userLongitude) {
-      alert('Waiting for your location...')
-      return
+    const name = nameInput.value.trim();
+    const date = dateInput.value;
+    const time = timeInput.value;
+    const durationHours = durationInput.value.trim();
+    const professionalId = document.getElementById('professional_id').value;
+
+    const lat = localStorage.getItem('userLat');
+    const lng = localStorage.getItem('userLng');
+    const userLat = lat ? parseFloat(lat) : null;
+    const userLng = lng ? parseFloat(lng) : null;
+
+    if (!userLat || !userLng) {
+      alert('Waiting for your location...');
+      return;
     }
-  
-    // Combine date and time into ISO datetime
-    const localDate = new Date(`${date}T${time}:00`)
-    const bookingTime = localDate.toISOString()
-  
-    // Client-side validation: Check if booking is at least 30 minutes from now
-    const now = new Date()
-    const minTimeFromNow = new Date(now.getTime() + 30 * 60 * 1000) // Add 30 minutes
-  
+
+    // Combine date + time into ISO datetime
+    const localDate = new Date(`${date}T${time}:00`);
+    const bookingTime = localDate.toISOString();
+
+    // Client-side: must be ≥ 30 min from now
+    const now = new Date();
+    const minTimeFromNow = new Date(now.getTime() + 30 * 60 * 1000);
     if (localDate < minTimeFromNow) {
-      const minTime = minTimeFromNow.toLocaleString()
-      alert(`Bookings must be made at least 30 minutes in advance.\nEarliest available time is: ${minTime}`)
-      return
+      const minStr = minTimeFromNow.toLocaleString();
+      alert(`Bookings must be at least 30 minutes in advance.\nEarliest available: ${minStr}`);
+      return;
     }
-  
+
     fetch(window.location.href, {
       method: 'POST',
       headers: {
@@ -147,39 +243,38 @@
         professional_id: professionalId,
         booking_time: bookingTime,
         duration_hours: durationHours,
-        latitude: userLatitude,
-        longitude: userLongitude
+        latitude: userLat,
+        longitude: userLng
       })
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log('Server response:', data)
         if (data.success) {
-          alert('Booking successful! Redirecting to payment...')
-          window.location.href = `/bookings/checkout/${data.booking_id}/`
+          alert('Booking successful! Redirecting to payment...');
+          window.location.href = `/bookings/checkout/${data.booking_id}/`;
         } else {
-          alert('Error: ' + data.error)
+          alert('Error: ' + data.error);
         }
       })
       .catch((error) => {
-        console.error('Fetch error:', error)
-        alert('Something went wrong. Try again.')
-      })
+        console.error('Fetch error:', error);
+        alert('Something went wrong. Please try again.');
+      });
   }
-  // Helper for CSRF token
+
   function getCookie(name) {
-    let cookieValue = null
+    let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';')
+      const cookies = document.cookie.split(';');
       for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim()
+        const cookie = cookies[i].trim();
         if (cookie.substring(0, name.length + 1) === name + '=') {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
-          break
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
       }
     }
-    return cookieValue
+    return cookieValue;
   }
 </script>
 {% endblock %}

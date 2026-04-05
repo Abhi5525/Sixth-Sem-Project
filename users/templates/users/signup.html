@@ -1,5 +1,8 @@
+{% extends 'home/base-navbar.html' %}
+{% block title %}Sign Up - Service Manpower{% endblock %}
 {% load static %}
-{% block content %}
+
+{% block main-content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link rel="stylesheet" href="{% static 'users/css/signup.css' %}">
 
@@ -50,6 +53,15 @@
                         <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
                         {% if form.phone_number.errors %}
                             <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ form.phone_number.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field-group {% if form.email.errors %}has-error{% endif %}">
+                        <i class="fa-solid fa-envelope field-icon" aria-hidden="true"></i>
+                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {% if form.email.errors %}
+                            <p class="error-text" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ form.email.errors|join:", " }}</p>
                         {% endif %}
                     </div>
 
@@ -117,21 +129,25 @@
     const confirmPasswordField = document.getElementById('{{ form.password2.id_for_label }}');
     const fullNameField = document.getElementById('{{ form.full_name.id_for_label }}');
     const phoneField = document.getElementById('{{ form.phone_number.id_for_label }}');
+    const emailField = document.getElementById('{{ form.email.id_for_label }}');
     const termsCheck = document.getElementById('termsCheck');
     const termsError = document.getElementById('termsError');
     const strengthBar = document.getElementById('strengthBar');
     const strengthText = document.getElementById('strengthText');
 
-    [fullNameField, phoneField, passwordField, confirmPasswordField].forEach((field) => {
+    // Set placeholder for floating label effect
+    [fullNameField, phoneField, emailField, passwordField, confirmPasswordField].forEach((field) => {
         if (!field) return;
         field.setAttribute('placeholder', ' ');
         field.classList.add('input-control');
     });
 
+    // Mark fields with errors
     document.querySelectorAll('.field-group.has-error .input-control').forEach((field) => {
         field.setAttribute('aria-invalid', 'true');
     });
 
+    // Password strength calculator
     function getStrength(password) {
         let score = 0;
         if (password.length >= 8) score += 1;
@@ -158,10 +174,14 @@
         strengthText.textContent = state.text;
     }
 
-    passwordField.addEventListener('input', () => {
-        paintStrength(getStrength(passwordField.value));
-    });
+    // Update strength on password input
+    if (passwordField) {
+        passwordField.addEventListener('input', () => {
+            paintStrength(getStrength(passwordField.value));
+        });
+    }
 
+    // Toggle password visibility
     document.querySelectorAll('.toggle-password').forEach((toggleBtn) => {
         toggleBtn.addEventListener('click', () => {
             const target = document.getElementById(toggleBtn.dataset.target);
@@ -174,12 +194,16 @@
         });
     });
 
-    termsCheck.addEventListener('change', () => {
-        if (termsCheck.checked) {
-            termsError.hidden = true;
-        }
-    });
+    // Terms checkbox handler
+    if (termsCheck) {
+        termsCheck.addEventListener('change', () => {
+            if (termsCheck.checked) {
+                termsError.hidden = true;
+            }
+        });
+    }
 
+    // Show field error
     function showFieldError(field, message) {
         field.setAttribute('aria-invalid', 'true');
         const group = field.closest('.field-group');
@@ -193,6 +217,7 @@
         existing.querySelector('span').textContent = message;
     }
 
+    // Form submit validation
     signupForm.addEventListener('submit', (e) => {
         let valid = true;
         document.querySelectorAll('.client-error').forEach((item) => item.remove());
@@ -208,6 +233,11 @@
             valid = false;
         }
 
+        if (emailField && !emailField.value.includes('@')) {
+            showFieldError(emailField, 'Please enter a valid email address.');
+            valid = false;
+        }
+
         if (passwordField.value.length < 8) {
             showFieldError(passwordField, 'Password must be at least 8 characters.');
             valid = false;
@@ -218,7 +248,7 @@
             valid = false;
         }
 
-        if (!termsCheck.checked) {
+        if (termsCheck && !termsCheck.checked) {
             termsError.hidden = false;
             valid = false;
         }
@@ -228,6 +258,7 @@
         }
     });
 
+    // Ripple effect on button click
     document.querySelectorAll('.ripple-btn').forEach((button) => {
         button.addEventListener('click', (event) => {
             const ripple = document.createElement('span');

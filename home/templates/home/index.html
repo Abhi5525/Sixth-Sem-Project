@@ -71,42 +71,119 @@
   <section id="search" class="mb-5">
     <h2 class="mb-4">Find Professionals</h2>
 
-<form method="get">
-  <div class="row">
-    <div class="form">
-      <div class="input-group search-input-group mb-3">
-        <input 
-          type="search" 
-          class="form-control custom-search-input" 
-          id="searchInput" 
-          name="searchInput"
-          placeholder="Search plumbers, carpenters..." 
-          aria-label="Search"
-          value="{{ request.GET.searchInput|default:'' }}" 
-        />
-        <button class="btn btn-primary custom-search-btn" type="submit">
-          <i class="fas fa-search me-2"></i>Search
+    <div class="search-bar-wrapper">
+      <form method="get" class="search-form d-flex gap-2">
+        <div class="input-group search-input-group flex-grow-1">
+          <input 
+            type="search" 
+            class="form-control custom-search-input" 
+            id="searchInput" 
+            name="searchInput"
+            placeholder="Search plumbers, carpenters..." 
+            aria-label="Search"
+            value="{{ request.GET.searchInput|default:'' }}" 
+          />
+          <button class="btn btn-primary custom-search-btn-compact" type="submit" title="Search professionals">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <!-- Filter Button -->
+        <button type="button" class="btn btn-outline-primary filter-toggle-btn" data-bs-toggle="modal" data-bs-target="#filterModal" title="Open filters">
+          <i class="fas fa-sliders-h me-2"></i>
+          <span>Filters</span>
         </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Filter Modal -->
+  <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-end">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+        <!-- Header -->
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #0960d1, #00c6ff); color: white; padding: 1.5rem; border-radius: 16px 16px 0 0;">
+          <h5 class="modal-title fw-bold" id="filterModalLabel">
+            <i class="fas fa-filter me-2"></i> Filter Professionals
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body p-4">
+          <!-- Price Filter -->
+          <div class="filter-section mb-4">
+            <label class="filter-section-title mb-3">
+              <i class="fas fa-tag text-primary me-2"></i> Hourly Price
+            </label>
+            <div class="price-input-container">
+              <div class="input-group">
+                <span class="input-group-text bg-primary text-white border-0">₹</span>
+                <input 
+                  type="number" 
+                  id="priceInput" 
+                  class="form-control" 
+                  placeholder="Enter price per hour"
+                  min="0"
+                  max="600"
+                  value=""
+                />
+              </div>
+              <small class="text-muted d-block mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Shows professionals with price around this value. Leave empty to show all.
+              </small>
+              <div class="price-display mt-3" id="priceDisplay" style="display: none;">
+                <span class="badge bg-primary">Around ₹<span id="priceValue">0</span>/hour</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Rating Filter -->
+          <div class="filter-section mb-4">
+            <label class="filter-section-title mb-3">
+              <i class="fas fa-star text-warning me-2"></i>Minimum Rating
+            </label>
+            <input 
+              type="range" 
+              id="ratingSlider" 
+              class="form-range" 
+              min="0" 
+              max="5" 
+              step="0.5"
+              value="0"
+            />
+            <div class="rating-display d-flex align-items-center justify-content-between mt-3">
+              <span id="ratingValue" class="fw-bold">All Ratings</span>
+              <span id="ratingStars" class="text-warning">☆☆☆☆☆</span>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Filter Stats -->
+          <div class="filter-info p-3 bg-light rounded">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-2"></i>
+              <span id="filterStats">Showing all professionals</span>
+            </small>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="applyFiltersBtn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #0960d1, #00c6ff); border: none;">
+            <i class="fas fa-check me-2"></i>Apply Filters
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</form>
-    <!-- <div class="d-flex flex-wrap gap-2 mb-4">
-      <button class="btn btn-outline-primary category-filter" data-category="Plumber">
-        Plumber
-      </button>
-      <button class="btn btn-outline-primary category-filter" data-category="Carpenter">
-        Carpenter
-      </button>
-      <button class="btn btn-outline-primary category-filter" data-category="Electrician">
-        Electrician
-      </button>
-      <button class="btn btn-outline-primary category-filter" data-category="Painter">
-        Painter
-      </button>
-    </div> -->
 
-<div class="container mt 3">
+<div class="container mt-3">
          <!-- Display messages -->
 {% if messages %}
 <div class="messages">
@@ -134,8 +211,11 @@
 
                 </h5>
                 <p class="text-muted mb-0 ">
-                  {{manpower.skill}}
-
+                  {% for skill in manpower.skills.all %}
+                    <span class="badge bg-info me-1">{{ skill.name }}</span>
+                  {% empty %}
+                    {{ manpower.skill|default:"No skills" }}
+                  {% endfor %}
                 </p>
               </div>
             </div>
@@ -146,8 +226,7 @@
               {% endif %}
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">Rs {{manpower.rate}}</span> / hour
 
-         {% comment %} <div class = "card-body position-relative">        {% endcomment %}
-<span  class="availability badge position-absolute ms-2{% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
+<span class="availability badge position-absolute ms-2{% if manpower.is_available %}bg-success{% else %}bg-primary{% endif %}" 
       data-id="{{ manpower.id }}">
       
     {% if manpower.is_available %}
@@ -873,6 +952,266 @@ function getCookie(name) {
       // Add logout logic here
     }
   }
+
+// ===== GEOLOCATION: Request location on page load =====
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📍 Page loaded - requesting geolocation...');
+    requestGeolocation();
+});
+
+function requestGeolocation() {
+    // Check if geolocation is supported
+    if (!navigator.geolocation) {
+        console.warn('⚠️ Geolocation not supported by this browser');
+        return;
+    }
+
+    // Check if we already have location in session (to avoid repeated requests)
+    // Only request if location wasn't saved recently
+    const currentTime = Date.now();
+    const lastLocationTime = sessionStorage.getItem('lastLocationRequestTime');
+    const LOCATION_CACHE_TIME = 60000; // 1 minute
+
+    if (lastLocationTime && currentTime - parseInt(lastLocationTime) < LOCATION_CACHE_TIME) {
+        console.log('📍 Location already requested recently, skipping...');
+        return;
+    }
+
+    console.log('🌐 Browser is about to show location permission dialog...');
+
+    // Request location - THIS WILL SHOW THE BROWSER DIALOG
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            // SUCCESS - User allowed location
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            console.log('✅ Location allowed by user!');
+            console.log('Latitude:', latitude);
+            console.log('Longitude:', longitude);
+            console.log('Accuracy:', accuracy, 'meters');
+
+            // Save to session storage
+            sessionStorage.setItem('lastLocationRequestTime', Date.now());
+
+            // Send location to backend
+            sendLocationToBackend(latitude, longitude);
+        },
+        function(error) {
+            // ERROR - User denied or other error
+            console.warn('❌ Location error:', error.code, error.message);
+            
+            let message = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'You denied location access. Professionals may not be sorted by distance.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Location information is not available.';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Location request timed out.';
+                    break;
+            }
+            console.warn(message);
+            
+            // Save that we asked, so we don't spam requests
+            sessionStorage.setItem('lastLocationRequestTime', Date.now());
+        },
+        {
+            enableHighAccuracy: true,    // Request precise location
+            timeout: 10000,              // 10 second timeout
+            maximumAge: 0                // Don't use cached location
+        }
+    );
+}
+
+function sendLocationToBackend(latitude, longitude) {
+    // Get CSRF token
+    const csrfToken = getCookie('csrftoken');
+    
+    if (!csrfToken) {
+        console.warn('⚠️ CSRF token not found');
+        return;
+    }
+
+    console.log('📤 Sending location to backend...');
+
+    fetch('{% url "home_module:save_user_location" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            latitude: latitude,
+            longitude: longitude
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Location saved to backend!');
+            console.log('Response:', data);
+            
+            // Reload page to show sorted professionals
+            console.log('🔄 Reloading page to show sorted professionals...');
+            window.location.reload();
+        } else {
+            console.error('❌ Failed to save location');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error sending location:', error);
+    });
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ===== LIVE FILTERING FOR PROFESSIONALS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('priceInput');
+    const ratingSlider = document.getElementById('ratingSlider');
+    const ratingValue = document.getElementById('ratingValue');
+    const ratingStars = document.getElementById('ratingStars');
+    const filterStats = document.getElementById('filterStats');
+    const priceDisplay = document.getElementById('priceDisplay');
+    const priceValue = document.getElementById('priceValue');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    
+    // Handle rating slider change
+    function handleSliderChange() {
+        updateFilterDisplay();
+        applyFilters();
+    }
+    
+    // Handle price input change
+    function handlePriceChange() {
+        updateFilterDisplay();
+        applyFilters();
+    }
+    
+    // Update display values
+    function updateFilterDisplay() {
+        const rating = parseFloat(ratingSlider.value);
+        if (rating === 0) {
+            ratingValue.textContent = 'All Ratings';
+            ratingStars.textContent = '☆☆☆☆☆';
+        } else {
+            ratingValue.textContent = rating + ' stars & above';
+            let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalf = (rating % 1) > 0;
+            
+            for (let i = 0; i < fullStars; i++) stars += '★';
+            if (hasHalf) stars += '⯨';
+            for (let i = 0; i < (5 - fullStars - (hasHalf ? 1 : 0)); i++) stars += '☆';
+            
+            ratingStars.textContent = stars;
+        }
+        
+        // Update price display
+        if (priceInput.value) {
+            priceValue.textContent = priceInput.value;
+            priceDisplay.style.display = 'block';
+        } else {
+            priceDisplay.style.display = 'none';
+        }
+    }
+    
+    // Function to apply filters
+    function applyFilters() {
+        const targetPrice = priceInput.value ? parseFloat(priceInput.value) : null;
+        const minRating = parseFloat(ratingSlider.value) || 0;
+        
+        // Get all professional cards
+        const professionalCards = document.querySelectorAll('#professionalsList .col');
+        let visibleCount = 0;
+        
+        professionalCards.forEach(card => {
+            const cardBody = card.querySelector('.card-body');
+            if (!cardBody) return;
+            
+            // Extract price from card text (format: "Rs XXX / hour")
+            const priceText = cardBody.textContent.match(/Rs\s+(\d+(?:\.\d{2})?)/);
+            const price = priceText ? parseFloat(priceText[1]) : 0;
+            
+            // Extract rating from card text (format: "X.X (Y reviews)") - matches the number before reviews
+            const ratingText = cardBody.textContent.match(/(\d+\.?\d*)\s*\(\d+\s*reviews\)/);
+            const rating = ratingText ? parseFloat(ratingText[1]) : 0;
+            
+            // Check if card matches filters
+            let priceMatch = true;
+            if (targetPrice !== null) {
+                // Show prices around the target (within ±50% tolerance)
+                const tolerance = targetPrice * 0.5;
+                priceMatch = price >= (targetPrice - tolerance) && price <= (targetPrice + tolerance);
+            }
+            const ratingMatch = rating >= minRating;
+            
+            // Show or hide card
+            if (priceMatch && ratingMatch) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update filter stats
+        if (visibleCount === 0) {
+            filterStats.textContent = 'No professionals match your filters';
+        } else {
+            filterStats.textContent = `Showing ${visibleCount} professional${visibleCount !== 1 ? 's' : ''}`;
+        }
+        
+        // Show or hide "no results" message
+        const list = document.getElementById('professionalsList');
+        let noResultsMsg = list.querySelector('.no-results-message');
+        
+        if (visibleCount === 0) {
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.className = 'no-results-message text-center py-5 col-12';
+                noResultsMsg.innerHTML = `
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p class="text-muted fs-5">No professionals match your filters.</p>
+                    <small class="text-muted d-block">Try adjusting your price or rating filter.</small>
+                `;
+                list.appendChild(noResultsMsg);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+    
+    // Attach event listeners
+    if (priceInput) priceInput.addEventListener('input', handlePriceChange);
+    if (ratingSlider) ratingSlider.addEventListener('input', handleSliderChange);
+    
+    // Initialize display
+    updateFilterDisplay();
+    
+    // Apply filters button (redundant but good UX)
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyFilters);
+    }
+});
 
 </script>
 

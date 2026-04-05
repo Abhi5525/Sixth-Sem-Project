@@ -1,0 +1,72 @@
+<!-- Camera Capture Modal for KYC Profile Photo -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="camera-modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-camera"></i>
+          Capture Profile Photo (KYC Verification)
+        </h5>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Instructions -->
+        <div class="camera-instructions">
+          <ul class="camera-instructions-list">
+            <li><i class="fas fa-check"></i> Make sure your face is clearly visible</li>
+            <li><i class="fas fa-check"></i> Use good lighting (avoid backlighting)</li>
+            <li><i class="fas fa-check"></i> Remove sunglasses and hats</li>
+            <li><i class="fas fa-check"></i> Look directly at the camera</li>
+          </ul>
+        </div>
+
+        <!-- Camera View -->
+        <div id="cameraView">
+          <video id="cameraVideo" playsinline autoplay></video>
+          <div class="camera-controls">
+            <button type="button" class="camera-btn btn-capture" id="capturePhotoBtn">
+              <i class="fas fa-circle"></i> Capture Photo
+            </button>
+            <button type="button" class="camera-btn btn-close-camera" id="closeCameraBtn">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview View -->
+        <div id="previewView">
+          <p class="text-center text-muted mb-3">
+            <small><i class="fas fa-info-circle"></i> Does this photo look good?</small>
+          </p>
+          <img id="previewImage" alt="Captured photo preview" style="max-width: 100%; height: auto;">
+          <div class="preview-controls">
+            <button type="button" class="camera-btn btn-retake" id="retakePhotoBtn">
+              <i class="fas fa-redo"></i> Retake
+            </button>
+            <button type="button" class="camera-btn btn-confirm" id="confirmPhotoBtn">
+              <i class="fas fa-check"></i> Confirm Photo
+            </button>
+          </div>
+        </div>
+
+        <!-- Fallback for no camera access -->
+        <div id="cameraFallback" class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Camera not available.</strong> Please use a device with camera access or try allowing camera permissions in your browser settings.
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <small class="text-muted w-100">
+          <i class="fas fa-lock"></i> Your photo is secure and only used for identity verification.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden Canvas for photo processing -->
+<canvas id="photoCanvas"></canvas>

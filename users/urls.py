@@ -23,6 +23,7 @@ urlpatterns = [
     path('profile/toggle-availability/<int:pk>/', views.toggle_availability, name='toggle_availability'),
     path('profile/', views.profile, name='profile'),
     path("profile/update/", views.update_profile, name="update_profile"),
+    path("profile/request-reverification/", views.request_reverification, name="request_reverification"),
 
 
 

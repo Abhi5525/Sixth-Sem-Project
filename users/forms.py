@@ -2,7 +2,7 @@ import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
-from .models import Province, District, Municipality, CustomUser, ManpowerProfile
+from .models import Province, District, Municipality, CustomUser, ManpowerProfile, Skill
 
 User = get_user_model()
 
@@ -21,6 +21,26 @@ class UserSignupForm(UserCreationForm):
         self.fields['password1'].widget.attrs.update({'class': 'form-control','id': 'password1', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control','id': 'password2', 'placeholder': 'Confirm Password'})
 
+    def clean_full_name(self):
+        """Validate full name: cannot start with number, must contain only letters and spaces"""
+        full_name = self.cleaned_data.get('full_name')
+        if not full_name:
+            raise forms.ValidationError("Full name is required.")
+        
+        # Cannot start with a digit
+        if full_name[0].isdigit():
+            raise forms.ValidationError("Full name cannot start with a number.")
+        
+        # Cannot start with special characters
+        if not full_name[0].isalpha():
+            raise forms.ValidationError("Full name must start with a letter.")
+        
+        # Only letters, spaces, and hyphens allowed
+        if not re.match(r"^[a-zA-Z\s\-']{2,100}$", full_name):
+            raise forms.ValidationError("Full name can only contain letters, spaces, hyphens, and apostrophes.")
+        
+        return full_name
+
     def clean_password1(self):
         password = self.cleaned_data.get('password1')
 
@@ -34,8 +54,6 @@ class UserSignupForm(UserCreationForm):
 
         return password
 
-
-
     def clean_phone_number(self):
         phone = self.cleaned_data['phone_number']
         phone = re.sub(r'\s+', '', phone)
@@ -46,44 +64,74 @@ class UserSignupForm(UserCreationForm):
         return phone
 
 class ManpowerSignupForm(forms.ModelForm):
+    skills = forms.ModelMultipleChoiceField(
+        queryset=Skill.objects.all().order_by('category', 'name'),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'skills-checkbox',
+            'data-form-type': 'signup'
+        }),
+        required=True,
+        help_text="Select at least one skill. Maximum 3 skills allowed."
+    )
+    
+    profile_picture = forms.ImageField(
+        required=True,
+        label='Profile Photo (KYC Verification)',
+        widget=forms.FileInput(attrs={
+            'class': 'd-none',
+            'id': 'profile_picture',
+            'accept': 'image/*',
+            'style': 'display: none !important;',
+        }),
+        help_text="Capture a photo using camera for identity verification (KYC)."
+    )
+
     class Meta:
         model = ManpowerProfile
-        fields = [ 'email', 'skill', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate', 'about_yourself']
+        fields = ['email', 'skills', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate', 'about_yourself']
         widgets = {
-            'email':forms.EmailInput(attrs={'class':'form-control' ,'id':'email', 'placeholder':'Enter your email'}),
-            'province': forms.Select(attrs={'class': 'form-control', 'id': 'province', 'placeholder': "e.g: Bagmati"}),
-            'district': forms.Select(attrs={'class': 'form-control', 'id': 'district', 'placeholder': 'e.g: Kavrepalanchowk'}),
-            'municipality': forms.Select(attrs={'class': 'form-control', 'id': 'municipality', 'placeholder': 'e.g: Budhanilkantha'}),
-            'ward': forms.Select(attrs={'class': 'form-control', 'id': 'ward', 'placeholder': 'e.g: 1'}),
-            'skill': forms.TextInput(attrs={'class': 'form-control','id':'skill', 'placeholder': 'Enter your Skills'}),
-            'experience': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'years of experience'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'id': 'email'}),
+            'province': forms.Select(attrs={'class': 'form-control', 'id': 'province'}),
+            'district': forms.Select(attrs={'class': 'form-control', 'id': 'district'}),
+            'municipality': forms.Select(attrs={'class': 'form-control', 'id': 'municipality'}),
+            'ward': forms.Select(attrs={'class': 'form-control', 'id': 'ward'}),
+            'experience': forms.NumberInput(attrs={'class': 'form-control'}),
             'citizenship_front': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'rate':forms.NumberInput(attrs={'class':'form-control',  'id':'rate', 'placeholder': 'Enter your rate per hour'}),
-            'about_yourself': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Tell us about your experience and skills'}),
+            'rate': forms.NumberInput(attrs={'class': 'form-control', 'id': 'rate'}),
+            'about_yourself': forms.Textarea(attrs={'class': 'form-control'}),
         }
         labels = {
             'rate': 'Rate/Hour',
+            'skills': 'Professional Skills',
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)  # Get the logged-in user from kwargs
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
-            # Pre-fill fields from UserProfile or User
-            # self.fields['full_name'].initial = user.full_name
-            # self.fields['skill'].initial = user.manpowerprofile.skill
-            # self.fields['province'].initial = user.manpowerprofile.province
-            # self.fields['district'].initial = user.manpowerprofile.district
-            # self.fields['municipality'].initial = user.manpowerprofile.municipality
-            # self.fields['ward'].initial = user.manpowerprofile.ward
-            # self.fields['experience'].initial = user.manpowerprofile.experience
-            # self.fields['citizenship_front'].initial = user.manpowerprofile.citizenship_front
-            # self.fields['citizenship_back'].initial = user.manpowerprofile.citizenship_back
-            # self.fields['rate'].initial = user.manpowerprofile.rate
-
-        # Populate province dropdown (optional, as JavaScript handles this)
             self.fields['province'].widget.choices = [('', '--- Select Province ---')] + [(p.name, p.name) for p in Province.objects.all()]
+    
+    def save(self, commit=True):
+        """Override save to handle profile_picture field"""
+        instance = super().save(commit=False)
+        
+        # Set profile picture from form
+        if 'profile_picture' in self.cleaned_data:
+            instance.profile_picture = self.cleaned_data['profile_picture']
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
+    def clean_skills(self):
+        skills = self.cleaned_data.get('skills')
+        if not skills:
+            raise forms.ValidationError("You must select at least one skill.")
+        if skills.count() > 3:
+            raise forms.ValidationError("You can select a maximum of 3 skills.")
+        return skills
 
     def clean_province(self):
         province = self.cleaned_data.get('province')
@@ -135,9 +183,33 @@ class ManpowerSignupForm(forms.ModelForm):
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and CustomUser.objects.filter(email=email).exists():
+        if not email:
+            raise forms.ValidationError("Email is required.")
+        
+        # Email cannot start with a digit
+        if email[0].isdigit():
+            raise forms.ValidationError("Email cannot start with a number.")
+        
+        # Email format validation (RFC 5322 simplified)
+        email_pattern = r"^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, email):
+            raise forms.ValidationError("Please enter a valid email address (must start with a letter).")
+        
+        if CustomUser.objects.filter(email=email).exists():
             raise forms.ValidationError("This email is already registered.")
         return email
+    
+    def clean_profile_picture(self):
+        """Validate profile picture"""
+        profile_picture = self.cleaned_data.get('profile_picture')
+        if not profile_picture:
+            raise forms.ValidationError("Profile photo is required for identity verification.")
+        
+        # Check file size (max 5MB)
+        if profile_picture.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("Image size must not exceed 5MB.")
+        
+        return profile_picture
 
 class LoginForm(forms.Form):
     phone_number = forms.CharField(
@@ -210,15 +282,24 @@ class UserProfileUpdateForm(forms.ModelForm):
 
 
 class ManpowerProfileUpdateForm(forms.ModelForm):
+    skills = forms.ModelMultipleChoiceField(
+        queryset=Skill.objects.all().order_by('category', 'name'),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'skills-checkbox',
+            'data-form-type': 'update'
+        }),
+        required=True,
+        help_text="Select at least one skill. Maximum 3 skills allowed."
+    )
+
     class Meta:
         model = ManpowerProfile
         fields = [
-            'skill', 'province', 'district', 'municipality', 'ward',
+            'skills', 'province', 'district', 'municipality', 'ward',
             'experience', 'citizenship_front', 'citizenship_back', 'rate',
             'profile_picture'
         ]
         widgets = {
-            'skill': forms.TextInput(attrs={'class': 'form-control'}),
             'province': forms.TextInput(attrs={'class': 'form-control'}),
             'district': forms.TextInput(attrs={'class': 'form-control'}),
             'municipality': forms.TextInput(attrs={'class': 'form-control'}),
@@ -228,8 +309,18 @@ class ManpowerProfileUpdateForm(forms.ModelForm):
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'rate': forms.NumberInput(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-        }    
-    def clean_experience(self):
+        }
+        labels = {
+            'skills': 'Professional Skills',
+        }
+
+    def clean_skills(self):
+        skills = self.cleaned_data.get('skills')
+        if not skills:
+            raise forms.ValidationError("You must select at least one skill.")
+        if skills.count() > 3:
+            raise forms.ValidationError("You can select a maximum of 3 skills.")
+        return skills
         experience = self.cleaned_data.get('experience')
         if experience is not None and experience < 0:
             raise forms.ValidationError("Experience cannot be negative.")

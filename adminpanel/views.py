@@ -96,9 +96,10 @@ def all_professionals(request):
     if search_query:
         professionals_list = professionals_list.filter(
             Q(user__full_name__icontains=search_query) |
-            Q(skill__icontains=search_query) |
-            Q(email__icontains=search_query)
-        )
+            Q(skills__name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(skill__icontains=search_query)  # Keep old field for backward compatibility
+        ).distinct()
     
     professionals_list = professionals_list.order_by('-id')
     

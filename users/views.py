@@ -30,6 +30,14 @@ def update_profile(request):
         manpower_profile = get_object_or_404(ManpowerProfile, user=user)
 
     if request.method == "POST":
+        # For PENDING professionals, allow update but show warning
+        if manpower_profile and manpower_profile.verification_status == 'PENDING':
+            messages.warning(request, "Your changes will be saved, but your profile will only be visible to clients after admin approval.")
+        
+        # For REJECTED professionals, allow update to fix issues
+        if manpower_profile and manpower_profile.verification_status == 'REJECTED':
+            messages.info(request, "Please fix the issues mentioned in the rejection reason. After saving, you can request re-verification.")
+        
         user_form = UserProfileUpdateForm(request.POST, instance=user)
         profile_form = ManpowerProfileUpdateForm(request.POST, request.FILES, instance=manpower_profile) if manpower_profile else None
 
@@ -48,6 +56,7 @@ def update_profile(request):
     return render(request, "users/update_profile.html", {
         "user_form": user_form,
         "profile_form": profile_form,
+        "verification_status": manpower_profile.verification_status if manpower_profile else None,
     })
 
 
@@ -56,10 +65,56 @@ def toggle_availability(request, pk):
     """Toggle availability for professionals only."""
     if request.method == "POST":
         manpower = get_object_or_404(ManpowerProfile, pk=pk, user=request.user)
+        
+        # Check verification status
+        if manpower.verification_status == 'PENDING':
+            return JsonResponse({
+                "success": False,
+                "message": "You can toggle availability only after your account is approved by admin."
+            }, status=403)
+        
+        if manpower.verification_status == 'REJECTED':
+            return JsonResponse({
+                "success": False,
+                "message": "Your professional account has been rejected. Please contact support."
+            }, status=403)
+        
         manpower.is_available = not manpower.is_available
         manpower.save()
         return JsonResponse({"success": True, "is_available": manpower.is_available})
     return JsonResponse({"success": False}, status=400)
+
+
+@login_required
+def request_reverification(request):
+    """Allow rejected professionals to request re-verification after fixing issues."""
+    if request.method == 'POST':
+        try:
+            manpower_profile = get_object_or_404(ManpowerProfile, user=request.user)
+            
+            # Only allow re-verification request for rejected profiles
+            if manpower_profile.verification_status != 'REJECTED':
+                messages.error(request, "Your profile is not eligible for re-verification at this time.")
+                return redirect('users:profile')
+            
+            # Change status back to PENDING
+            manpower_profile.verification_status = 'PENDING'
+            manpower_profile.rejection_reason = None  # Clear rejection reason
+            manpower_profile.verified_at = None
+            manpower_profile.verified_by = None
+            manpower_profile.save(update_fields=['verification_status', 'rejection_reason', 'verified_at', 'verified_by'])
+            
+            messages.success(request, "Re-verification request submitted! Our admin team will review your profile shortly. You'll be notified once it's approved.")
+            return redirect('users:profile')
+            
+        except ManpowerProfile.DoesNotExist:
+            messages.error(request, "Professional profile not found.")
+            return redirect('users:profile')
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return redirect('users:profile')
+    
+    return redirect('users:profile')
 
 User = get_user_model()
 def signup(request):
@@ -232,6 +287,15 @@ def profile(request):
 @login_required
 def prof_dashboard(request):
     pro = get_object_or_404(ManpowerProfile, user=request.user)
+    
+    # Check verification status
+    if pro.verification_status == 'PENDING':
+        messages.error(request, "Your professional account is under review. You can access the dashboard only after approval.")
+        return redirect('users:profile')
+    
+    if pro.verification_status == 'REJECTED':
+        messages.error(request, "Your professional account has been rejected. Please contact support for more information.")
+        return redirect('users:profile')
     
     # ✅ Use timezone.now() instead of datetime.now()
     now_utc = timezone.now()  # Timezone-aware UTC datetime

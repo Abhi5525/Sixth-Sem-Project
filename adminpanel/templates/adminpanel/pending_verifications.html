@@ -42,7 +42,13 @@
                                     <strong>{{ prof.user.full_name }}</strong>
                                 </div>
                             </td>
-                            <td><span class="badge bg-secondary">{{ prof.skill }}</span></td>
+                            <td><span class="badge bg-secondary">
+                                {% for skill in prof.skills.all %}
+                                    {{ skill.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    {{ prof.skill|default:"No skills" }}
+                                {% endfor %}
+                            </span></td>
                             <td>{{ prof.email }}</td>
                             <td>{{ prof.user.phone_number }}</td>
                             <td>{{ prof.district }}, {{ prof.province }}</td>

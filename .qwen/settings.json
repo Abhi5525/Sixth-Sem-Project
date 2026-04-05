@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv\\scripts\\python.exe *)",
+      "Bash(set *)",
+      "Bash(del *)",
+      "Bash(git checkout *)"
+    ]
+  },
+  "$version": 3
+}

@@ -139,14 +139,15 @@
             </h2>
             <div class="booking-list">
                 {% for booking in upcoming_bookings %}
+                {% with skills_display=booking.professional.skills.all|join:", " %}
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
-                     data-service-name="{{ booking.professional.skill|title }}"
+                     data-service-name="{% if booking.professional.skills.exists %}{{ skills_display|title }}{% else %}{{ booking.professional.skill|title }}{% endif %}"
                      data-start-time="{{ booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-end-time="{{ end_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
-                     data-professional-skill="{{ booking.professional.skill|title }}"
+                     data-professional-skill="{% if booking.professional.skills.exists %}{{ skills_display|title }}{% else %}{{ booking.professional.skill|title }}{% endif %}"
                      data-professional-phone="{{ booking.professional.user.phone_number }}"
                      data-total-fee="{{ booking.total_fee|floatformat:2 }}"
                      data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
@@ -158,7 +159,13 @@
                     <div class="booking-header">
                         <div class="header-left">
                             <i class="fas fa-tools service-icon"></i>
-                            <span class="booking-title">{{ booking.professional.skill|title }}</span>
+                            <span class="booking-title">
+                                {% for skill in booking.professional.skills.all %}
+                                    {{ skill.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    {{ booking.professional.skill|title }}
+                                {% endfor %}
+                            </span>
                         </div>
                         {% if booking.is_confirmed %}
                             <span class="booking-status status-confirmed">Confirmed</span>
@@ -180,6 +187,7 @@
                         <button class="view-details-btn" onclick="openModal(this)">View Details</button>
                     </div>
                 </div>
+                {% endwith %}
                 {% empty %}
                 <div class="empty-state">
                     <i class="fas fa-calendar-plus"></i>
@@ -196,14 +204,15 @@
             </h2>
             <div class="booking-list">
                 {% for booking in past_bookings %}
+                {% with skills_display=booking.professional.skills.all|join:", " %}
                 <div class="booking-card"
                      data-id="{{ booking.id }}"
-                     data-service-name="{{ booking.professional.skill|title }}"
+                     data-service-name="{% if booking.professional.skills.exists %}{{ skills_display|title }}{% else %}{{ booking.professional.skill|title }}{% endif %}"
                      data-start-time="{{ booking_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-end-time="{{ end_time|localtime|date:'M d, Y \a\t g:i A' }}"
                      data-duration="{{ booking.duration_hours|floatformat:0 }} hour{{ booking.duration_hours|floatformat:0|pluralize }}"
                      data-professional-name="{{ booking.professional.user.full_name}}"
-                     data-professional-skill="{{ booking.professional.skill|title }}"
+                     data-professional-skill="{% if booking.professional.skills.exists %}{{ skills_display|title }}{% else %}{{ booking.professional.skill|title }}{% endif %}"
                      data-professional-phone="{{ booking.professional.user.phone_number }}"
                      data-total-fee="{{ booking.total_fee|floatformat:2 }}"
                      data-deposit-amount="{{ booking.deposit_amount|floatformat:2 }}"
@@ -221,7 +230,13 @@
                             {% else %}
                                 <i class="fas fa-tools service-icon"></i>
                             {% endif %}
-                            <span class="booking-title">{{ booking.professional.skill|title }}</span>
+                            <span class="booking-title">
+                                {% for skill in booking.professional.skills.all %}
+                                    {{ skill.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    {{ booking.professional.skill|title }}
+                                {% endfor %}
+                            </span>
                         </div>
                         <span class="booking-status status-{{ booking.status }}">{{ booking.status|title }}</span>
                     </div>
@@ -239,6 +254,7 @@
                         <button class="view-details-btn" onclick="openModal(this)">View Details</button>
                     </div>
                 </div>
+                {% endwith %}
                 {% empty %}
                 <div class="empty-state">
                     <i class="fas fa-history"></i>

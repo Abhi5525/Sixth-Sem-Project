@@ -76,8 +76,10 @@ def home(request):
     manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True, verification_status='APPROVED')
     if query:
         manpower_qs = manpower_qs.filter(
-            Q(skill__icontains=query) | Q(user__full_name__icontains=query)
-        )
+            Q(skills__name__icontains=query) |
+            Q(user__full_name__icontains=query) |
+            Q(skill__icontains=query)  # Keep old field for backward compatibility
+        ).distinct()
 
     manpower_list = None
     user_has_location = False

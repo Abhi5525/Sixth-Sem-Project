@@ -116,7 +116,13 @@
                                 {% for prof in recent_pending %}
                                 <tr>
                                     <td>{{ prof.user.full_name }}</td>
-                                    <td><span class="badge bg-secondary">{{ prof.skill }}</span></td>
+                                    <td><span class="badge bg-secondary">
+                                        {% for skill in prof.skills.all %}
+                                            {{ skill.name }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            {{ prof.skill|default:"No skills" }}
+                                        {% endfor %}
+                                    </span></td>
                                     <td>{{ prof.district }}</td>
                                     <td>
                                         <a href="{% url 'adminpanel:professional_detail' prof.id %}" class="btn btn-sm btn-info">
