@@ -137,13 +137,14 @@ TIME_ZONE = 'Asia/Kathmandu'  # Or your local timezone
 USE_TZ = True  # This is CRITICAL
 USE_I18N = True
 
-# Email Configuration (for development/testing)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Prints emails to console
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 25
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
+# Email Configuration for Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='your-email@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='your-app-password')
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='your-email@gmail.com')
 
 SITE_ID = 1  # This tells Django which site to use
 
