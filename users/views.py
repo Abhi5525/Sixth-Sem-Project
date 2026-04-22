@@ -28,6 +28,11 @@ def update_profile(request):
     manpower_profile = None
     if user.is_professional:
         manpower_profile = get_object_or_404(ManpowerProfile, user=user)
+        
+        # Check if professional account is rejected
+        if manpower_profile.verification_status == 'REJECTED':
+            messages.error(request, "Your professional account has been rejected. You cannot update your professional profile. Please contact support.")
+            return redirect("users:profile")
 
     if request.method == "POST":
         # For PENDING professionals, allow update but show warning
@@ -45,14 +50,38 @@ def update_profile(request):
             user_form.save()
             if profile_form:
                 profile_form.save()
+            
+            # Check if this is an AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Profile updated successfully!'
+                })
+            
             messages.success(request, "Profile updated successfully.")
             return redirect("users:profile")
         else:
+            # Combine errors from both forms
+            errors = {}
+            if user_form.errors:
+                errors.update(user_form.errors)
+            if profile_form and profile_form.errors:
+                errors.update(profile_form.errors)
+            
+            # Check if this is an AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors,
+                    'message': 'Please correct the errors below.'
+                }, status=400)
+            
             messages.error(request, "Please correct the errors below.")
     else:
         user_form = UserProfileUpdateForm(instance=user)
         profile_form = ManpowerProfileUpdateForm(instance=manpower_profile) if manpower_profile else None
 
+    # For non-AJAX requests, render the template
     return render(request, "users/update_profile.html", {
         "user_form": user_form,
         "profile_form": profile_form,

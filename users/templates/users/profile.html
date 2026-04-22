@@ -156,24 +156,194 @@
 <div class="modal fade" id="updateProfileModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" enctype="multipart/form-data" action="{% url 'users:update_profile' %}">
+      <form method="post" enctype="multipart/form-data" action="{% url 'users:update_profile' %}" id="updateProfileForm">
         {% csrf_token %}
         <div class="modal-header card-header-styled">
-          <h5 class="modal-title">Update Profile</h5>
+          <h5 class="modal-title">
+            <i class="fas fa-user-edit me-2"></i>Update Profile
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <h6 class="fw-bold mb-3">Basic Info</h6>
-          {{ user_form.as_p }}
+          <!-- Error Alert Container -->
+          <div id="formErrors" class="alert alert-danger d-none" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Please fix the following errors:</strong>
+            <ul id="errorList" class="mb-0 mt-2"></ul>
+          </div>
+
+          <!-- Success Alert Container -->
+          <div id="formSuccess" class="alert alert-success d-none" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span id="successMessage"></span>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-primary">
+            <i class="fas fa-user me-2"></i>Personal Information
+          </h6>
+          
+          <div class="mb-3">
+            <label for="{{ user_form.full_name.id_for_label }}" class="form-label fw-semibold">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            {{ user_form.full_name }}
+            <div class="invalid-feedback" id="error-full_name"></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ user_form.phone_number.id_for_label }}" class="form-label fw-semibold">
+              Phone Number <span class="text-danger">*</span>
+            </label>
+            {{ user_form.phone_number }}
+            <div class="invalid-feedback" id="error-phone_number"></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ user_form.email.id_for_label }}" class="form-label fw-semibold">
+              Email Address
+            </label>
+            {{ user_form.email }}
+            <div class="invalid-feedback" id="error-email"></div>
+            <small class="form-text text-muted">Optional - used for notifications</small>
+          </div>
+
           {% if profile_form %}
           <hr class="my-4">
-          <h6 class="fw-bold mb-3">Professional Info</h6>
-          {{ profile_form.as_p }}
+          <h6 class="fw-bold mb-3 text-primary">
+            <i class="fas fa-briefcase me-2"></i>Professional Information
+          </h6>
+
+          {% if profile_form.profile_picture %}
+          <div class="mb-3">
+            <label for="{{ profile_form.profile_picture.id_for_label }}" class="form-label fw-semibold">
+              Profile Picture
+            </label>
+            {{ profile_form.profile_picture }}
+            <div class="invalid-feedback" id="error-profile_picture"></div>
+            <small class="form-text text-muted">Recommended: Square image, max 5MB</small>
+          </div>
+          {% endif %}
+
+          {% if profile_form.skills %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Skills <span class="text-danger">*</span>
+            </label>
+            <div class="skills-container border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+              {{ profile_form.skills }}
+            </div>
+            <div class="invalid-feedback" id="error-skills"></div>
+            <small class="form-text text-muted">Select up to 3 skills</small>
+          </div>
+          {% endif %}
+
+          {% if profile_form.experience %}
+          <div class="mb-3">
+            <label for="{{ profile_form.experience.id_for_label }}" class="form-label fw-semibold">
+              Years of Experience <span class="text-danger">*</span>
+            </label>
+            {{ profile_form.experience }}
+            <div class="invalid-feedback" id="error-experience"></div>
+          </div>
+          {% endif %}
+
+          {% if profile_form.rate %}
+          <div class="mb-3">
+            <label for="{{ profile_form.rate.id_for_label }}" class="form-label fw-semibold">
+              Hourly Rate (NPR) <span class="text-danger">*</span>
+            </label>
+            {{ profile_form.rate }}
+            <div class="invalid-feedback" id="error-rate"></div>
+            <small class="form-text text-muted">Set your hourly rate in Nepalese Rupees</small>
+          </div>
+          {% endif %}
+
+          {% if profile_form.about_yourself %}
+          <div class="mb-3">
+            <label for="{{ profile_form.about_yourself.id_for_label }}" class="form-label fw-semibold">
+              About Yourself
+            </label>
+            {{ profile_form.about_yourself }}
+            <div class="invalid-feedback" id="error-about_yourself"></div>
+            <small class="form-text text-muted">Tell clients about your experience and expertise</small>
+          </div>
+          {% endif %}
+
+          {% if profile_form.province %}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="{{ profile_form.province.id_for_label }}" class="form-label fw-semibold">
+                Province <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.province }}
+              <div class="invalid-feedback" id="error-province"></div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="{{ profile_form.district.id_for_label }}" class="form-label fw-semibold">
+                District <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.district }}
+              <div class="invalid-feedback" id="error-district"></div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if profile_form.municipality %}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="{{ profile_form.municipality.id_for_label }}" class="form-label fw-semibold">
+                Municipality <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.municipality }}
+              <div class="invalid-feedback" id="error-municipality"></div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="{{ profile_form.ward.id_for_label }}" class="form-label fw-semibold">
+                Ward Number <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.ward }}
+              <div class="invalid-feedback" id="error-ward"></div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if profile_form.citizenship_front or profile_form.citizenship_back %}
+          <hr class="my-4">
+          <h6 class="fw-bold mb-3 text-secondary">
+            <i class="fas fa-id-card me-2"></i>Citizenship Documents
+          </h6>
+
+          {% if profile_form.citizenship_front %}
+          <div class="mb-3">
+            <label for="{{ profile_form.citizenship_front.id_for_label }}" class="form-label fw-semibold">
+              Citizenship Front
+            </label>
+            {{ profile_form.citizenship_front }}
+            <div class="invalid-feedback" id="error-citizenship_front"></div>
+          </div>
+          {% endif %}
+
+          {% if profile_form.citizenship_back %}
+          <div class="mb-3">
+            <label for="{{ profile_form.citizenship_back.id_for_label }}" class="form-label fw-semibold">
+              Citizenship Back
+            </label>
+            {{ profile_form.citizenship_back }}
+            <div class="invalid-feedback" id="error-citizenship_back"></div>
+          </div>
+          {% endif %}
+          {% endif %}
           {% endif %}
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-custom">Save Changes</button>
+          <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancel
+          </button>
+          <button type="submit" class="btn btn-primary btn-custom" id="saveProfileBtn">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </button>
         </div>
       </form>
     </div>
@@ -257,15 +427,29 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  console.log('Profile page loaded');
+  
+  // Toggle availability button handler
   document.querySelectorAll(".toggle-availability-btn").forEach(btn => {
     btn.addEventListener("click", function () {
+      console.log('Toggle availability clicked');
       const manpowerId = this.getAttribute("data-id");
+      if (!manpowerId) {
+        console.warn('No manpower ID found on button');
+        return;
+      }
+
+      console.log('Sending toggle request for ID:', manpowerId);
       fetch(`toggle-availability/${manpowerId}/`, {
         method: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
       })
-      .then(r => r.json())
+      .then(r => {
+        console.log('Toggle response status:', r.status);
+        return r.json();
+      })
       .then(data => {
+        console.log('Toggle response data:', data);
         if (data.success) {
           if (data.is_available) {
             btn.textContent = "Set Unavailable";
@@ -280,9 +464,121 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(data.message);
         }
       })
-      .catch(err => console.error("Error:", err));
+      .catch(err => console.error("Toggle Error:", err));
     });
   });
+
+  // Update Profile Modal - AJAX Form Submission
+  const updateProfileForm = document.getElementById('updateProfileForm');
+  console.log('Update profile form found:', !!updateProfileForm);
+  
+  if (updateProfileForm) {
+    updateProfileForm.addEventListener('submit', function(e) {
+      console.log('Form submit triggered');
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const saveBtn = document.getElementById('saveProfileBtn');
+      const errorAlert = document.getElementById('formErrors');
+      const successAlert = document.getElementById('formSuccess');
+      const errorList = document.getElementById('errorList');
+      
+      console.log('Starting form submission...');
+      
+      // Clear previous errors
+      if (errorAlert) errorAlert.classList.add('d-none');
+      if (successAlert) successAlert.classList.add('d-none');
+      if (errorList) errorList.innerHTML = '';
+      document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      document.querySelectorAll('[id^="error-"]').forEach(el => el.textContent = '');
+      
+      // Disable button and show loading
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+      }
+      
+      fetch("{% url 'users:update_profile' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        console.log('Response received:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Data received:', data);
+        
+        if (data.success) {
+          // Show success message
+          if (successAlert) {
+            successAlert.classList.remove('d-none');
+            const successMsg = document.getElementById('successMessage');
+            if (successMsg) successMsg.textContent = data.message || 'Profile updated successfully!';
+          }
+          
+          // Reload page after 1.5 seconds
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          // Show errors
+          if (errorAlert) errorAlert.classList.remove('d-none');
+          
+          if (data.errors) {
+            Object.keys(data.errors).forEach(fieldName => {
+              const fieldErrors = data.errors[fieldName];
+              const errorDiv = document.getElementById(`error-${fieldName}`);
+              
+              if (errorDiv) {
+                errorDiv.textContent = fieldErrors.join(', ');
+                errorDiv.style.display = 'block';
+                
+                const fieldElement = document.querySelector(`[name="${fieldName}"]`);
+                if (fieldElement) {
+                  fieldElement.classList.add('is-invalid');
+                }
+              }
+              
+              if (errorList) {
+                fieldErrors.forEach(error => {
+                  const li = document.createElement('li');
+                  li.textContent = `${fieldName}: ${error}`;
+                  errorList.appendChild(li);
+                });
+              }
+            });
+          } else if (data.message && errorList) {
+            errorList.innerHTML = `<li>${data.message}</li>`;
+          }
+          
+          // Re-enable button
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        if (errorAlert) errorAlert.classList.remove('d-none');
+        if (errorList) errorList.innerHTML = '<li>An unexpected error occurred. Please try again.</li>';
+        
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
+        }
+      });
+    });
+    
+    console.log('Event listener attached to form');
+  } else {
+    console.error('Update profile form NOT found!');
+  }
 });
 </script>
 {% endblock %}

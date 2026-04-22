@@ -1,0 +1,361 @@
+
+{% extends "home/base-navbar.html" %}
+{% load static %}
+
+{% block main-content %}
+<link rel="stylesheet" href="{% static 'users/css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'users/css/skills.css' %}">
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <!-- Page Header -->
+      <div class="mb-4">
+        <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary mb-3">
+          <i class="fas fa-arrow-left me-2"></i>Back to Profile
+        </a>
+        <h2 class="text-primary fw-bold">
+          <i class="fas fa-user-edit me-2"></i>Update Profile
+        </h2>
+        <p class="text-muted">Update your personal and professional information</p>
+      </div>
+
+      {% if user.is_professional and verification_status == 'PENDING' %}
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+          <h6 class="alert-heading mb-1">Profile Under Review</h6>
+          <p class="mb-0 small">Your changes will be saved, but your profile will only be visible to clients after admin approval.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if user.is_professional and verification_status == 'REJECTED' %}
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="fas fa-times-circle fa-2x me-3"></i>
+        <div>
+          <h6 class="alert-heading mb-1">Fix Issues & Re-submit</h6>
+          <p class="mb-0 small">Please fix the issues mentioned in the rejection reason. After saving, you can request re-verification.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Update Form -->
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <!-- User Information Section -->
+            <h5 class="fw-bold mb-3 text-primary">
+              <i class="fas fa-user me-2"></i>Personal Information
+            </h5>
+            
+            <div class="mb-3">
+              <label for="{{ user_form.full_name.id_for_label }}" class="form-label fw-semibold">
+                Full Name <span class="text-danger">*</span>
+              </label>
+              {{ user_form.full_name }}
+              {% if user_form.full_name.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in user_form.full_name.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ user_form.phone_number.id_for_label }}" class="form-label fw-semibold">
+                Phone Number <span class="text-danger">*</span>
+              </label>
+              {{ user_form.phone_number }}
+              {% if user_form.phone_number.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in user_form.phone_number.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ user_form.email.id_for_label }}" class="form-label fw-semibold">
+                Email Address
+              </label>
+              {{ user_form.email }}
+              {% if user_form.email.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in user_form.email.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">Optional - used for notifications</small>
+            </div>
+
+            {% if profile_form %}
+            <!-- Professional Information Section -->
+            <hr class="my-4">
+            <h5 class="fw-bold mb-3 text-primary">
+              <i class="fas fa-briefcase me-2"></i>Professional Information
+            </h5>
+
+            {% if profile_form.profile_picture %}
+            <div class="mb-3">
+              <label for="{{ profile_form.profile_picture.id_for_label }}" class="form-label fw-semibold">
+                Profile Picture
+              </label>
+              {{ profile_form.profile_picture }}
+              {% if profile_form.profile_picture.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.profile_picture.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">Recommended: Square image, max 5MB</small>
+            </div>
+            {% endif %}
+
+            {% if profile_form.skills %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">
+                Skills <span class="text-danger">*</span>
+              </label>
+              <div class="skills-container">
+                {{ profile_form.skills }}
+              </div>
+              {% if profile_form.skills.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.skills.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">Select up to 3 skills</small>
+            </div>
+            {% endif %}
+
+            {% if profile_form.experience %}
+            <div class="mb-3">
+              <label for="{{ profile_form.experience.id_for_label }}" class="form-label fw-semibold">
+                Years of Experience <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.experience }}
+              {% if profile_form.experience.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.experience.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if profile_form.rate %}
+            <div class="mb-3">
+              <label for="{{ profile_form.rate.id_for_label }}" class="form-label fw-semibold">
+                Hourly Rate (NPR) <span class="text-danger">*</span>
+              </label>
+              {{ profile_form.rate }}
+              {% if profile_form.rate.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.rate.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">Set your hourly rate in Nepalese Rupees</small>
+            </div>
+            {% endif %}
+
+            {% if profile_form.about_yourself %}
+            <div class="mb-3">
+              <label for="{{ profile_form.about_yourself.id_for_label }}" class="form-label fw-semibold">
+                About Yourself
+              </label>
+              {{ profile_form.about_yourself }}
+              {% if profile_form.about_yourself.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.about_yourself.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">Tell clients about your experience and expertise</small>
+            </div>
+            {% endif %}
+
+            {% if profile_form.province %}
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ profile_form.province.id_for_label }}" class="form-label fw-semibold">
+                  Province <span class="text-danger">*</span>
+                </label>
+                {{ profile_form.province }}
+                {% if profile_form.province.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in profile_form.province.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ profile_form.district.id_for_label }}" class="form-label fw-semibold">
+                  District <span class="text-danger">*</span>
+                </label>
+                {{ profile_form.district }}
+                {% if profile_form.district.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in profile_form.district.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if profile_form.municipality %}
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ profile_form.municipality.id_for_label }}" class="form-label fw-semibold">
+                  Municipality <span class="text-danger">*</span>
+                </label>
+                {{ profile_form.municipality }}
+                {% if profile_form.municipality.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in profile_form.municipality.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ profile_form.ward.id_for_label }}" class="form-label fw-semibold">
+                  Ward Number <span class="text-danger">*</span>
+                </label>
+                {{ profile_form.ward }}
+                {% if profile_form.ward.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in profile_form.ward.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if profile_form.citizenship_front or profile_form.citizenship_back %}
+            <hr class="my-4">
+            <h6 class="fw-bold mb-3 text-secondary">
+              <i class="fas fa-id-card me-2"></i>Citizenship Documents
+            </h6>
+
+            {% if profile_form.citizenship_front %}
+            <div class="mb-3">
+              <label for="{{ profile_form.citizenship_front.id_for_label }}" class="form-label fw-semibold">
+                Citizenship Front
+              </label>
+              {{ profile_form.citizenship_front }}
+              {% if profile_form.citizenship_front.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.citizenship_front.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if profile_form.citizenship_back %}
+            <div class="mb-3">
+              <label for="{{ profile_form.citizenship_back.id_for_label }}" class="form-label fw-semibold">
+                Citizenship Back
+              </label>
+              {{ profile_form.citizenship_back }}
+              {% if profile_form.citizenship_back.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in profile_form.citizenship_back.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+
+            <!-- Submit Buttons -->
+            <hr class="my-4">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{% url 'users:profile' %}" class="btn btn-secondary">
+                <i class="fas fa-times me-2"></i>Cancel
+              </a>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Dynamic location dropdowns (if needed)
+document.addEventListener('DOMContentLoaded', function() {
+  const provinceSelect = document.getElementById('{{ profile_form.province.id_for_label|default:"" }}');
+  const districtSelect = document.getElementById('{{ profile_form.district.id_for_label|default:"" }}');
+  const municipalitySelect = document.getElementById('{{ profile_form.municipality.id_for_label|default:"" }}');
+
+  if (provinceSelect && districtSelect) {
+    provinceSelect.addEventListener('change', function() {
+      const provinceName = this.value;
+      if (provinceName) {
+        fetch(`/users/get-districts/?province_name=${encodeURIComponent(provinceName)}`)
+          .then(response => response.json())
+          .then(data => {
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            data.districts.forEach(district => {
+              const option = document.createElement('option');
+              option.value = district.name;
+              option.textContent = district.name;
+              districtSelect.appendChild(option);
+            });
+            // Reset municipality when district changes
+            if (municipalitySelect) {
+              municipalitySelect.innerHTML = '<option value="">Select Municipality</option>';
+            }
+          });
+      }
+    });
+  }
+
+  if (districtSelect && municipalitySelect) {
+    districtSelect.addEventListener('change', function() {
+      const districtName = this.value;
+      if (districtName) {
+        fetch(`/users/get-municipality/?district_name=${encodeURIComponent(districtName)}`)
+          .then(response => response.json())
+          .then(data => {
+            municipalitySelect.innerHTML = '<option value="">Select Municipality</option>';
+            data.municipality.forEach(municipality => {
+              const option = document.createElement('option');
+              option.value = municipality.name;
+              option.textContent = municipality.name;
+              municipalitySelect.appendChild(option);
+            });
+          });
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
