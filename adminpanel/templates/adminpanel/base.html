@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin Dashboard{% endblock %} - Mistri Nepal</title>
+    <title>{% block title %}Admin Dashboard{% endblock %} - Mistri Nepal Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'adminpanel/css/admin.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -15,43 +16,59 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <i class="fas fa-user-shield"></i>
-                <h5>Admin Panel</h5>
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <h5 class="mb-0">Admin Panel</h5>
+                    <small class="text-white-50" style="font-size: 0.75rem;">Service Management</small>
+                </div>
             </div>
             
             <nav class="sidebar-nav">
                 <a href="{% url 'adminpanel:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
                 </a>
                 <a href="{% url 'adminpanel:pending_verifications' %}" class="nav-link {% if request.resolver_match.url_name == 'pending_verifications' %}active{% endif %}">
-                    <i class="fas fa-clock"></i> Pending Verifications
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Verifications</span>
                     {% if pending_count %}
-                    <span class="badge bg-warning">{{ pending_count }}</span>
+                    <span class="badge">{{ pending_count }}</span>
                     {% endif %}
                 </a>
                 <a href="{% url 'adminpanel:all_professionals' %}" class="nav-link {% if request.resolver_match.url_name == 'all_professionals' %}active{% endif %}">
-                    <i class="fas fa-users"></i> All Professionals
+                    <i class="fas fa-users"></i>
+                    <span>All Professionals</span>
                 </a>
                 <a href="{% url 'adminpanel:all_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'all_bookings' %}active{% endif %}">
-                    <i class="fas fa-calendar-alt"></i> All Bookings
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>All Bookings</span>
                 </a>
                 
-                <hr class="sidebar-divider">
+                <div class="sidebar-divider"></div>
                 
-                <a href="{% url 'home_module:home' %}" class="nav-link">
-                    <i class="fas fa-home"></i> View Site
+                <a href="{% url 'home_module:home' %}" class="nav-link" target="_blank">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>View Main Site</span>
                 </a>
                 <form method="post" action="{% url 'users:logout' %}" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="nav-link" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                    <button type="submit" class="nav-link logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </button>
                 </form>
             </nav>
             
             <div class="sidebar-footer">
-                <p class="mb-0">Logged in as:</p>
-                <strong>{{ user.full_name }}</strong>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0" style="font-size: 0.8rem; opacity: 0.8;">Logged in as:</p>
+                        <strong style="font-size: 0.9rem;">{{ user.full_name }}</strong>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -59,25 +76,34 @@
         <div class="main-content">
             <!-- Top Bar -->
             <div class="top-bar">
-                <button class="btn btn-link mobile-menu-toggle d-lg-none" id="sidebarToggle">
+                <button class="btn mobile-menu-toggle d-lg-none" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
                 
                 <div class="top-bar-content">
-                    <h4 class="page-title mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                    <div>
+                        <h4 class="page-title mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                        <small class="text-muted" style="font-size: 0.85rem;">Welcome back, Admin!</small>
+                    </div>
                     <div class="user-info">
-                        <span>{{ user.full_name }}</span>
-                        <i class="fas fa-user-circle fa-lg"></i>
+                        <div class="text-end me-2 d-none d-md-block">
+                            <div style="font-weight: 600; font-size: 0.9rem;">{{ user.full_name }}</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Administrator</small>
+                        </div>
+                        <i class="fas fa-user-circle fa-2x"></i>
                     </div>
                 </div>
             </div>
             
             <!-- Messages -->
             {% if messages %}
-            <div class="container-fluid mt-3">
+            <div class="container-fluid mt-4">
                 {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} fa-lg me-2"></i>
+                        <span>{{ message }}</span>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 {% endfor %}
@@ -94,9 +120,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Mobile sidebar toggle
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
-        });
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth < 992 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        }
         
         // CSRF token helper
         function getCookie(name) {
@@ -114,6 +152,17 @@
             return cookieValue;
         }
         const csrftoken = getCookie('csrftoken');
+        
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

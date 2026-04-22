@@ -258,6 +258,45 @@
         }
     });
 
+    // ============================
+    // Geolocation Capture
+    // ============================
+    function captureGeolocation() {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Store in form as hidden fields
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'location_latitude';
+                    input.value = lat;
+                    signupForm.appendChild(input);
+                    
+                    const input2 = document.createElement('input');
+                    input2.type = 'hidden';
+                    input2.name = 'location_longitude';
+                    input2.value = lng;
+                    signupForm.appendChild(input2);
+                    
+                    console.log('Location captured:', lat, lng);
+                },
+                function(error) {
+                    console.warn('Geolocation error:', error.message);
+                    // Continue signup even if geolocation fails
+                },
+                { timeout: 5000, maximumAge: 0 }
+            );
+        }
+    }
+
+    // Request geolocation on page load
+    window.addEventListener('load', function() {
+        captureGeolocation();
+    });
+
     // Ripple effect on button click
     document.querySelectorAll('.ripple-btn').forEach((button) => {
         button.addEventListener('click', (event) => {

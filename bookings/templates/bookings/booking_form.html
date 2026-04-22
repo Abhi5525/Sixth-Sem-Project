@@ -21,7 +21,7 @@
       </div>
 
       <div class="form-group icon-input">
-        <input type="date" id="date" name="date" class="form-control" placeholder=" " />
+        <input type="date" id="date" name="date" class="form-control" placeholder=" " min="" />
         <label for="date" class="form-label">Booking Date</label>
         <span class="error-message" id="dateError"></span>
         <i class="bi bi-calendar"></i>
@@ -67,6 +67,14 @@
   const nameInput = document.getElementById('name');
   const durationInput = document.getElementById('durationHours');
 
+  function setDateMinConstraint() {
+    const today = getTodayStr();
+    dateInput.setAttribute('min', today);
+    if (dateInput.value && dateInput.value < today) {
+      dateInput.value = '';
+    }
+  }
+
   // NOTE: No HTML5 min/step attributes — all constraints enforced via JS
 
   function updateMinTime() {
@@ -91,10 +99,14 @@
   }
 
   dateInput.addEventListener('change', function () {
+    setDateMinConstraint();
     updateMinTime();
     // Validate date field on change
     validateField('date');
   });
+
+  setDateMinConstraint();
+  updateMinTime();
 
   // Clear error on user interaction
   [nameInput, dateInput, timeInput, durationInput].forEach((input) => {
@@ -118,8 +130,9 @@
       case 'name': {
         const val = nameInput.value.trim();
         if (!val) return showFieldError('name', 'Name is required');
-        if (val.length < 2) return showFieldError('name', 'Name must be at least 2 characters');
+        if (!/^[A-Za-z]/.test(val)) return showFieldError('name', 'Name must start with a letter');
         if (!/^[a-zA-Z\s\-'.]+$/.test(val)) return showFieldError('name', 'Name can only contain letters, spaces, hyphens, and apostrophes');
+        if (val.replace(/[^A-Za-z]/g, '').length < 3) return showFieldError('name', 'Name must contain at least 3 letters');
         return true;
       }
       case 'date': {

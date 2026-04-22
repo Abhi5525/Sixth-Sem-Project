@@ -5,9 +5,48 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="card shadow-sm">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="border-left: 5px solid #f59e0b;">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                Pending Verifications
+                            </h4>
+                            <p class="text-muted mb-0">Review and approve professional applications</p>
+                        </div>
+                        <div class="mt-2 mt-md-0">
+                            <span class="badge bg-warning text-dark" style="font-size: 1rem; padding: 0.6rem 1rem;">
+                                <i class="fas fa-hourglass-half me-2"></i>
+                                {{ pending_professionals|length }} Pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Professionals Table -->
+    <div class="card">
         <div class="card-header bg-white">
-            <h5 class="mb-0">Pending Professional Verifications</h5>
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="fas fa-list me-2 text-primary"></i>
+                        Applications Awaiting Review
+                    </h5>
+                    <small class="text-muted">Click "View" to see full details before approving or rejecting</small>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="card-body p-0">
             {% if pending_professionals %}
@@ -15,55 +54,94 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Skill</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Location</th>
-                            <th>Experience</th>
-                            <th>Rate/hr</th>
-                            <th>Actions</th>
+                            <th style="width: 50px;">#</th>
+                            <th><i class="fas fa-user me-1"></i>Professional</th>
+                            <th><i class="fas fa-tools me-1"></i>Skills</th>
+                            <th><i class="fas fa-envelope me-1"></i>Contact</th>
+                            <th><i class="fas fa-map-marker-alt me-1"></i>Location</th>
+                            <th><i class="fas fa-briefcase me-1"></i>Experience</th>
+                            <th><i class="fas fa-indian-rupee-sign me-1"></i>Rate/hr</th>
+                            <th style="width: 200px;"><i class="fas fa-cog me-1"></i>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for prof in pending_professionals %}
                         <tr>
-                            <td>{{ prof.id }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ forloop.counter }}</span>
+                            </td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if prof.profile_picture %}
-                                    <img src="{{ prof.profile_picture.url }}" alt="{{ prof.user.full_name }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <img src="{{ prof.profile_picture.url }}" alt="{{ prof.user.full_name }}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #e2e8f0;">
                                     {% else %}
-                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-user text-white"></i>
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 45px; height: 45px; font-weight: 600; font-size: 1.1rem;">
+                                        {{ prof.user.full_name|first|upper }}
                                     </div>
                                     {% endif %}
-                                    <strong>{{ prof.user.full_name }}</strong>
+                                    <div>
+                                        <strong class="d-block">{{ prof.user.full_name }}</strong>
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone me-1"></i>{{ prof.user.phone_number }}
+                                        </small>
+                                    </div>
                                 </div>
                             </td>
-                            <td><span class="badge bg-secondary">
-                                {% for skill in prof.skills.all %}
-                                    {{ skill.name }}{% if not forloop.last %}, {% endif %}
-                                {% empty %}
-                                    {{ prof.skill|default:"No skills" }}
-                                {% endfor %}
-                            </span></td>
-                            <td>{{ prof.email }}</td>
-                            <td>{{ prof.user.phone_number }}</td>
-                            <td>{{ prof.district }}, {{ prof.province }}</td>
-                            <td>{{ prof.experience }} years</td>
-                            <td>Rs {{ prof.rate }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for skill in prof.skills.all %}
+                                    <span class="badge bg-info" style="font-size: 0.75rem;">
+                                        {{ skill.name }}
+                                    </span>
+                                    {% empty %}
+                                    <span class="badge bg-secondary" style="font-size: 0.75rem;">
+                                        No skills listed
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <small class="d-block">
+                                        <i class="fas fa-envelope text-muted me-1"></i>
+                                        {{ prof.email|truncatechars:20 }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone text-muted me-1"></i>
+                                        {{ prof.user.phone_number }}
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="fas fa-map-pin text-muted me-1"></i>
+                                    {{ prof.district }}
+                                </small>
+                                <br>
+                                <small class="text-muted">{{ prof.province }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ prof.experience }} yrs
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="text-success">
+                                    <i class="fas fa-indian-rupee-sign me-1"></i>
+                                    {{ prof.rate }}
+                                </strong>
+                            </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="{% url 'adminpanel:professional_detail' prof.id %}" class="btn btn-sm btn-info" title="View Details">
-                                        <i class="fas fa-eye"></i>
+                                    <a href="{% url 'adminpanel:professional_detail' prof.id %}" class="btn btn-sm btn-info" title="View Full Details">
+                                        <i class="fas fa-eye me-1"></i>View
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-success approve-btn" data-id="{{ prof.id }}" title="Approve">
-                                        <i class="fas fa-check"></i>
+                                    <button type="button" class="btn btn-sm btn-success approve-btn" data-id="{{ prof.id }}" title="Approve Professional">
+                                        <i class="fas fa-check me-1"></i>Approve
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-danger reject-btn" data-id="{{ prof.id }}" data-name="{{ prof.user.full_name }}" title="Reject">
-                                        <i class="fas fa-times"></i>
+                                    <button type="button" class="btn btn-sm btn-danger reject-btn" data-id="{{ prof.id }}" data-name="{{ prof.user.full_name }}" title="Reject Application">
+                                        <i class="fas fa-times me-1"></i>Reject
                                     </button>
                                 </div>
                             </td>
@@ -80,7 +158,9 @@
                     <ul class="pagination justify-content-center mb-0">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <i class="fas fa-chevron-left me-1"></i>Previous
+                            </a>
                         </li>
                         {% endif %}
                         
@@ -92,18 +172,26 @@
                         
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                Next<i class="fas fa-chevron-right ms-1"></i>
+                            </a>
                         </li>
                         {% endif %}
                     </ul>
                 </nav>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </small>
+                </div>
             </div>
             {% endif %}
             {% else %}
-            <div class="p-5 text-center">
-                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                <h4>All Clear!</h4>
-                <p class="text-muted">No pending verifications at the moment.</p>
+            <div class="empty-state py-5">
+                <i class="fas fa-check-circle" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">All Caught Up! 🎉</h5>
+                <p class="text-muted mb-0">No pending verifications at the moment.</p>
+                <p class="text-muted">New applications will appear here when professionals register.</p>
             </div>
             {% endif %}
         </div>
@@ -112,23 +200,89 @@
 
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject Professional</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;">
+                <h5 class="modal-title">
+                    <i class="fas fa-times-circle me-2"></i>Reject Professional
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to reject <strong id="rejectName"></strong>?</p>
+            <div class="modal-body p-4">
+                <div class="alert alert-warning" style="border-left: 4px solid #f59e0b;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This will reject <strong id="rejectName"></strong>'s application and revert their account to a regular client.
+                </div>
                 <div class="mb-3">
-                    <label for="rejectionReason" class="form-label">Reason for Rejection:</label>
-                    <textarea class="form-control" id="rejectionReason" rows="3"></textarea>
-                    <span class="error-message" id="reasonError" style="color: #dc3545; font-size: 0.875rem; display: none; margin-top: 0.25rem;"></span>
+                    <label for="rejectionReason" class="form-label fw-semibold">
+                        <i class="fas fa-comment-dots me-1"></i>Reason for Rejection:
+                    </label>
+                    <textarea class="form-control" id="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection..."></textarea>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This reason will be shown to the professional so they can make corrections.
+                    </div>
+                    <span class="error-message" id="reasonError" style="color: #dc3545; font-size: 0.875rem; display: none; margin-top: 0.5rem;"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-lightbulb me-1"></i>Common Reasons:
+                    </label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary reason-template" data-reason="Profile picture is not clear or does not match citizenship documents.">
+                            <i class="fas fa-camera me-1"></i>Unclear Photo
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reason-template" data-reason="Citizenship documents are blurry or incomplete.">
+                            <i class="fas fa-id-card me-1"></i>Unclear Documents
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reason-template" data-reason="Rate is too high for the experience level. Please review pricing guidelines.">
+                            <i class="fas fa-money-bill me-1"></i>Rate Too High
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reason-template" data-reason="Incomplete or inaccurate information provided in the application.">
+                            <i class="fas fa-edit me-1"></i>Incomplete Info
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmReject">Reject</button>
+            <div class="modal-footer" style="border-top: 2px solid #f1f5f9;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmReject">
+                    <i class="fas fa-times-circle me-1"></i>Reject Application
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Approve Professional
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-check fa-4x text-success mb-3"></i>
+                    <h5>Confirm Approval</h5>
+                    <p class="text-muted">Are you sure you want to approve <strong id="approveName"></strong>?</p>
+                    <p class="text-muted" style="font-size: 0.9rem;">
+                        This will allow them to accept bookings and appear in search results.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 2px solid #f1f5f9; justify-content: center;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="confirmApprove">
+                    <i class="fas fa-check-circle me-1"></i>Yes, Approve
+                </button>
             </div>
         </div>
     </div>
@@ -138,29 +292,41 @@
 {% block extra_js %}
 <script>
     let rejectProfId = null;
+    let approveProfId = null;
     const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
     
-    // Approve professional
+    // Show approve modal
     document.querySelectorAll('.approve-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const profId = this.dataset.id;
-            if (confirm('Are you sure you want to approve this professional?')) {
-                fetch(`/adminpanel/professionals/${profId}/approve/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error approving professional');
-                    }
-                });
+            approveProfId = this.dataset.id;
+            document.getElementById('approveName').textContent = this.closest('tr').querySelector('strong').textContent;
+            approveModal.show();
+        });
+    });
+    
+    // Confirm approval
+    document.getElementById('confirmApprove').addEventListener('click', function() {
+        fetch(`/adminpanel/professionals/${approveProfId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
             }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                approveModal.hide();
+                // Show success animation
+                setTimeout(() => location.reload(), 300);
+            } else {
+                alert('Error approving professional: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
         });
     });
     
@@ -170,7 +336,18 @@
             rejectProfId = this.dataset.id;
             document.getElementById('rejectName').textContent = this.dataset.name;
             document.getElementById('rejectionReason').value = '';
+            document.getElementById('reasonError').style.display = 'none';
+            document.getElementById('rejectionReason').classList.remove('is-invalid');
             rejectModal.show();
+        });
+    });
+    
+    // Reason templates
+    document.querySelectorAll('.reason-template').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('rejectionReason').value = this.dataset.reason;
+            document.getElementById('reasonError').style.display = 'none';
+            document.getElementById('rejectionReason').classList.remove('is-invalid');
         });
     });
     
@@ -192,7 +369,7 @@
         }
         
         if (reason.length < 10) {
-            reasonError.textContent = 'Reason must be at least 10 characters';
+            reasonError.textContent = 'Reason must be at least 10 characters long';
             reasonError.style.display = 'block';
             reasonTextarea.classList.add('is-invalid');
             return;
@@ -213,11 +390,27 @@
         .then(data => {
             if (data.success) {
                 rejectModal.hide();
-                location.reload();
+                // Show success animation
+                setTimeout(() => location.reload(), 300);
             } else {
-                alert('Error rejecting professional');
+                alert('Error rejecting professional: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
         });
+    });
+    
+    // Add smooth animations to table rows
+    document.querySelectorAll('tbody tr').forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
+        }, index * 50);
     });
 </script>
 {% endblock %}

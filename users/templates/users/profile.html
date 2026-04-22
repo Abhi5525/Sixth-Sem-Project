@@ -65,8 +65,16 @@
           <h5 class="card-title fw-bold mb-3">Professional Details</h5>
           {% if manpower_profile %}
           <dl class="row">
-            <dt class="col-sm-4 text-muted">Skill</dt>
-            <dd class="col-sm-8">{{ manpower_profile.skill }}</dd>
+            <dt class="col-sm-4 text-muted">Skills</dt>
+            <dd class="col-sm-8">
+              {% if manpower_profile.skills.all %}
+                {% for skill in manpower_profile.skills.all %}
+                  <span class="badge bg-primary me-2 mb-2">{{ skill.name }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">No skills assigned</span>
+              {% endif %}
+            </dd>
             <dt class="col-sm-4 text-muted">Location</dt>
             <dd class="col-sm-8">{{ manpower_profile.province }}, {{ manpower_profile.district }}, {{ manpower_profile.municipality }}, Ward {{ manpower_profile.ward }}</dd>
             <dt class="col-sm-4 text-muted">Experience</dt>

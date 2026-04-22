@@ -82,12 +82,30 @@ class Skill(models.Model):
         ('Other', 'Other'),
     ])
     description = models.TextField(blank=True, null=True)
+    
+    # Add aliases for search functionality
+    aliases = models.JSONField(default=list, blank=True, help_text="Common search terms that should match this skill")
 
     class Meta:
         ordering = ['category', 'name']
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        # Auto-populate aliases if not set
+        if not self.aliases:
+            alias_map = {
+                'Carpentry': ['carpenter', 'carpentry', 'woodwork', 'carpentry work'],
+                'Plumbing': ['plumber', 'plumbing', 'pipe fitting', 'plumbing work'],
+                'Electrical': ['electrician', 'electrical', 'wiring', 'electrical work'],
+                'Masonry': ['mason', 'masonry', 'bricklayer', 'masonry work'],
+                'Cleaning': ['cleaner', 'cleaning', 'house cleaning', 'cleaning service'],
+                'Painting': ['painter', 'painting', 'wall painting', 'painting work'],
+            }
+            self.aliases = alias_map.get(self.name, [self.name.lower()])
+        
+        super().save(*args, **kwargs)
 
 # Manpower Profile (with GPS and availability)
 class ManpowerProfile(models.Model):

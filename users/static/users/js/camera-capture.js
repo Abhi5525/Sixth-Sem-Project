@@ -12,6 +12,23 @@ class CameraCapture {
         this.modal = null;
         this.modalInstance = null;
         this.isCapturing = false;
+        
+        // Cache frequently accessed DOM elements
+        this.cameraBtn = null;
+        this.captureBtn = null;
+        this.closeBtn = null;
+        this.retakeBtn = null;
+        this.confirmBtn = null;
+        this.viewPhotoBtn = null;
+        this.removePhotoBtn = null;
+        this.fallback = null;
+        this.cameraView = null;
+        this.previewView = null;
+        this.fileInput = null;
+        this.captureButtonContainer = null;
+        this.previewSection = null;
+        this.uploadedPhotoPreview = null;
+        this.statusDiv = null;
 
         this.init();
     }
@@ -30,9 +47,29 @@ class CameraCapture {
         if (!this.checkCameraSupport()) {
             return;
         }
-
+        
+        // Cache all DOM elements on setup
+        this.cacheElements();
         this.setupEventListeners();
         console.log('CameraCapture initialized successfully');
+    }
+    
+    cacheElements() {
+        this.cameraBtn = document.getElementById('cameraBtn');
+        this.captureBtn = document.getElementById('capturePhotoBtn');
+        this.closeBtn = document.getElementById('closeCameraBtn');
+        this.retakeBtn = document.getElementById('retakePhotoBtn');
+        this.confirmBtn = document.getElementById('confirmPhotoBtn');
+        this.viewPhotoBtn = document.getElementById('viewPhotoBtn');
+        this.removePhotoBtn = document.getElementById('removePhotoBtn');
+        this.fallback = document.getElementById('cameraFallback');
+        this.cameraView = document.getElementById('cameraView');
+        this.previewView = document.getElementById('previewView');
+        this.fileInput = document.getElementById('profile_picture');
+        this.captureButtonContainer = document.getElementById('captureButtonContainer');
+        this.previewSection = document.getElementById('imagePreviewSection');
+        this.uploadedPhotoPreview = document.getElementById('uploadedPhotoPreview');
+        this.statusDiv = document.getElementById('captureStatus');
     }
 
     checkCameraSupport() {
@@ -50,7 +87,9 @@ class CameraCapture {
 
         if (!hasGetUserMedia) {
             console.warn('Camera not supported on this device');
-            document.getElementById('cameraBtn')?.setAttribute('disabled', 'disabled');
+            if (this.cameraBtn) {
+                this.cameraBtn.setAttribute('disabled', 'disabled');
+            }
             this.showCameraFallback('Camera is not supported on this device.');
         }
 
@@ -59,9 +98,8 @@ class CameraCapture {
 
     setupEventListeners() {
         // Camera button click
-        const cameraBtn = document.getElementById('cameraBtn');
-        if (cameraBtn) {
-            cameraBtn.addEventListener('click', (e) => {
+        if (this.cameraBtn) {
+            this.cameraBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.openCamera();
             });
@@ -70,32 +108,45 @@ class CameraCapture {
         }
 
         // Capture button
-        const captureBtn = document.getElementById('capturePhotoBtn');
-        if (captureBtn) {
-            captureBtn.addEventListener('click', () => this.capturePhoto());
+        if (this.captureBtn) {
+            this.captureBtn.addEventListener('click', () => this.capturePhoto());
         }
 
         // Close camera
-        const closeBtn = document.getElementById('closeCameraBtn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.closeCamera());
+        if (this.closeBtn) {
+            this.closeBtn.addEventListener('click', () => this.closeCamera());
         }
 
         // Retake photo
-        const retakeBtn = document.getElementById('retakePhotoBtn');
-        if (retakeBtn) {
-            retakeBtn.addEventListener('click', () => this.retakePhoto());
+        if (this.retakeBtn) {
+            this.retakeBtn.addEventListener('click', () => this.retakePhoto());
         }
 
         // Confirm photo
-        const confirmBtn = document.getElementById('confirmPhotoBtn');
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => this.confirmPhoto());
+        if (this.confirmBtn) {
+            this.confirmBtn.addEventListener('click', () => this.confirmPhoto());
+        }
+
+        // View photo button
+        if (this.viewPhotoBtn) {
+            this.viewPhotoBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.viewPhoto();
+            });
+        }
+
+        // Remove photo button
+        if (this.removePhotoBtn) {
+            this.removePhotoBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.removePhoto();
+            });
         }
 
         // Hide camera fallback if visible
-        const fallback = document.getElementById('cameraFallback');
-        if (fallback) fallback.style.display = 'none';
+        if (this.fallback) {
+            this.fallback.style.display = 'none';
+        }
     }
 
     async openCamera() {
@@ -105,9 +156,13 @@ class CameraCapture {
             this.video = document.getElementById('cameraVideo');
             this.canvas = document.getElementById('photoCanvas');
 
-            if (!this.video) {
-                console.error('Video element not found');
-                alert('Error: Camera modal not found. Please reload the page.');
+            if (!this.modal || !this.video || !this.canvas) {
+                console.error('Camera UI elements missing:', {
+                    modal: !!this.modal,
+                    video: !!this.video,
+                    canvas: !!this.canvas
+                });
+                alert('Error: Camera components are missing. Please reload the page.');
                 return;
             }
 
@@ -189,32 +244,27 @@ class CameraCapture {
     }
 
     showCameraView() {
-        const cameraView = document.getElementById('cameraView');
-        const previewView = document.getElementById('previewView');
-        if (cameraView) {
-            cameraView.classList.add('active');
-            cameraView.style.display = '';
+        if (this.cameraView) {
+            this.cameraView.classList.add('active');
+            this.cameraView.style.display = '';
         }
-        if (previewView) {
-            previewView.classList.remove('active');
-            previewView.style.display = '';
+        if (this.previewView) {
+            this.previewView.classList.remove('active');
+            this.previewView.style.display = '';
         }
     }
 
     showPreview() {
-        const previewImg = document.getElementById('previewImage');
-        if (previewImg) {
-            previewImg.src = this.capturedImageData;
+        if (this.uploadedPhotoPreview) {
+            this.uploadedPhotoPreview.src = this.capturedImageData;
         }
-        const cameraView = document.getElementById('cameraView');
-        const previewView = document.getElementById('previewView');
-        if (cameraView) {
-            cameraView.classList.remove('active');
-            cameraView.style.display = '';
+        if (this.cameraView) {
+            this.cameraView.classList.remove('active');
+            this.cameraView.style.display = '';
         }
-        if (previewView) {
-            previewView.classList.add('active');
-            previewView.style.display = '';
+        if (this.previewView) {
+            this.previewView.classList.add('active');
+            this.previewView.style.display = '';
         }
     }
 
@@ -236,8 +286,7 @@ class CameraCapture {
             const blob = await this.dataURLtoBlob(this.capturedImageData);
             const file = new File([blob], 'profile-photo-kyc.jpg', { type: 'image/jpeg' });
 
-            const fileInput = document.getElementById('profile_picture');
-            if (!fileInput) {
+            if (!this.fileInput) {
                 console.error('File input #profile_picture not found');
                 alert('Error: Profile picture field not found. Please reload the page.');
                 return;
@@ -245,17 +294,12 @@ class CameraCapture {
 
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
+            this.fileInput.files = dataTransfer.files;
 
-            console.log('File set on input:', fileInput.files);
+            console.log('File set on input:', this.fileInput.files);
 
             this.updateCaptureStatus();
-
-            const cameraBtn = document.getElementById('cameraBtn');
-            if (cameraBtn) {
-                cameraBtn.disabled = true;
-                cameraBtn.innerHTML = '<i class="fas fa-check"></i> Photo Captured';
-            }
+            this.showImagePreview();
 
             this.closeCamera();
 
@@ -267,10 +311,102 @@ class CameraCapture {
         }
     }
 
+    showImagePreview() {
+        // Hide capture button container
+        if (this.captureButtonContainer) {
+            this.captureButtonContainer.style.display = 'none';
+        }
+
+        // Show preview section
+        if (this.previewSection) {
+            this.previewSection.style.display = 'block';
+        }
+
+        // Set the preview image
+        if (this.uploadedPhotoPreview && this.capturedImageData) {
+            this.uploadedPhotoPreview.src = this.capturedImageData;
+        }
+
+        // Disable camera button
+        if (this.cameraBtn) {
+            this.cameraBtn.disabled = true;
+            this.cameraBtn.innerHTML = '<i class="fas fa-check"></i> Photo Captured';
+        }
+    }
+
+    viewPhoto() {
+        const previewImg = document.getElementById('uploadedPhotoPreview');
+        if (previewImg && previewImg.src) {
+            // Create a modal to view the full image
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'photoViewModal';
+            modal.tabIndex = '-1';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-image"></i> Profile Photo Preview
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${previewImg.src}" alt="Profile photo" style="max-width: 100%; max-height: 500px; border-radius: 8px;">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const viewModal = new bootstrap.Modal(modal);
+            viewModal.show();
+
+            // Clean up modal after it's hidden
+            modal.addEventListener('hidden.bs.modal', () => {
+                modal.remove();
+            });
+        }
+    }
+
+    removePhoto() {
+        // Confirm removal
+        const confirmed = confirm('Are you sure you want to remove this photo? You can capture another one.');
+        if (!confirmed) return;
+
+        // Clear file input
+        if (this.fileInput) {
+            this.fileInput.value = '';
+            this.fileInput.files = new DataTransfer().files;
+        }
+
+        // Clear captured image data
+        this.capturedImageData = null;
+
+        // Hide preview section
+        if (this.previewSection) {
+            this.previewSection.style.display = 'none';
+        }
+
+        // Show capture button container
+        if (this.captureButtonContainer) {
+            this.captureButtonContainer.style.display = 'block';
+        }
+
+        // Re-enable camera button
+        if (this.cameraBtn) {
+            this.cameraBtn.disabled = false;
+            this.cameraBtn.innerHTML = '<i class="fas fa-camera"></i> Capture with Camera';
+        }
+
+        this.showSuccessMessage('Photo removed. You can capture a new one.');
+    }
+
     updateCaptureStatus() {
-        const statusDiv = document.getElementById('captureStatus');
-        if (statusDiv) {
-            statusDiv.style.display = 'block';
+        if (this.statusDiv) {
+            this.statusDiv.style.display = 'block';
         }
     }
 
@@ -289,15 +425,13 @@ class CameraCapture {
         }
 
         // Force hide both views
-        const cameraView = document.getElementById('cameraView');
-        const previewView = document.getElementById('previewView');
-        if (cameraView) {
-            cameraView.classList.remove('active');
-            cameraView.style.display = 'none';
+        if (this.cameraView) {
+            this.cameraView.classList.remove('active');
+            this.cameraView.style.display = 'none';
         }
-        if (previewView) {
-            previewView.classList.remove('active');
-            previewView.style.display = 'none';
+        if (this.previewView) {
+            this.previewView.classList.remove('active');
+            this.previewView.style.display = 'none';
         }
 
         this.capturedImageData = null;
@@ -326,7 +460,7 @@ class CameraCapture {
     }
 
     showCameraFallback(message) {
-        const fallback = document.getElementById('cameraFallback');
+        const fallback = this.fallback || document.getElementById('cameraFallback');
         if (fallback) {
             fallback.style.display = 'block';
             fallback.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Camera not available.</strong> ${message}`;
@@ -334,7 +468,7 @@ class CameraCapture {
     }
 
     showInsecureError() {
-        const fallback = document.getElementById('cameraFallback');
+        const fallback = this.fallback || document.getElementById('cameraFallback');
         if (fallback) {
             fallback.style.display = 'block';
             fallback.innerHTML = `
@@ -345,7 +479,7 @@ class CameraCapture {
             `;
         }
 
-        const cameraBtn = document.getElementById('cameraBtn');
+        const cameraBtn = this.cameraBtn || document.getElementById('cameraBtn');
         if (cameraBtn) {
             cameraBtn.disabled = true;
             cameraBtn.innerHTML = '<i class="fas fa-lock"></i> Requires HTTPS';

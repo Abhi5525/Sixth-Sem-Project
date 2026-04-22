@@ -673,8 +673,14 @@ select {
     color: var(--accent);
 }
 
-.file-input-label input[type="file"] {
-    display: none;
+/* Hide file inputs but keep them accessible to labels */
+input[type="file"][name="citizenship_front"],
+input[type="file"][name="citizenship_back"],
+input[type="file"][name="profile_picture"] {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
 }
 
 /* Camera button inside KYC */

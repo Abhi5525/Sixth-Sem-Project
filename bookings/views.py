@@ -4,6 +4,7 @@ import base64
 import hmac
 import hashlib
 import logging
+import re
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -22,6 +23,8 @@ from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
+BOOKING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s\-']{2,99}$")
+
 @login_required
 def booking_form(request, professional_id):
     professional = get_object_or_404(ManpowerProfile, id=professional_id)
@@ -31,7 +34,19 @@ def booking_form(request, professional_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            name = data.get('name')
+            name = (data.get('name') or '').strip()
+
+            if not BOOKING_NAME_PATTERN.fullmatch(name):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Name must start with a letter and contain at least 3 valid characters.'
+                }, status=400)
+
+            if len(re.sub(r"[^A-Za-z]", "", name)) < 3:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Name must contain at least 3 letters.'
+                }, status=400)
             
             # Parse booking time
             booking_time_str = data.get('booking_time')
@@ -43,42 +58,12 @@ def booking_form(request, professional_id):
             if not timezone.is_aware(booking_time):
                 booking_time = timezone.make_aware(booking_time, timezone=timezone.utc)
             
-            # Check if booking is at least 30 minutes from now
-            now_utc = timezone.now()
-            min_booking_time = now_utc + timedelta(hours=0.5)
-            
-            if booking_time < min_booking_time:
-                # Convert to user's local time for error message
-                user_tz = timezone.get_current_timezone()
-                local_min_time = timezone.localtime(min_booking_time, user_tz)
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Bookings must be made at least 30 minutes in advance. '
-                            f'Earliest available time is {local_min_time.strftime("%Y-%m-%d %I:%M %p")}'
-                }, status=400)
-            
             # Parse duration
             duration_hours_raw = data.get('duration_hours') or 1
             duration_hours = float(duration_hours_raw)
 
-            if duration_hours <= 0:
-                return JsonResponse({'success': False, 'error': 'Duration must be positive'}, status=400)
-
             # Calculate end time
             end_time = booking_time + timedelta(hours=duration_hours)
-            
-            # Check for overlapping bookings (extra validation)
-            overlapping = Booking.objects.filter(
-                professional=professional,
-                booking_time__lt=end_time,
-                end_time__gt=booking_time
-            ).exists()
-            
-            if overlapping:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'This professional is already booked for the selected time slot.'
-                }, status=400)
 
             # ... rest of your code ...
             user_lat_raw = data.get('latitude')
@@ -98,7 +83,7 @@ def booking_form(request, professional_id):
             deposit = (total_fee * Decimal('0.10')).quantize(Decimal('0.01'))
 
             # Create booking
-            booking = Booking.objects.create(
+            booking = Booking(
                 client=request.user,
                 client_name=name,
                 professional=professional,
@@ -112,6 +97,9 @@ def booking_form(request, professional_id):
                 professional_latitude=prof_lat,
                 professional_longitude=prof_lng
             )
+
+            booking.full_clean()
+            booking.save()
 
             # Create payment record for deposit
             Payment.objects.create(booking=booking, amount=deposit)

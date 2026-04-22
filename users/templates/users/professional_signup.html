@@ -256,11 +256,31 @@
                                 <div class="file-card-icon"><i class="fas fa-id-card"></i></div>
                                 <div class="file-card-label">Citizenship — Front Side</div>
                                 <div class="file-input-container">
-                                    <label class="file-input-label">
-                                        <span class="file-input-text" id="citFrontText">Choose file...</span>
-                                        <i class="fas fa-upload file-input-icon"></i>
-                                        {{ form.citizenship_front }}
-                                    </label>
+                                    {{ form.citizenship_front }}
+                                    
+                                    <!-- Upload Button (shown when no file) -->
+                                    <div id="citFrontUploadContainer">
+                                        <label for="id_citizenship_front" class="file-input-label">
+                                            <span class="file-input-text" id="citFrontText">Choose file...</span>
+                                            <i class="fas fa-upload file-input-icon"></i>
+                                        </label>
+                                    </div>
+
+                                    <!-- Preview Section (shown when file uploaded) -->
+                                    <div id="citFrontPreviewSection" style="display:none; text-align: center;">
+                                        <p class="text-success" style="margin-bottom: 8px;">
+                                            <i class="fas fa-check-circle"></i> <strong>File Uploaded</strong>
+                                        </p>
+                                        <img id="citFrontPreview" alt="Citizenship front preview" style="max-width: 150px; max-height: 150px; border-radius: 6px; border: 2px solid #28a745; margin-bottom: 10px;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-document="citizenship_front" data-action="view" title="View document">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-document="citizenship_front" data-action="remove" title="Remove and re-upload">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             {% if form.citizenship_front.errors %}
@@ -274,11 +294,31 @@
                                 <div class="file-card-icon"><i class="fas fa-id-card"></i></div>
                                 <div class="file-card-label">Citizenship — Back Side</div>
                                 <div class="file-input-container">
-                                    <label class="file-input-label">
-                                        <span class="file-input-text" id="citBackText">Choose file...</span>
-                                        <i class="fas fa-upload file-input-icon"></i>
-                                        {{ form.citizenship_back }}
-                                    </label>
+                                    {{ form.citizenship_back }}
+                                    
+                                    <!-- Upload Button (shown when no file) -->
+                                    <div id="citBackUploadContainer">
+                                        <label for="id_citizenship_back" class="file-input-label">
+                                            <span class="file-input-text" id="citBackText">Choose file...</span>
+                                            <i class="fas fa-upload file-input-icon"></i>
+                                        </label>
+                                    </div>
+
+                                    <!-- Preview Section (shown when file uploaded) -->
+                                    <div id="citBackPreviewSection" style="display:none; text-align: center;">
+                                        <p class="text-success" style="margin-bottom: 8px;">
+                                            <i class="fas fa-check-circle"></i> <strong>File Uploaded</strong>
+                                        </p>
+                                        <img id="citBackPreview" alt="Citizenship back preview" style="max-width: 150px; max-height: 150px; border-radius: 6px; border: 2px solid #28a745; margin-bottom: 10px;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-document="citizenship_back" data-action="view" title="View document">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-document="citizenship_back" data-action="remove" title="Remove and re-upload">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             {% if form.citizenship_back.errors %}
@@ -292,13 +332,38 @@
                                 <div class="file-card-icon"><i class="fas fa-camera"></i></div>
                                 <div class="file-card-label">Profile Photo (KYC Verification)</div>
                                 <div class="file-input-container">
-                                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" style="display:none !important;" required>
-                                    <button type="button" class="camera-btn" id="cameraBtn">
-                                        <i class="fas fa-camera"></i> Capture with Camera
-                                    </button>
-                                    <small class="d-block mt-2 text-muted">
-                                        <i class="fas fa-info-circle"></i> Camera capture required. After admin verification, you can change your photo later.
-                                    </small>
+                                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*" required>
+                                    
+                                    <!-- Image Preview Section -->
+                                    <div id="imagePreviewSection" style="display:none; margin-bottom: 15px;">
+                                        <div style="text-align: center; margin-bottom: 10px;">
+                                            <p class="text-success" style="margin-bottom: 8px;">
+                                                <i class="fas fa-check-circle"></i> <strong>Profile Photo Captured</strong>
+                                            </p>
+                                            <img id="uploadedPhotoPreview" 
+                                                 alt="Captured profile photo" 
+                                                 style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #28a745; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                        </div>
+                                        <div style="text-align: center; margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="viewPhotoBtn" title="View full photo">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" id="removePhotoBtn" title="Remove this photo and try again">
+                                                <i class="fas fa-trash"></i> Remove & Retry
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Capture Button (shown when no image) -->
+                                    <div id="captureButtonContainer">
+                                        <button type="button" class="camera-btn" id="cameraBtn">
+                                            <i class="fas fa-camera"></i> Capture with Camera
+                                        </button>
+                                        <small class="d-block mt-2 text-muted">
+                                            <i class="fas fa-info-circle"></i> Camera capture required. After admin verification, you can change your photo later.
+                                        </small>
+                                    </div>
+
                                     <div id="captureStatus" class="alert alert-success mt-2" style="display:none;">
                                         <i class="fas fa-check-circle"></i> Photo captured successfully!
                                     </div>
@@ -332,7 +397,7 @@
                     </div>
                 </form>
 
-                <p class="account-link">Already have an account? <a href="{% url 'users:login' %}">Log in</a></p>
+                
             </div>
         </section>
     </div>
@@ -354,6 +419,111 @@ document.addEventListener('DOMContentLoaded', function () {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
+    const emailField = document.getElementById('email');
+    const rateField = document.getElementById('rate');
+    const experienceField = document.getElementById('experience');
+    const wardField = document.getElementById('ward');
+    const profilePictureField = document.getElementById('profile_picture');
+    const cameraBtn = document.getElementById('cameraBtn');
+    const skillSearchField = document.getElementById('skillSearch');
+    const skillsContainer = document.getElementById('skillsOptions');
+
+    const EMAIL_REGEX = /^[A-Za-z][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    function clearFieldError(field) {
+        if (!field) return;
+        field.classList.remove('is-invalid');
+        const group = field.closest('.field-group') || field.closest('.file-upload-card');
+        if (group) {
+            group.querySelector('.client-error')?.remove();
+        }
+    }
+
+    function setFieldError(field, message) {
+        if (!field) return false;
+        field.classList.add('is-invalid');
+        const group = field.closest('.field-group') || field.closest('.file-upload-card');
+        if (!group) return false;
+        let err = group.querySelector('.client-error');
+        if (!err) {
+            err = document.createElement('p');
+            err.className = 'error-text client-error';
+            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span></span>';
+            group.appendChild(err);
+        }
+        err.querySelector('span').textContent = message;
+        return false;
+    }
+
+    function getSelectedSkillsCount() {
+        return document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked').length;
+    }
+
+    function validateStep1() {
+        let valid = true;
+        if (!emailField || !emailField.value.trim()) {
+            valid = setFieldError(emailField, 'Email is required') && valid;
+        } else if (!EMAIL_REGEX.test(emailField.value.trim())) {
+            valid = setFieldError(emailField, 'Enter a valid email address that starts with a letter') && valid;
+        }
+
+        if (!rateField || !rateField.value.trim()) {
+            valid = setFieldError(rateField, 'Hourly rate is required') && valid;
+        } else if (parseFloat(rateField.value) <= 0 || parseFloat(rateField.value) > 10000) {
+            valid = setFieldError(rateField, 'Rate must be between 1 and 10,000') && valid;
+        }
+
+        return valid;
+    }
+
+    function validateStep2() {
+        let valid = true;
+        ['province', 'district', 'municipality', 'ward'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el || !el.value) {
+                valid = setFieldError(el, 'This field is required') && valid;
+            }
+        });
+
+        if (wardField && wardField.value && !/^\d+$/.test(wardField.value)) {
+            valid = setFieldError(wardField, 'Ward must be a valid number') && valid;
+        }
+
+        return valid;
+    }
+
+    function validateStep3() {
+        let valid = true;
+        const checked = document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked');
+        if (checked.length === 0) {
+            valid = setFieldError(skillsContainer, 'Select at least one skill') && valid;
+        } else if (checked.length > 3) {
+            valid = setFieldError(skillsContainer, 'Maximum 3 skills allowed') && valid;
+        }
+
+        if (experienceField && experienceField.value && (parseFloat(experienceField.value) < 0 || parseFloat(experienceField.value) > 50)) {
+            valid = setFieldError(experienceField, 'Experience must be between 0 and 50') && valid;
+        }
+
+        return valid;
+    }
+
+    function validateStep4() {
+        let valid = true;
+        const citFront = document.getElementById('id_citizenship_front');
+        const citBack = document.getElementById('id_citizenship_back');
+
+        if (!citFront || !citFront.files || citFront.files.length === 0) {
+            valid = setFieldError(citFront, 'Citizenship front is required') && valid;
+        }
+        if (!citBack || !citBack.files || citBack.files.length === 0) {
+            valid = setFieldError(citBack, 'Citizenship back is required') && valid;
+        }
+        if (!profilePictureField || !profilePictureField.files || profilePictureField.files.length === 0) {
+            valid = setFieldError(cameraBtn, 'Profile photo is required. Please capture with camera.') && valid;
+        }
+        return valid;
+    }
 
     function updateWizard() {
         // Show/hide steps
@@ -400,61 +570,10 @@ document.addEventListener('DOMContentLoaded', function () {
         clearAllErrors();
         let valid = true;
 
-        if (step === 1) {
-            const email = document.getElementById('email');
-            const rate = document.getElementById('rate');
-
-            if (!email || !email.value.trim()) {
-                showFieldError(email, 'Email is required'); valid = false;
-            } else if (!/^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.value.trim())) {
-                showFieldError(email, 'Enter a valid email (must start with a letter)'); valid = false;
-            }
-
-            if (!rate || !rate.value) {
-                showFieldError(rate, 'Hourly rate is required'); valid = false;
-            } else if (parseFloat(rate.value) <= 0 || parseFloat(rate.value) > 10000) {
-                showFieldError(rate, 'Rate must be between 1 and 10,000'); valid = false;
-            }
-        }
-
-        if (step === 2) {
-            ['province', 'district', 'municipality', 'ward'].forEach((id) => {
-                const el = document.getElementById(id);
-                if (!el || !el.value) {
-                    showFieldError(el, 'This field is required'); valid = false;
-                }
-            });
-        }
-
-        if (step === 3) {
-            const checked = document.querySelectorAll('#skillsOptions input[type="checkbox"]:checked');
-            if (checked.length === 0) {
-                showSkillsError('Select at least one skill'); valid = false;
-            } else if (checked.length > 3) {
-                showSkillsError('Maximum 3 skills allowed'); valid = false;
-            }
-
-            const exp = document.getElementById('experience');
-            if (exp && exp.value && (parseFloat(exp.value) < 0 || parseFloat(exp.value) > 50)) {
-                showFieldError(exp, 'Experience must be between 0 and 50'); valid = false;
-            }
-        }
-
-        if (step === 4) {
-            const citFront = document.getElementById('citizenship_front');
-            const citBack = document.getElementById('citizenship_back');
-            const profilePic = document.getElementById('profile_picture');
-
-            if (!citFront || !citFront.value) {
-                showFieldError(citFront, 'Citizenship front is required'); valid = false;
-            }
-            if (!citBack || !citBack.value) {
-                showFieldError(citBack, 'Citizenship back is required'); valid = false;
-            }
-            if (!profilePic || !profilePic.files || profilePic.files.length === 0) {
-                showFieldError(document.getElementById('cameraBtn'), 'Profile photo is required — please capture with camera'); valid = false;
-            }
-        }
+        if (step === 1) valid = validateStep1() && valid;
+        if (step === 2) valid = validateStep2() && valid;
+        if (step === 3) valid = validateStep3() && valid;
+        if (step === 4) valid = validateStep4() && valid;
 
         if (!valid) {
             const firstError = document.querySelector('.form-step[style*="block"] .is-invalid');
@@ -462,36 +581,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return valid;
-    }
-
-    function showFieldError(el, msg) {
-        if (!el) return;
-        el.classList.add('is-invalid');
-        const group = el.closest('.field-group') || el.closest('.file-upload-card');
-        if (!group) return;
-        let err = group.querySelector('.client-error');
-        if (!err) {
-            err = document.createElement('p');
-            err.className = 'error-text client-error';
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span></span>';
-            group.appendChild(err);
-        }
-        err.querySelector('span').textContent = msg;
-    }
-
-    function showSkillsError(msg) {
-        const wrap = document.querySelector('.skills-options');
-        if (wrap) wrap.classList.add('has-error');
-        const group = document.querySelector('[data-section="step3"].field-group');
-        if (!group) return;
-        let err = group.querySelector('.client-error');
-        if (!err) {
-            err = document.createElement('p');
-            err.className = 'error-text client-error';
-            err.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span></span>';
-            group.appendChild(err);
-        }
-        err.querySelector('span').textContent = msg;
     }
 
     function clearAllErrors() {
@@ -503,9 +592,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // Clear error on user interaction
     document.querySelectorAll('.field-wrapper input, .field-wrapper select, .field-wrapper textarea').forEach((input) => {
         input.addEventListener('input', () => {
-            input.classList.remove('is-invalid');
-            const group = input.closest('.field-group');
-            if (group) group.querySelector('.client-error')?.remove();
+            clearFieldError(input);
+        });
+    });
+
+    [emailField, rateField, experienceField, wardField].forEach((field) => {
+        field?.addEventListener('blur', () => {
+            clearFieldError(field);
+            if (field === emailField && field.value.trim() && !EMAIL_REGEX.test(field.value.trim())) {
+                setFieldError(field, 'Enter a valid email address that starts with a letter');
+            }
+            if (field === rateField && field.value && (parseFloat(field.value) <= 0 || parseFloat(field.value) > 10000)) {
+                setFieldError(field, 'Rate must be between 1 and 10,000');
+            }
+            if (field === experienceField && field.value && (parseFloat(field.value) < 0 || parseFloat(field.value) > 50)) {
+                setFieldError(field, 'Experience must be between 0 and 50');
+            }
         });
     });
 
@@ -543,28 +645,115 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Maximum 3 skills allowed.');
             }
             updateSkillsCount();
+            clearFieldError(skillsContainer);
         });
     });
 
     updateSkillsCount();
 
     // ============================
-    // File Upload Labels
+    // File Upload Labels & Preview
     // ============================
-    const citFront = document.getElementById('citizenship_front');
-    const citBack = document.getElementById('citizenship_back');
-    if (citFront) {
-        citFront.addEventListener('change', function () {
-            const t = document.getElementById('citFrontText');
-            if (t) { t.textContent = this.files[0]?.name || 'Choose file...'; t.style.color = this.files[0] ? '#006fc2' : ''; }
+    const citFront = document.getElementById('id_citizenship_front');
+    const citBack = document.getElementById('id_citizenship_back');
+    
+    function handleDocumentUpload(fileInput, textElementId, uploadContainerId, previewSectionId, previewImgId) {
+        if (!fileInput) return;
+        
+        fileInput.addEventListener('change', function () {
+            const t = document.getElementById(textElementId);
+            const uploadContainer = document.getElementById(uploadContainerId);
+            const previewSection = document.getElementById(previewSectionId);
+            const previewImg = document.getElementById(previewImgId);
+            
+            if (t) { 
+                t.textContent = this.files[0]?.name || 'Choose file...'; 
+                t.style.color = this.files[0] ? '#006fc2' : ''; 
+            }
+            
+            clearFieldError(fileInput);
+            
+            // Update preview
+            if (this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    if (uploadContainer) uploadContainer.style.display = 'none';
+                    if (previewImg) previewImg.src = e.target.result;
+                    if (previewSection) previewSection.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                if (uploadContainer) uploadContainer.style.display = 'block';
+                if (previewSection) previewSection.style.display = 'none';
+            }
         });
     }
-    if (citBack) {
-        citBack.addEventListener('change', function () {
-            const t = document.getElementById('citBackText');
-            if (t) { t.textContent = this.files[0]?.name || 'Choose file...'; t.style.color = this.files[0] ? '#006fc2' : ''; }
+    
+    handleDocumentUpload(citFront, 'citFrontText', 'citFrontUploadContainer', 'citFrontPreviewSection', 'citFrontPreview');
+    handleDocumentUpload(citBack, 'citBackText', 'citBackUploadContainer', 'citBackPreviewSection', 'citBackPreview');
+    
+    // ============================
+    // Document View & Remove
+    // ============================
+    document.querySelectorAll('[data-document][data-action]').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const docType = this.dataset.document;
+            const action = this.dataset.action;
+            const fileInputId = 'id_' + docType; // Django adds 'id_' prefix
+            
+            if (action === 'view') {
+                const fileInput = document.getElementById(fileInputId);
+                if (fileInput && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const modal = document.createElement('div');
+                        modal.className = 'modal fade';
+                        modal.id = 'docViewModal';
+                        modal.tabIndex = '-1';
+                        modal.innerHTML = `
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-file-image"></i> Document Preview
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img src="${e.target.result}" alt="Document preview" style="max-width: 100%; max-height: 600px; border-radius: 8px;">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        const viewModal = new bootstrap.Modal(modal);
+                        viewModal.show();
+                        
+                        modal.addEventListener('hidden.bs.modal', () => {
+                            modal.remove();
+                        });
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            } else if (action === 'remove') {
+                const confirmed = confirm('Are you sure you want to remove this document? You will need to upload it again.');
+                if (!confirmed) return;
+                
+                const fileInput = document.getElementById(fileInputId);
+                if (fileInput) {
+                    fileInput.value = '';
+                    fileInput.files = new DataTransfer().files;
+                    
+                    // Trigger change event to update UI
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
         });
-    }
+    });
 
     // ============================
     // Cascading Dropdowns
@@ -647,18 +836,21 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================
     // Real-time Email Validation
     // ============================
-    const emailField = document.getElementById('email');
     emailField?.addEventListener('blur', function () {
         const email = this.value.trim();
         if (!email) return;
         if (/^\d/.test(email)) {
-            showFieldError(this, 'Email cannot start with a number'); return;
+            setFieldError(this, 'Email cannot start with a number'); return;
         }
-        if (!/^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-            showFieldError(this, 'Please enter a valid email address'); return;
+        if (!EMAIL_REGEX.test(email)) {
+            setFieldError(this, 'Please enter a valid email address'); return;
         }
         this.classList.remove('is-invalid');
         this.classList.add('is-valid');
+    });
+
+    profilePictureField?.addEventListener('change', function () {
+        clearFieldError(cameraBtn);
     });
 
     // ============================
@@ -684,6 +876,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return val;
     }
+
+    // ============================
+    // Geolocation Capture
+    // ============================
+    function captureGeolocation() {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Populate hidden form fields
+                    const latField = document.getElementById('latitude');
+                    const lngField = document.getElementById('longitude');
+                    
+                    if (latField) latField.value = lat;
+                    if (lngField) lngField.value = lng;
+                    
+                    console.log('Location captured:', lat, lng);
+                },
+                function(error) {
+                    console.warn('Geolocation error:', error.message);
+                    // Continue signup even if geolocation fails
+                },
+                { timeout: 5000, maximumAge: 0 }
+            );
+        }
+    }
+
+    // Request geolocation when entering Step 2 (Location)
+    const oldNextBtn = nextBtn.addEventListener;
+    
+    // Request geolocation when page loads
+    captureGeolocation();
 
     // Init
     updateWizard();

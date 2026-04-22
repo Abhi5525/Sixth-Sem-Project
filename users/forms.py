@@ -6,8 +6,50 @@ from .models import Province, District, Municipality, CustomUser, ManpowerProfil
 
 User = get_user_model()
 
+NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s\-']{2,99}$")
+EMAIL_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
+
+def _normalize_whitespace(value):
+    return re.sub(r"\s+", " ", (value or "").strip())
+
+
+def _validate_person_name(value, field_name="Full name"):
+    value = _normalize_whitespace(value)
+    if not value:
+        raise forms.ValidationError(f"{field_name} is required.")
+    if not value[0].isalpha():
+        raise forms.ValidationError(f"{field_name} must start with a letter.")
+    if not NAME_PATTERN.fullmatch(value):
+        raise forms.ValidationError(
+            f"{field_name} can only contain letters, spaces, hyphens, and apostrophes."
+        )
+
+    # Require at least 3 alphabetic letters (not counting spaces/punctuation)
+    letters_only = re.sub(r"[^A-Za-z]", "", value)
+    if len(letters_only) < 3:
+        raise forms.ValidationError(f"{field_name} must contain at least 3 letters.")
+    return value
+
+
+def _validate_email(value):
+    email = (value or "").strip().lower()
+    if not email:
+        raise forms.ValidationError("Email is required.")
+    if not email[0].isalpha():
+        raise forms.ValidationError("Email must start with a letter.")
+    if '@' not in email:
+        raise forms.ValidationError("Please enter a valid email address.")
+
+    local_part = email.split('@', 1)[0]
+    if len(local_part) < 3:
+        raise forms.ValidationError("Email username (before @) must be at least 3 characters.")
+    if not EMAIL_PATTERN.fullmatch(email):
+        raise forms.ValidationError("Please enter a valid email address.")
+    return email
+
 class UserSignupForm(UserCreationForm):
-    full_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    full_name = forms.CharField(min_length=3, max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
     phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}))
 
     class Meta:
@@ -22,24 +64,7 @@ class UserSignupForm(UserCreationForm):
         self.fields['password2'].widget.attrs.update({'class': 'form-control','id': 'password2', 'placeholder': 'Confirm Password'})
 
     def clean_full_name(self):
-        """Validate full name: cannot start with number, must contain only letters and spaces"""
-        full_name = self.cleaned_data.get('full_name')
-        if not full_name:
-            raise forms.ValidationError("Full name is required.")
-        
-        # Cannot start with a digit
-        if full_name[0].isdigit():
-            raise forms.ValidationError("Full name cannot start with a number.")
-        
-        # Cannot start with special characters
-        if not full_name[0].isalpha():
-            raise forms.ValidationError("Full name must start with a letter.")
-        
-        # Only letters, spaces, and hyphens allowed
-        if not re.match(r"^[a-zA-Z\s\-']{2,100}$", full_name):
-            raise forms.ValidationError("Full name can only contain letters, spaces, hyphens, and apostrophes.")
-        
-        return full_name
+        return _validate_person_name(self.cleaned_data.get('full_name'), field_name="Full name")
 
     def clean_password1(self):
         password = self.cleaned_data.get('password1')
@@ -88,7 +113,7 @@ class ManpowerSignupForm(forms.ModelForm):
 
     class Meta:
         model = ManpowerProfile
-        fields = ['email', 'skills', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate', 'about_yourself']
+        fields = ['email', 'skills', 'province', 'district', 'municipality', 'ward', 'experience', 'citizenship_front', 'citizenship_back', 'rate', 'about_yourself', 'latitude', 'longitude']
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control', 'id': 'email'}),
             'province': forms.Select(attrs={'class': 'form-control', 'id': 'province'}),
@@ -100,6 +125,8 @@ class ManpowerSignupForm(forms.ModelForm):
             'citizenship_back': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'rate': forms.NumberInput(attrs={'class': 'form-control', 'id': 'rate'}),
             'about_yourself': forms.Textarea(attrs={'class': 'form-control'}),
+            'latitude': forms.HiddenInput(attrs={'id': 'latitude'}),
+            'longitude': forms.HiddenInput(attrs={'id': 'longitude'}),
         }
         labels = {
             'rate': 'Rate/Hour',
@@ -182,19 +209,7 @@ class ManpowerSignupForm(forms.ModelForm):
         return rate
     
     def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email:
-            raise forms.ValidationError("Email is required.")
-        
-        # Email cannot start with a digit
-        if email[0].isdigit():
-            raise forms.ValidationError("Email cannot start with a number.")
-        
-        # Email format validation (RFC 5322 simplified)
-        email_pattern = r"^[a-zA-Z][a-zA-Z0-9._%-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        if not re.match(email_pattern, email):
-            raise forms.ValidationError("Please enter a valid email address (must start with a letter).")
-        
+        email = _validate_email(self.cleaned_data.get('email'))
         if CustomUser.objects.filter(email=email).exists():
             raise forms.ValidationError("This email is already registered.")
         return email
@@ -271,10 +286,14 @@ class UserProfileUpdateForm(forms.ModelForm):
             if CustomUser.objects.exclude(pk=self.instance.pk).filter(phone_number=phone).exists():
                 raise forms.ValidationError("This phone number is already registered.")
         return phone
+
+    def clean_full_name(self):
+        return _validate_person_name(self.cleaned_data.get('full_name'), field_name="Full name")
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
+            email = _validate_email(email)
             # Check if email is taken by another user
             if CustomUser.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
                 raise forms.ValidationError("This email is already registered.")
@@ -321,6 +340,8 @@ class ManpowerProfileUpdateForm(forms.ModelForm):
         if skills.count() > 3:
             raise forms.ValidationError("You can select a maximum of 3 skills.")
         return skills
+
+    def clean_experience(self):
         experience = self.cleaned_data.get('experience')
         if experience is not None and experience < 0:
             raise forms.ValidationError("Experience cannot be negative.")

@@ -4,6 +4,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import uuid
+from datetime import timedelta
 from users.models import CustomUser , ManpowerProfile # Import CustomUser from users app
 
 class Booking(models.Model):
@@ -46,8 +47,8 @@ class Booking(models.Model):
             raise ValidationError("Selected user is not registered as a professional.")
         
         # Check 2: Duration validation
-        if self.duration_hours <= 0:
-            raise ValidationError("Duration must be positive.")
+        if self.duration_hours < 0.5 or self.duration_hours > 24:
+            raise ValidationError("Duration must be between 0.5 and 24 hours.")
         
         # Check 3: Overlapping bookings with timezone awareness
         if self.professional and self.booking_time:
@@ -56,7 +57,7 @@ class Booking(models.Model):
                 self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
             
             # Calculate end time
-            end_time = self.booking_time + timezone.timedelta(hours=self.duration_hours)
+            end_time = self.booking_time + timedelta(hours=self.duration_hours)
             
             # Check for overlapping bookings (using UTC times)
             overlapping_bookings = Booking.objects.filter(
@@ -80,7 +81,7 @@ class Booking(models.Model):
                 self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
             
             # Calculate minimum allowed booking time (30 minutes from now)
-            min_booking_time = now_utc + timezone.timedelta(hours=0.5)
+            min_booking_time = now_utc + timedelta(hours=0.5)
             
             if self.booking_time < min_booking_time:
                 # Convert to local time for error message

@@ -130,6 +130,15 @@ def signup(request):
                 user.is_client = True
                 user.is_professional = False
                 user.save()
+                
+                # Store geolocation in session for later use in professional signup
+                latitude = request.POST.get('location_latitude')
+                longitude = request.POST.get('location_longitude')
+                if latitude:
+                    request.session['location_latitude'] = latitude
+                if longitude:
+                    request.session['location_longitude'] = longitude
+                
                 messages.success(request, "Account created successfully. Please log in.")
                 return redirect('users:login')
             except Exception as e:
@@ -152,13 +161,45 @@ def professional_signup(request):
             manpower_profile.user = request.user
             request.user.is_professional = True
             request.user.save()
+            
+            # Try to get geolocation from POST data or session
+            latitude = request.POST.get('latitude') or request.session.get('location_latitude')
+            longitude = request.POST.get('longitude') or request.session.get('location_longitude')
+            
+            if latitude:
+                try:
+                    manpower_profile.latitude = float(latitude)
+                except (ValueError, TypeError):
+                    pass
+            if longitude:
+                try:
+                    manpower_profile.longitude = float(longitude)
+                except (ValueError, TypeError):
+                    pass
+            
             manpower_profile.save()
+            form.save_m2m()
+            
+            # Clear location from session after use
+            request.session.pop('location_latitude', None)
+            request.session.pop('location_longitude', None)
+            
             messages.success(request, "Profile created successfully.")
-            return redirect('users:profile')  # Adjust to your profile URL
+            return redirect('users:profile')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = ManpowerSignupForm(user=request.user)
+        
+        # Pre-populate latitude/longitude from session if available
+        initial_data = {}
+        if 'location_latitude' in request.session:
+            initial_data['latitude'] = request.session['location_latitude']
+        if 'location_longitude' in request.session:
+            initial_data['longitude'] = request.session['location_longitude']
+        if initial_data:
+            form = ManpowerSignupForm(initial=initial_data, user=request.user)
+    
     return render(request, 'users/professional_signup.html', {'form': form})
 
 

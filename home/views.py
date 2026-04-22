@@ -16,6 +16,31 @@ from django.db.models import Q
 from geopy.distance import great_circle
 from django.views.decorators.csrf import ensure_csrf_cookie
 
+PROFESSION_ALIASES = {
+    'carpenter': ['carpentry'],
+    'carpentry': ['carpenter'],
+    'plumber': ['plumbing'],
+    'plumbing': ['plumber'],
+    'electrician': ['electrical'],
+    'electrical': ['electrician'],
+    'painter': ['painting'],
+    'painting': ['painter'],
+    'cleaner': ['cleaning'],
+    'cleaning': ['cleaner'],
+    'mason': ['masonry'],
+    'masonry': ['mason'],
+}
+
+
+def build_search_terms(query):
+    normalized = (query or '').strip().lower()
+    if not normalized:
+        return []
+
+    terms = {normalized}
+    terms.update(PROFESSION_ALIASES.get(normalized, []))
+    return list(terms)
+
 
 def save_user_location(request):
     if request.method != "POST":
@@ -38,6 +63,7 @@ def save_user_location(request):
 @ensure_csrf_cookie
 def home(request):
     query = request.GET.get('searchInput')
+    search_terms = build_search_terms(query)
 
     # First, check if user location exists in session
     user_lat = request.session.get("userLat")
@@ -74,12 +100,11 @@ def home(request):
     
     # Only show APPROVED professionals
     manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True, verification_status='APPROVED')
-    if query:
-        manpower_qs = manpower_qs.filter(
-            Q(skills__name__icontains=query) |
-            Q(user__full_name__icontains=query) |
-            Q(skill__icontains=query)  # Keep old field for backward compatibility
-        ).distinct()
+    if search_terms:
+        search_q = Q(user__full_name__icontains=query) | Q(skill__icontains=query)
+        for term in search_terms:
+            search_q |= Q(skills__name__icontains=term) | Q(skills__category__icontains=term)
+        manpower_qs = manpower_qs.filter(search_q).distinct()
 
     manpower_list = None
     user_has_location = False
