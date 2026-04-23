@@ -138,8 +138,8 @@ rel="stylesheet"
         if (!phoneNumber.value.trim()) {
             showError(phoneNumber, 'Phone number is required');
             isValid = false;
-        } else if (!/^\d{10}$/.test(phoneNumber.value.trim())) {
-            showError(phoneNumber, 'Phone number must be exactly 10 digits');
+        } else if (!/^98\d{8}$/.test(phoneNumber.value.trim())) {
+            showError(phoneNumber, 'Phone number must be 10 digits and start with 98');
             isValid = false;
         }
         

@@ -8,10 +8,17 @@ User = get_user_model()
 
 NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s\-']{2,99}$")
 EMAIL_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+PHONE_PATTERN = re.compile(r"^98\d{8}$")
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 
 def _normalize_whitespace(value):
     return re.sub(r"\s+", " ", (value or "").strip())
+
+
+def _normalize_phone(value):
+    return re.sub(r"\s+", "", (value or "")).strip()
 
 
 def _validate_person_name(value, field_name="Full name"):
@@ -48,9 +55,76 @@ def _validate_email(value):
         raise forms.ValidationError("Please enter a valid email address.")
     return email
 
+
+def _validate_phone_number(value, user_instance=None):
+    phone = _normalize_phone(value)
+    if not PHONE_PATTERN.fullmatch(phone):
+        raise forms.ValidationError("Enter a valid 10-digit phone number starting with 98.")
+
+    qs = CustomUser.objects.filter(phone_number=phone)
+    if user_instance and user_instance.pk:
+        qs = qs.exclude(pk=user_instance.pk)
+    if qs.exists():
+        raise forms.ValidationError("This phone number is already registered.")
+    return phone
+
+
+def _validate_image_upload(file_obj, field_label, required=False):
+    if not file_obj:
+        if required:
+            raise forms.ValidationError(f"{field_label} is required.")
+        return file_obj
+
+    filename = getattr(file_obj, "name", "")
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        allowed = ", ".join(sorted(ALLOWED_IMAGE_EXTENSIONS))
+        raise forms.ValidationError(f"{field_label} must be an image file ({allowed}).")
+
+    if getattr(file_obj, "size", 0) > MAX_IMAGE_SIZE_BYTES:
+        raise forms.ValidationError(f"{field_label} size must not exceed 5MB.")
+
+    content_type = getattr(file_obj, "content_type", "") or ""
+    if content_type and not content_type.startswith("image/"):
+        raise forms.ValidationError(f"{field_label} must be a valid image.")
+
+    return file_obj
+
+
+def _validate_location_hierarchy(province, district, municipality):
+    province_exists = Province.objects.filter(name=province).exists()
+    if not province_exists:
+        raise forms.ValidationError({"province": "Select a valid province."})
+
+    district_qs = District.objects.filter(name=district)
+    if not district_qs.exists():
+        raise forms.ValidationError({"district": "Select a valid district."})
+    if not district_qs.filter(province__name=province).exists():
+        raise forms.ValidationError({"district": "Selected district does not belong to the selected province."})
+
+    municipality_qs = Municipality.objects.filter(name=municipality)
+    if not municipality_qs.exists():
+        raise forms.ValidationError({"municipality": "Select a valid municipality."})
+    if not municipality_qs.filter(district__name=district).exists():
+        raise forms.ValidationError({"municipality": "Selected municipality does not belong to the selected district."})
+
+
+def _validate_rate_for_experience(experience, rate):
+    if experience is None or rate is None:
+        return
+
+    if experience < 1 and not (0 <= rate <= 200):
+        raise forms.ValidationError({"rate": "Rate must be between 0 and 200 for experience less than 1 year."})
+    if 1 <= experience < 3 and not (0 <= rate <= 300):
+        raise forms.ValidationError({"rate": "Rate must be between 0 and 300 for experience between 1 and 3 years."})
+    if 3 <= experience < 5 and not (0 <= rate <= 400):
+        raise forms.ValidationError({"rate": "Rate must be between 0 and 400 for experience between 3 and 5 years."})
+    if experience >= 5 and not (0 <= rate <= 600):
+        raise forms.ValidationError({"rate": "Rate must be between 0 and 600 for experience 5 years or more."})
+
 class UserSignupForm(UserCreationForm):
-    full_name = forms.CharField(min_length=3, max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
-    phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}))
+    full_name = forms.CharField(min_length=3, max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name', 'minlength': '3'}))
+    phone_number = forms.CharField(max_length=10, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number', 'inputmode': 'numeric', 'pattern': '98[0-9]{8}'}))
 
     class Meta:
         model = CustomUser
@@ -80,13 +154,7 @@ class UserSignupForm(UserCreationForm):
         return password
 
     def clean_phone_number(self):
-        phone = self.cleaned_data['phone_number']
-        phone = re.sub(r'\s+', '', phone)
-        if not phone.isdigit() or len(phone) != 10:
-            raise forms.ValidationError("Enter a valid phone number (10 digits).")
-        if CustomUser.objects.filter(phone_number=phone).exists():
-            raise forms.ValidationError("This phone number is already registered.")
-        return phone
+        return _validate_phone_number(self.cleaned_data.get('phone_number'))
 
 class ManpowerSignupForm(forms.ModelForm):
     skills = forms.ModelMultipleChoiceField(
@@ -161,19 +229,19 @@ class ManpowerSignupForm(forms.ModelForm):
         return skills
 
     def clean_province(self):
-        province = self.cleaned_data.get('province')
+        province = _normalize_whitespace(self.cleaned_data.get('province'))
         if province and not Province.objects.filter(name=province).exists():
             raise forms.ValidationError("Select a valid province.")
         return province
 
     def clean_district(self):
-        district = self.cleaned_data.get('district')
+        district = _normalize_whitespace(self.cleaned_data.get('district'))
         if district and not District.objects.filter(name=district).exists():
             raise forms.ValidationError("Select a valid district.")
         return district
 
     def clean_municipality(self):
-        municipality = self.cleaned_data.get('municipality')
+        municipality = _normalize_whitespace(self.cleaned_data.get('municipality'))
         if municipality and not Municipality.objects.filter(name=municipality).exists():
             raise forms.ValidationError("Select a valid municipality.")
         return municipality
@@ -217,21 +285,46 @@ class ManpowerSignupForm(forms.ModelForm):
     def clean_profile_picture(self):
         """Validate profile picture"""
         profile_picture = self.cleaned_data.get('profile_picture')
-        if not profile_picture:
-            raise forms.ValidationError("Profile photo is required for identity verification.")
-        
-        # Check file size (max 5MB)
-        if profile_picture.size > 5 * 1024 * 1024:
-            raise forms.ValidationError("Image size must not exceed 5MB.")
-        
-        return profile_picture
+        return _validate_image_upload(profile_picture, "Profile photo", required=True)
+
+    def clean_citizenship_front(self):
+        return _validate_image_upload(self.cleaned_data.get('citizenship_front'), "Citizenship front image")
+
+    def clean_citizenship_back(self):
+        return _validate_image_upload(self.cleaned_data.get('citizenship_back'), "Citizenship back image")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        province = cleaned_data.get('province')
+        district = cleaned_data.get('district')
+        municipality = cleaned_data.get('municipality')
+        ward = cleaned_data.get('ward')
+        experience = cleaned_data.get('experience')
+        rate = cleaned_data.get('rate')
+
+        if province and district and municipality:
+            _validate_location_hierarchy(province, district, municipality)
+
+        if ward is not None and municipality:
+            try:
+                municipality_obj = Municipality.objects.get(name=municipality, district__name=district)
+                if int(ward) not in range(1, municipality_obj.ward + 1):
+                    self.add_error('ward', f"Ward number must be between 1 and {municipality_obj.ward}.")
+            except Municipality.DoesNotExist:
+                # Handled by location hierarchy validation
+                pass
+
+        _validate_rate_for_experience(experience, rate)
+        return cleaned_data
 
 class LoginForm(forms.Form):
     phone_number = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Phone Number'
+            'placeholder': 'Phone Number',
+            'inputmode': 'numeric',
+            'pattern': '98[0-9]{8}'
         })
     )
     password = forms.CharField(
@@ -249,21 +342,18 @@ class LoginForm(forms.Form):
         password = cleaned_data.get('password')
         
         if phone_number and password:
-            normalized_phone = re.sub(r'\s+', '', phone_number).strip()
+            normalized_phone = _normalize_phone(phone_number)
             cleaned_data['phone_number'] = normalized_phone
 
-            if not normalized_phone.isdigit() or len(normalized_phone) != 10:
-                raise forms.ValidationError("Enter a valid 10-digit phone number.")
+            if not PHONE_PATTERN.fullmatch(normalized_phone):
+                raise forms.ValidationError("Enter a valid 10-digit phone number starting with 98.")
 
-            try:
-                user = authenticate(username=normalized_phone, password=password)
-                if not user:
-                    raise forms.ValidationError("Phone number or password is incorrect.")
-                if not user.is_active:
-                    raise forms.ValidationError("This account has been deactivated.")
-                self.user = user
-            except Exception as e:
-                raise forms.ValidationError(f"Login error: {str(e)}")
+            user = authenticate(username=normalized_phone, password=password)
+            if not user:
+                raise forms.ValidationError("Phone number or password is incorrect.")
+            if not user.is_active:
+                raise forms.ValidationError("This account has been deactivated.")
+            self.user = user
              
         return cleaned_data
     
@@ -272,20 +362,16 @@ class UserProfileUpdateForm(forms.ModelForm):
         model = CustomUser
         fields = ['full_name', 'phone_number', 'email']
         widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'full_name': forms.TextInput(attrs={'class': 'form-control', 'minlength': '3'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control', 'inputmode': 'numeric', 'pattern': '98[0-9]{8}'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
     
     def clean_phone_number(self):
         phone = self.cleaned_data.get('phone_number')
-        if phone:
-            if not phone.isdigit() or len(phone) != 10:
-                raise forms.ValidationError("Enter a valid 10-digit phone number.")
-            # Check if phone number is taken by another user
-            if CustomUser.objects.exclude(pk=self.instance.pk).filter(phone_number=phone).exists():
-                raise forms.ValidationError("This phone number is already registered.")
-        return phone
+        if not phone:
+            return phone
+        return _validate_phone_number(phone, user_instance=self.instance)
 
     def clean_full_name(self):
         return _validate_person_name(self.cleaned_data.get('full_name'), field_name="Full name")
@@ -362,3 +448,53 @@ class ManpowerProfileUpdateForm(forms.ModelForm):
         if ward is not None and (ward < 1 or ward > 50):
             raise forms.ValidationError("Ward number must be between 1 and 50.")
         return ward
+
+    def clean_province(self):
+        province = _normalize_whitespace(self.cleaned_data.get('province'))
+        if province and not Province.objects.filter(name=province).exists():
+            raise forms.ValidationError("Select a valid province.")
+        return province
+
+    def clean_district(self):
+        district = _normalize_whitespace(self.cleaned_data.get('district'))
+        if district and not District.objects.filter(name=district).exists():
+            raise forms.ValidationError("Select a valid district.")
+        return district
+
+    def clean_municipality(self):
+        municipality = _normalize_whitespace(self.cleaned_data.get('municipality'))
+        if municipality and not Municipality.objects.filter(name=municipality).exists():
+            raise forms.ValidationError("Select a valid municipality.")
+        return municipality
+
+    def clean_profile_picture(self):
+        return _validate_image_upload(self.cleaned_data.get('profile_picture'), "Profile photo")
+
+    def clean_citizenship_front(self):
+        return _validate_image_upload(self.cleaned_data.get('citizenship_front'), "Citizenship front image")
+
+    def clean_citizenship_back(self):
+        return _validate_image_upload(self.cleaned_data.get('citizenship_back'), "Citizenship back image")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        province = cleaned_data.get('province')
+        district = cleaned_data.get('district')
+        municipality = cleaned_data.get('municipality')
+        ward = cleaned_data.get('ward')
+        experience = cleaned_data.get('experience')
+        rate = cleaned_data.get('rate')
+
+        if province and district and municipality:
+            _validate_location_hierarchy(province, district, municipality)
+
+        if ward is not None and municipality:
+            try:
+                municipality_obj = Municipality.objects.get(name=municipality, district__name=district)
+                if int(ward) not in range(1, municipality_obj.ward + 1):
+                    self.add_error('ward', f"Ward number must be between 1 and {municipality_obj.ward}.")
+            except Municipality.DoesNotExist:
+                pass
+
+        _validate_rate_for_experience(experience, rate)
+        return cleaned_data
