@@ -27,43 +27,46 @@
       <!-- Verification Status Alert -->
       {% if manpower_profile %}
       {% if manpower_profile.verification_status == 'PENDING' %}
-      <div class="alert alert-warning d-flex align-items-center" role="alert">
+      <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center" role="alert">
         <i class="fas fa-clock fa-2x me-3"></i>
-        <div>
+        <div class="flex-grow-1">
           <h5 class="alert-heading mb-1">Verification Pending</h5>
           <p class="mb-1"><strong>Your professional profile is under review by our admin team.</strong></p>
           <p class="mb-0 small">You can edit your profile below, but you will only be visible to clients once your account is approved. You'll receive a notification when approved.</p>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% elif manpower_profile.verification_status == 'REJECTED' %}
-      <div class="alert alert-danger d-flex align-items-center" role="alert">
+      <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
         <i class="fas fa-times-circle fa-2x me-3"></i>
-        <div>
+        <div class="flex-grow-1">
           <h5 class="alert-heading mb-1">Profile Rejected</h5>
-          <p class="mb-1">Your profile was reviewed and rejected. Reason:</p>
+          <p class="mb-1">Your professional profile was reviewed and rejected. Reason:</p>
           <p class="mb-2"><strong>{{ manpower_profile.rejection_reason }}</strong></p>
-          <p class="mb-3 small">Please review the reason above and fix the issues in your profile.</p>
-          <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#requestReverificationModal">
-            <i class="fas fa-redo me-1"></i> Request Re-verification
-          </button>
-          <small class="d-block text-muted mt-2">After making changes, submit a re-verification request for admin review.</small>
+          <p class="mb-3 small">Your account has been returned to client status. If you'd like to apply again as a professional, please fix the issues mentioned above and submit a new application.</p>
+          <a href="{% url 'users:professional_signup' %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Apply as Professional Again
+          </a>
+          <small class="d-block text-muted mt-2">Note: Your previous professional data will be updated when you reapply.</small>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% elif manpower_profile.verification_status == 'APPROVED' %}
-      <div class="alert alert-success d-flex align-items-center" role="alert">
+      <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
         <i class="fas fa-check-circle fa-2x me-3"></i>
-        <div>
+        <div class="flex-grow-1">
           <h5 class="alert-heading mb-1">✓ Verified Professional</h5>
           <p class="mb-0">Your profile has been verified and is now visible to clients!</p>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endif %}
       {% endif %}
       
+      {% if manpower_profile and manpower_profile.verification_status != 'REJECTED' %}
       <div class="card mb-4">
         <div class="card-body">
           <h5 class="card-title fw-bold mb-3">Professional Details</h5>
-          {% if manpower_profile %}
           <dl class="row">
             <dt class="col-sm-4 text-muted">Skills</dt>
             <dd class="col-sm-8">
@@ -82,26 +85,32 @@
             <dt class="col-sm-4 text-muted">Rate</dt>
             <dd class="col-sm-8">Rs. {{ manpower_profile.rate }}</dd>
           </dl>
-          {% else %}
-          <p class="text-muted">No manpower profile found.</p>
-          {% endif %}
+          
           <div class="d-flex flex-wrap mt-3">
             <button class="btn btn-primary btn-custom me-2 mb-2" data-bs-toggle="modal" data-bs-target="#updateProfileModal">
-              {% if manpower_profile and manpower_profile.verification_status == 'REJECTED' %}
-                <i class="fas fa-edit me-2"></i>Fix & Update Profile
+              {% if manpower_profile.verification_status == 'PENDING' %}
+                <i class="fas fa-edit me-2"></i>Update Profile (Pending Approval)
               {% else %}
-                Update Profile
+                <i class="fas fa-edit me-2"></i>Update Profile
               {% endif %}
             </button>
           
-            <button class="btn {% if manpower_profile.is_available %}btn-danger{% else %}btn-success{% endif %} btn-custom mb-2 ml-2 me-2 toggle-availability-btn" data-id="{{ manpower_profile.id }}"{% if manpower_profile and manpower_profile.verification_status != 'APPROVED' %} disabled title="Available only for verified professionals"{% endif %}>
-              {% if manpower_profile.is_available %}Set Unavailable{% else %}Set Available{% endif %}
+            {% if manpower_profile.verification_status == 'APPROVED' %}
+            <button class="btn {% if manpower_profile.is_available %}btn-danger{% else %}btn-success{% endif %} btn-custom mb-2 ml-2 me-2 toggle-availability-btn" data-id="{{ manpower_profile.id }}">
+              {% if manpower_profile.is_available %}<i class="fas fa-pause-circle me-2"></i>Set Unavailable{% else %}<i class="fas fa-check-circle me-2"></i>Set Available{% endif %}
             </button>
 
-           
-            <a href="{% url 'users:professional_dashboard' %}"{% if manpower_profile and manpower_profile.verification_status == 'REJECTED' %} onclick="return false;" class="disabled"{% endif %}><button class="btn btn-primary btn-custom me-2 mb-2"{% if manpower_profile and manpower_profile.verification_status == 'REJECTED' %} disabled title="Dashboard available only for verified professionals"{% elif manpower_profile and manpower_profile.verification_status == 'PENDING' %} disabled title="Dashboard available after approval"{% endif %}>
-              <i class="fas fa-tachometer-alt me-2"></i> Dashboard</button></a>
-          
+            <a href="{% url 'users:professional_dashboard' %}" class="btn btn-primary btn-custom me-2 mb-2">
+              <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+            {% elif manpower_profile.verification_status == 'PENDING' %}
+            <button class="btn btn-secondary btn-custom mb-2 ml-2 me-2" disabled title="Features available after approval">
+              <i class="fas fa-clock me-2"></i>Awaiting Approval
+            </button>
+            <button class="btn btn-secondary btn-custom mb-2" disabled title="Dashboard available after approval">
+              <i class="fas fa-lock me-2"></i>Dashboard Locked
+            </button>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -118,7 +127,25 @@
           </div>
         </div>
       </div>
-
+      {% elif manpower_profile and manpower_profile.verification_status == 'REJECTED' %}
+      <!-- Show basic client info for rejected professionals -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title fw-bold mb-3">Personal Information</h5>
+          <dl class="row">
+            <dt class="col-sm-4 text-muted">Name</dt>
+            <dd class="col-sm-8">{{ user.full_name }}</dd>
+            <dt class="col-sm-4 text-muted">Phone</dt>
+            <dd class="col-sm-8">{{ user.phone_number }}</dd>
+            <dt class="col-sm-4 text-muted">Email</dt>
+            <dd class="col-sm-8">{{ user.email }}</dd>
+          </dl>
+          <button class="btn btn-primary btn-custom mt-3 mb-3" data-bs-toggle="modal" data-bs-target="#updateProfileModal">
+            <i class="fas fa-edit me-2"></i>Update Profile
+          </button>
+        </div>
+      </div>
+      {% endif %}
       {% else %}
       <div class="card mb-4">
         <div class="card-body">
@@ -350,48 +377,6 @@
   </div>
 </div>
 
-<!-- Request Re-verification Modal -->
-<div class="modal fade" id="requestReverificationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
-                <h5 class="modal-title">
-                    <i class="fas fa-redo me-2"></i>Request Re-verification
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body py-4">
-                <div class="mb-3">
-                    <i class="fas fa-clipboard-check text-warning" style="font-size: 2.5rem;"></i>
-                </div>
-                <h5 class="mb-3">Ready for Re-verification?</h5>
-                <p class="mb-3">Before requesting re-verification:</p>
-                <ul class="ps-3 mb-3">
-                    <li>Make sure you've fixed all the issues mentioned in the rejection reason</li>
-                    <li>Update your profile with complete and accurate information</li>
-                    <li>Upload a clear KYC photo (profile picture)</li>
-                    <li>Ensure all documents are properly uploaded</li>
-                </ul>
-                <p class="text-muted small">
-                    <i class="fas fa-info-circle me-2"></i>
-                    After submission, our admin team will review your profile again. This may take a few hours.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <form method="post" action="{% url 'users:request_reverification' %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-paper-plane me-2"></i>Submit Request
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Logout Modal -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -400,185 +385,53 @@
                 <h5 class="modal-title">
                     <i class="fas fa-sign-out-alt me-2"></i>Confirm Logout
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center py-4">
+            <div class="modal-body py-4 text-center">
                 <div class="mb-3">
-                    <i class="fas fa-door-open text-danger" style="font-size: 3rem;"></i>
+                    <i class="fas fa-sign-out-alt text-danger" style="font-size: 3rem;"></i>
                 </div>
-                <h5 class="mb-2">Ready to leave?</h5>
-                <p class="text-muted mb-0">Are you sure you want to logout from your professional dashboard?</p>
+                <h5 class="mb-3">Are you sure you want to logout?</h5>
+                <p class="text-muted mb-0">You will need to login again to access your account.</p>
             </div>
-            <div class="modal-footer">
-                <form method="post" action="{% url 'users:logout' %}">
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
                     {% csrf_token %}
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-sign-out-alt me-2"></i>Yes, Logout
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-{% block scripts %}
+
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  console.log('Profile page loaded');
-  
-  // Toggle availability button handler
-  document.querySelectorAll(".toggle-availability-btn").forEach(btn => {
-    btn.addEventListener("click", function () {
-      console.log('Toggle availability clicked');
-      const manpowerId = this.getAttribute("data-id");
-      if (!manpowerId) {
-        console.warn('No manpower ID found on button');
-        return;
-      }
-
-      console.log('Sending toggle request for ID:', manpowerId);
-      fetch(`toggle-availability/${manpowerId}/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": "{{ csrf_token }}" },
-      })
-      .then(r => {
-        console.log('Toggle response status:', r.status);
-        return r.json();
-      })
-      .then(data => {
-        console.log('Toggle response data:', data);
-        if (data.success) {
-          if (data.is_available) {
-            btn.textContent = "Set Unavailable";
-            btn.classList.remove("btn-success");
-            btn.classList.add("btn-danger");
-          } else {
-            btn.textContent = "Set Available";
-            btn.classList.remove("btn-danger");
-            btn.classList.add("btn-success");
-          }
-        } else if (data.message) {
-          alert(data.message);
-        }
-      })
-      .catch(err => console.error("Toggle Error:", err));
-    });
-  });
-
-  // Update Profile Modal - AJAX Form Submission
-  const updateProfileForm = document.getElementById('updateProfileForm');
-  console.log('Update profile form found:', !!updateProfileForm);
-  
-  if (updateProfileForm) {
-    updateProfileForm.addEventListener('submit', function(e) {
-      console.log('Form submit triggered');
-      e.preventDefault();
-      
-      const formData = new FormData(this);
-      const saveBtn = document.getElementById('saveProfileBtn');
-      const errorAlert = document.getElementById('formErrors');
-      const successAlert = document.getElementById('formSuccess');
-      const errorList = document.getElementById('errorList');
-      
-      console.log('Starting form submission...');
-      
-      // Clear previous errors
-      if (errorAlert) errorAlert.classList.add('d-none');
-      if (successAlert) successAlert.classList.add('d-none');
-      if (errorList) errorList.innerHTML = '';
-      document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-      document.querySelectorAll('[id^="error-"]').forEach(el => el.textContent = '');
-      
-      // Disable button and show loading
-      if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
-      }
-      
-      fetch("{% url 'users:update_profile' %}", {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => {
-        console.log('Response received:', response.status);
-        return response.json();
-      })
-      .then(data => {
-        console.log('Data received:', data);
-        
-        if (data.success) {
-          // Show success message
-          if (successAlert) {
-            successAlert.classList.remove('d-none');
-            const successMsg = document.getElementById('successMessage');
-            if (successMsg) successMsg.textContent = data.message || 'Profile updated successfully!';
-          }
-          
-          // Reload page after 1.5 seconds
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        } else {
-          // Show errors
-          if (errorAlert) errorAlert.classList.remove('d-none');
-          
-          if (data.errors) {
-            Object.keys(data.errors).forEach(fieldName => {
-              const fieldErrors = data.errors[fieldName];
-              const errorDiv = document.getElementById(`error-${fieldName}`);
-              
-              if (errorDiv) {
-                errorDiv.textContent = fieldErrors.join(', ');
-                errorDiv.style.display = 'block';
-                
-                const fieldElement = document.querySelector(`[name="${fieldName}"]`);
-                if (fieldElement) {
-                  fieldElement.classList.add('is-invalid');
-                }
-              }
-              
-              if (errorList) {
-                fieldErrors.forEach(error => {
-                  const li = document.createElement('li');
-                  li.textContent = `${fieldName}: ${error}`;
-                  errorList.appendChild(li);
-                });
-              }
-            });
-          } else if (data.message && errorList) {
-            errorList.innerHTML = `<li>${data.message}</li>`;
-          }
-          
-          // Re-enable button
-          if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Fetch error:', error);
-        if (errorAlert) errorAlert.classList.remove('d-none');
-        if (errorList) errorList.innerHTML = '<li>An unexpected error occurred. Please try again.</li>';
-        
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
-        }
-      });
-    });
+// Auto-dismiss rejection message after 1 minute (60000ms)
+document.addEventListener('DOMContentLoaded', function() {
+    const rejectionAlert = document.querySelector('.alert-danger.alert-dismissible');
     
-    console.log('Event listener attached to form');
-  } else {
-    console.error('Update profile form NOT found!');
-  }
+    if (rejectionAlert) {
+        // Auto-dismiss after 1 minute
+        setTimeout(function() {
+            // Use Bootstrap's built-in close functionality
+            const bsAlert = new bootstrap.Alert(rejectionAlert);
+            bsAlert.close();
+            console.log('Rejection message auto-dismissed after 1 minute');
+        }, 60000); // 60 seconds = 60000 milliseconds
+        
+        // Also handle manual close button click
+        const closeBtn = rejectionAlert.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                console.log('Rejection message manually closed');
+            });
+        }
+    }
 });
 </script>
+
 {% endblock %}

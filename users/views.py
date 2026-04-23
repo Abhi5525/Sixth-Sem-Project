@@ -2,21 +2,16 @@
 # users/views.py
 from datetime import datetime, date
 import re
-# At the top of views.py
 from django.utils import timezone
 from django.contrib import messages
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth import login as auth_login ,get_user_model
+from django.contrib.auth import login as auth_login
 from django.db import transaction                                                           
 from .forms import ManpowerProfileUpdateForm, UserProfileUpdateForm, UserSignupForm, LoginForm, ManpowerSignupForm
 from users.models import  ManpowerProfile, District, Municipality, Province
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LogoutView
-from django.contrib.auth import authenticate, login as auth_login   
-from django.contrib import messages
-from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
 from django.views.decorators.http import require_POST
 from bookings.models import Booking, Payment    
 
@@ -116,36 +111,26 @@ def toggle_availability(request, pk):
 
 @login_required
 def request_reverification(request):
-    """Allow rejected professionals to request re-verification after fixing issues."""
-    if request.method == 'POST':
-        try:
-            manpower_profile = get_object_or_404(ManpowerProfile, user=request.user)
-            
-            # Only allow re-verification request for rejected profiles
-            if manpower_profile.verification_status != 'REJECTED':
-                messages.error(request, "Your profile is not eligible for re-verification at this time.")
-                return redirect('users:profile')
-            
-            # Change status back to PENDING
-            manpower_profile.verification_status = 'PENDING'
-            manpower_profile.rejection_reason = None  # Clear rejection reason
-            manpower_profile.verified_at = None
-            manpower_profile.verified_by = None
-            manpower_profile.save(update_fields=['verification_status', 'rejection_reason', 'verified_at', 'verified_by'])
-            
-            messages.success(request, "Re-verification request submitted! Our admin team will review your profile shortly. You'll be notified once it's approved.")
+    """Redirect rejected professionals to update their profile for re-verification."""
+    try:
+        manpower_profile = get_object_or_404(ManpowerProfile, user=request.user)
+        
+        # Only allow re-verification request for rejected profiles
+        if manpower_profile.verification_status != 'REJECTED':
+            messages.error(request, "Your profile is not eligible for re-verification at this time.")
             return redirect('users:profile')
-            
-        except ManpowerProfile.DoesNotExist:
-            messages.error(request, "Professional profile not found.")
-            return redirect('users:profile')
-        except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
-            return redirect('users:profile')
-    
-    return redirect('users:profile')
+        
+        # Redirect to professional signup where they can update their profile
+        messages.info(request, "Please update your profile and fix the issues mentioned in the rejection reason. Your profile will be submitted for re-verification.")
+        return redirect('users:professional_signup')
+        
+    except ManpowerProfile.DoesNotExist:
+        messages.error(request, "Professional profile not found.")
+        return redirect('users:profile')
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return redirect('users:profile')
 
-User = get_user_model()
 def signup(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
@@ -183,38 +168,113 @@ def signup(request):
 
 @login_required
 def professional_signup(request):
+    """Handle professional signup for new professionals and re-application after rejection."""
+    
+    # Check if user already has a ManpowerProfile
+    existing_profile = ManpowerProfile.objects.filter(user=request.user).first()
+    
+    # If user has an approved profile, don't allow duplicate signup
+    if existing_profile and existing_profile.verification_status == 'APPROVED':
+        messages.warning(request, "You already have an approved professional account.")
+        return redirect('users:profile')
+    
     if request.method == 'POST':
         form = ManpowerSignupForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            manpower_profile = form.save(commit=False)
-            manpower_profile.user = request.user
-            request.user.is_professional = True
-            request.user.save()
-            
-            # Try to get geolocation from POST data or session
-            latitude = request.POST.get('latitude') or request.session.get('location_latitude')
-            longitude = request.POST.get('longitude') or request.session.get('location_longitude')
-            
-            if latitude:
-                try:
-                    manpower_profile.latitude = float(latitude)
-                except (ValueError, TypeError):
-                    pass
-            if longitude:
-                try:
-                    manpower_profile.longitude = float(longitude)
-                except (ValueError, TypeError):
-                    pass
-            
-            manpower_profile.save()
-            form.save_m2m()
-            
-            # Clear location from session after use
-            request.session.pop('location_latitude', None)
-            request.session.pop('location_longitude', None)
-            
-            messages.success(request, "Profile created successfully.")
-            return redirect('users:profile')
+            try:
+                with transaction.atomic():
+                    # If there's an existing profile (rejected or pending), update it instead of creating new
+                    if existing_profile:
+                        manpower_profile = existing_profile
+                        
+                        # Update fields from form
+                        manpower_profile.email = form.cleaned_data['email']
+                        manpower_profile.skill = form.cleaned_data.get('skill', '')
+                        manpower_profile.province = form.cleaned_data['province']
+                        manpower_profile.district = form.cleaned_data['district']
+                        manpower_profile.municipality = form.cleaned_data['municipality']
+                        manpower_profile.ward = form.cleaned_data['ward']
+                        manpower_profile.experience = form.cleaned_data['experience']
+                        manpower_profile.about_yourself = form.cleaned_data.get('about_yourself', '')
+                        manpower_profile.rate = form.cleaned_data['rate']
+                        
+                        # Handle file uploads
+                        if form.cleaned_data.get('citizenship_front'):
+                            manpower_profile.citizenship_front = form.cleaned_data['citizenship_front']
+                        if form.cleaned_data.get('citizenship_back'):
+                            manpower_profile.citizenship_back = form.cleaned_data['citizenship_back']
+                        if form.cleaned_data.get('profile_picture'):
+                            manpower_profile.profile_picture = form.cleaned_data['profile_picture']
+                        
+                        # Reset verification status to PENDING for re-verification
+                        manpower_profile.verification_status = 'PENDING'
+                        manpower_profile.rejection_reason = None
+                        manpower_profile.verified_at = None
+                        manpower_profile.verified_by = None
+                        
+                        # Set is_professional flag (will be confirmed by signal on approval)
+                        request.user.is_professional = True
+                        request.user.save(update_fields=['is_professional'])
+                        
+                        # Try to get geolocation from POST data or session
+                        latitude = request.POST.get('latitude') or request.session.get('location_latitude')
+                        longitude = request.POST.get('longitude') or request.session.get('location_longitude')
+                        
+                        if latitude:
+                            try:
+                                manpower_profile.latitude = float(latitude)
+                            except (ValueError, TypeError):
+                                pass
+                        if longitude:
+                            try:
+                                manpower_profile.longitude = float(longitude)
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        manpower_profile.save()
+                        
+                        # Handle skills ManyToMany field
+                        if hasattr(form, 'cleaned_data') and 'skills' in form.cleaned_data:
+                            manpower_profile.skills.set(form.cleaned_data['skills'])
+                        
+                        messages.success(request, "Your profile has been updated and submitted for re-verification.")
+                    else:
+                        # New professional signup
+                        manpower_profile = form.save(commit=False)
+                        manpower_profile.user = request.user
+                        
+                        # Set is_professional flag (will be confirmed by signal on approval)
+                        request.user.is_professional = True
+                        request.user.save(update_fields=['is_professional'])
+                        
+                        # Try to get geolocation from POST data or session
+                        latitude = request.POST.get('latitude') or request.session.get('location_latitude')
+                        longitude = request.POST.get('longitude') or request.session.get('location_longitude')
+                        
+                        if latitude:
+                            try:
+                                manpower_profile.latitude = float(latitude)
+                            except (ValueError, TypeError):
+                                pass
+                        if longitude:
+                            try:
+                                manpower_profile.longitude = float(longitude)
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        manpower_profile.save()
+                        form.save_m2m()
+                        
+                        messages.success(request, "Professional profile created successfully. Awaiting admin approval.")
+                    
+                    # Clear location from session after use
+                    request.session.pop('location_latitude', None)
+                    request.session.pop('location_longitude', None)
+                    
+                    return redirect('users:profile')
+                    
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -253,7 +313,7 @@ def login(request):
     })
 
 class CustomLogoutView(LogoutView):
-    next_page = reverse_lazy('users:login')  # Redirect to login page after logout
+    next_page = '/users/login/'  # Redirect to login page after logout
 
     def post(self, request, *args, **kwargs):
         messages.success(request, "You have been logged out successfully.")

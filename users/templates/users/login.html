@@ -113,6 +113,20 @@ rel="stylesheet"
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 
 <script>
+    // Utility: Strip whitespace from string
+    function stripInput(value) {
+        return (value || "").trim();
+    }
+
+    // Utility: Auto-dismiss error message after timeout
+    function autoDismissError(errorDiv, timeout = 5000) {
+        window.setTimeout(() => {
+            if (errorDiv && errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, timeout);
+    }
+
     // Toggle password visibility
     const togglePassword = document.querySelector('.toggle-password');
     const passwordField = document.querySelector('#password');
@@ -129,40 +143,51 @@ rel="stylesheet"
         let isValid = true;
         const phoneNumber = document.getElementById('phone_number');
         const password = document.getElementById('password');
-        
+
         // Clear previous custom errors
         document.querySelectorAll('.custom-error').forEach(el => el.remove());
         document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
-        
+
+        // Normalize inputs using strip utility
+        const phoneValue = stripInput(phoneNumber.value);
+        const passwordValue = stripInput(password.value);
+
         // Validate phone number
-        if (!phoneNumber.value.trim()) {
+        if (!phoneValue) {
             showError(phoneNumber, 'Phone number is required');
             isValid = false;
-        } else if (!/^98\d{8}$/.test(phoneNumber.value.trim())) {
+        } else if (!/^98\d{8}$/.test(phoneValue)) {
             showError(phoneNumber, 'Phone number must be 10 digits and start with 98');
             isValid = false;
+        } else if (phoneValue.length !== 10) {
+            showError(phoneNumber, 'Phone number must be exactly 10 digits');
+            isValid = false;
         }
-        
+
         // Validate password
-        if (!password.value) {
+        if (!passwordValue) {
             showError(password, 'Password is required');
             isValid = false;
-        } else if (password.value.length < 8) {
+        } else if (passwordValue.length < 8) {
             showError(password, 'Password must be at least 8 characters');
             isValid = false;
         }
-        
+
         if (!isValid) {
             e.preventDefault();
         }
     });
-    
+
     function showError(field, message) {
         field.classList.add('is-invalid');
         const errorDiv = document.createElement('div');
         errorDiv.className = 'custom-error text-danger small mt-1';
         errorDiv.textContent = message;
-        field.closest('.form-group').appendChild(errorDiv);
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+            formGroup.appendChild(errorDiv);
+            autoDismissError(errorDiv, 5000);
+        }
     }
 </script>
 

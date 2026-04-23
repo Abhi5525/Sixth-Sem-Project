@@ -166,6 +166,8 @@ def approve_professional(request, pk):
         professional.verified_at = timezone.now()
         professional.verified_by = request.user
         professional.rejection_reason = None
+        
+        # Note: The signal handler will automatically set is_professional=True
         professional.save(update_fields=['verification_status', 'verified_at', 'verified_by', 'rejection_reason'])
         
         messages.success(request, f'{professional.user.full_name} has been approved successfully!')
@@ -188,12 +190,14 @@ def reject_professional(request, pk):
         professional.verified_at = timezone.now()
         professional.verified_by = request.user
         professional.rejection_reason = rejection_reason
+        
+        # Note: The signal handler will automatically set is_professional=False
         professional.save(update_fields=['verification_status', 'verified_at', 'verified_by', 'rejection_reason'])
         
-        messages.warning(request, f'{professional.user.full_name} has been rejected.')
+        messages.warning(request, f'{professional.user.full_name} has been rejected and returned to client status.')
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'message': 'Professional rejected'})
+            return JsonResponse({'success': True, 'message': 'Professional rejected and returned to client status'})
         
         return redirect('adminpanel:pending_verifications')
     

@@ -188,8 +188,9 @@
 {% if messages %}
 <div class="messages">
   {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
       {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   {% endfor %}
 </div>
@@ -953,136 +954,6 @@ function getCookie(name) {
     }
   }
 
-// ===== GEOLOCATION: Request location on page load =====
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📍 Page loaded - requesting geolocation...');
-    requestGeolocation();
-});
-
-function requestGeolocation() {
-    // Check if geolocation is supported
-    if (!navigator.geolocation) {
-        console.warn('⚠️ Geolocation not supported by this browser');
-        return;
-    }
-
-    // Check if we already have location in session (to avoid repeated requests)
-    // Only request if location wasn't saved recently
-    const currentTime = Date.now();
-    const lastLocationTime = sessionStorage.getItem('lastLocationRequestTime');
-    const LOCATION_CACHE_TIME = 60000; // 1 minute
-
-    if (lastLocationTime && currentTime - parseInt(lastLocationTime) < LOCATION_CACHE_TIME) {
-        console.log('📍 Location already requested recently, skipping...');
-        return;
-    }
-
-    console.log('🌐 Browser is about to show location permission dialog...');
-
-    // Request location - THIS WILL SHOW THE BROWSER DIALOG
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            // SUCCESS - User allowed location
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-
-            console.log('✅ Location allowed by user!');
-            console.log('Latitude:', latitude);
-            console.log('Longitude:', longitude);
-            console.log('Accuracy:', accuracy, 'meters');
-
-            // Save to session storage
-            sessionStorage.setItem('lastLocationRequestTime', Date.now());
-
-            // Send location to backend
-            sendLocationToBackend(latitude, longitude);
-        },
-        function(error) {
-            // ERROR - User denied or other error
-            console.warn('❌ Location error:', error.code, error.message);
-            
-            let message = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    message = 'You denied location access. Professionals may not be sorted by distance.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message = 'Location information is not available.';
-                    break;
-                case error.TIMEOUT:
-                    message = 'Location request timed out.';
-                    break;
-            }
-            console.warn(message);
-            
-            // Save that we asked, so we don't spam requests
-            sessionStorage.setItem('lastLocationRequestTime', Date.now());
-        },
-        {
-            enableHighAccuracy: true,    // Request precise location
-            timeout: 10000,              // 10 second timeout
-            maximumAge: 0                // Don't use cached location
-        }
-    );
-}
-
-function sendLocationToBackend(latitude, longitude) {
-    // Get CSRF token
-    const csrfToken = getCookie('csrftoken');
-    
-    if (!csrfToken) {
-        console.warn('⚠️ CSRF token not found');
-        return;
-    }
-
-    console.log('📤 Sending location to backend...');
-
-    fetch('{% url "home_module:save_user_location" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            latitude: latitude,
-            longitude: longitude
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('✅ Location saved to backend!');
-            console.log('Response:', data);
-            
-            // Reload page to show sorted professionals
-            console.log('🔄 Reloading page to show sorted professionals...');
-            window.location.reload();
-        } else {
-            console.error('❌ Failed to save location');
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error sending location:', error);
-    });
-}
-
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
 // ===== LIVE FILTERING FOR PROFESSIONALS =====
 document.addEventListener('DOMContentLoaded', function() {
     const priceInput = document.getElementById('priceInput');
@@ -1213,6 +1084,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Auto-dismiss messages after 1 minute (60000ms)
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert-dismissible');
+    
+    alerts.forEach(function(alert) {
+        // Auto-dismiss after 1 minute
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+            console.log('Message auto-dismissed after 1 minute');
+        }, 60000); // 60 seconds
+    });
+});
 </script>
 
 {% endblock %}

@@ -27,7 +27,14 @@ BOOKING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s\-']{2,99}$")
 
 @login_required
 def booking_form(request, professional_id):
-    professional = get_object_or_404(ManpowerProfile, id=professional_id)
+    # Ensure professional is APPROVED and available
+    professional = get_object_or_404(
+        ManpowerProfile,
+        id=professional_id,
+        verification_status='APPROVED',
+        user__is_professional=True
+    )
+    
     prof_lat = professional.latitude or 27.7
     prof_lng = professional.longitude or 85.3
 

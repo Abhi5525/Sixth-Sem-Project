@@ -38,15 +38,24 @@ class Booking(models.Model):
         verbose_name_plural = "Bookings"
 
     def clean(self):
-        # Check 1: Verify professional exists (better check)
-        if not hasattr(self.professional, 'user'):
-            raise ValidationError("Selected user does not have a professional profile.")
+        # Check 1: Verify professional is selected
+        if not self.professional:
+            raise ValidationError("Professional must be selected.")
         
-        # OR check if user has ManpowerProfile
-        if not hasattr(self.professional.user, 'manpower_profile'):
+        # Check 2: Verify professional is approved and available for booking
+        if not self.professional.user:
+            raise ValidationError("Selected professional does not have a user account.")
+        
+        if self.professional.verification_status != 'APPROVED':
+            raise ValidationError("Selected professional is not approved for bookings. Only APPROVED professionals can be booked.")
+        
+        if not self.professional.user.is_professional:
             raise ValidationError("Selected user is not registered as a professional.")
         
-        # Check 2: Duration validation
+        if not self.professional.is_available:
+            raise ValidationError(f"{self.professional.user.full_name} is currently unavailable for bookings.")
+        
+        # Check 3: Duration validation
         if self.duration_hours < 0.5 or self.duration_hours > 24:
             raise ValidationError("Duration must be between 0.5 and 24 hours.")
         

@@ -204,6 +204,12 @@ class ManpowerSignupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        self._user = user
+        
+        # Pre-populate email field with user's existing email if available
+        if user and user.email:
+            self.fields['email'].initial = user.email
+        
         if user:
             self.fields['province'].widget.choices = [('', '--- Select Province ---')] + [(p.name, p.name) for p in Province.objects.all()]
     
@@ -278,8 +284,15 @@ class ManpowerSignupForm(forms.ModelForm):
     
     def clean_email(self):
         email = _validate_email(self.cleaned_data.get('email'))
-        if CustomUser.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email is already registered.")
+        
+        # Check if email is taken by ANOTHER user (exclude current user)
+        qs = CustomUser.objects.filter(email=email)
+        if self._user and self._user.pk:
+            qs = qs.exclude(pk=self._user.pk)
+        
+        if qs.exists():
+            raise forms.ValidationError("This email is already registered to another account.")
+        
         return email
     
     def clean_profile_picture(self):

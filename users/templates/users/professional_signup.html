@@ -91,6 +91,7 @@
                             <div class="server-message {{ message.tags }}">
                                 <i class="fa-solid fa-circle-check"></i>
                                 <span>{{ message }}</span>
+                                <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.remove()" aria-label="Close" style="margin-left: auto; padding: 0;"></button>
                             </div>
                         {% endfor %}
                     </div>

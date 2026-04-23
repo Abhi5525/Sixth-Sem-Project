@@ -31,30 +31,33 @@
 <div class="content">
   <!-- Verification Status Alert -->
   {% if pro.verification_status == 'PENDING' %}
-  <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+  <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
     <i class="fas fa-clock fa-2x me-3"></i>
-    <div>
+    <div class="flex-grow-1">
       <h5 class="alert-heading mb-1">⏳ Verification Pending</h5>
       <p class="mb-0">Your profile is under review. You will appear in client searches once approved by admin.</p>
     </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   {% elif pro.verification_status == 'REJECTED' %}
-  <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+  <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
     <i class="fas fa-times-circle fa-2x me-3"></i>
-    <div>
+    <div class="flex-grow-1">
       <h5 class="alert-heading mb-1">❌ Profile Rejected</h5>
       <p class="mb-1">Your profile was reviewed and needs corrections:</p>
       <p class="mb-2"><strong>Reason: {{ pro.rejection_reason }}</strong></p>
-      <p class="mb-0 small">Please update your profile and contact support at <strong>1234567890</strong> for re-verification.</p>
+      <p class="mb-0 small">Please update your profile and contact support at <strong>9834567890</strong> for re-verification.</p>
     </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   {% elif pro.verification_status == 'APPROVED' %}
-  <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+  <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
     <i class="fas fa-check-circle fa-2x me-3"></i>
-    <div>
+    <div class="flex-grow-1">
       <h5 class="alert-heading mb-1">✓ Verified Professional</h5>
       <p class="mb-0">Your profile is live and visible to clients!</p>
     </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   {% endif %}
   
@@ -753,6 +756,28 @@ function updateBookingCard(bookingId, newStatus) {
         endTimeElement.textContent = 'Completed just now';
     }
 }
+
+// Auto-dismiss alerts after 1 minute (60000ms)
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert-dismissible');
+    
+    alerts.forEach(function(alert) {
+        // Auto-dismiss after 1 minute
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+            console.log('Alert auto-dismissed after 1 minute');
+        }, 60000); // 60 seconds
+        
+        // Handle manual close
+        const closeBtn = alert.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                console.log('Alert manually closed');
+            });
+        }
+    });
+});
 </script>
 
 {% endblock %}
