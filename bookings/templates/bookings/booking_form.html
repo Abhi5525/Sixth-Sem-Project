@@ -14,10 +14,17 @@
       {% csrf_token %}
 
       <div class="form-group icon-input">
-        <input type="text" id="name" name="name" class="form-control" placeholder=" " autocomplete="name" />
+        <input type="text" id="name" name="name" class="form-control" placeholder=" " autocomplete="name" value="{{ default_client_name }}" />
         <label for="name" class="form-label">Your Name</label>
         <span class="error-message" id="nameError"></span>
         <i class="bi bi-person"></i>
+      </div>
+
+      <div class="form-group icon-input">
+        <input type="text" id="phone" name="phone" class="form-control" placeholder=" " autocomplete="tel" inputmode="numeric" value="{{ default_client_phone }}" />
+        <label for="phone" class="form-label">Phone Number</label>
+        <span class="error-message" id="phoneError"></span>
+        <i class="bi bi-telephone"></i>
       </div>
 
       <div class="form-group icon-input">
@@ -27,17 +34,21 @@
         <i class="bi bi-calendar"></i>
       </div>
       <div class="form-group icon-input">
-        <input type="time" id="time" name="time" class="form-control" placeholder=" " />
-        <label for="time" class="form-label">Booking Time</label>
-        <span class="error-message" id="timeError"></span>
-        <i class="bi bi-clock"></i>
-      </div>
-
-      <div class="form-group icon-input">
         <input type="text" id="durationHours" name="duration_hours" class="form-control" placeholder=" " inputmode="decimal" />
         <label for="durationHours" class="form-label">Duration (Hours)</label>
         <span class="error-message" id="durationError"></span>
         <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="form-group icon-input">
+        <select id="time" name="time" class="form-control" disabled>
+          <option value="">Select date and duration first</option>
+        </select>
+        <label for="time" class="form-label">Booking Time</label>
+        <span class="error-message" id="timeError"></span>
+        <i class="bi bi-clock"></i>
+      </div>
+      <div class="form-group">
+        <small id="slotInfo" class="text-muted d-block"></small>
       </div>
 
       <input type="hidden" id="professional_id" value="{{ professional.id }}" />
@@ -47,9 +58,6 @@
 </div>
 
 <script>
-  // ============================
-  // Helpers
-  // ============================
   function pad(n) {
     return n.toString().padStart(2, '0');
   }
@@ -59,13 +67,46 @@
     return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   }
 
-  // ============================
-  // Date/Time Dynamic Constraints
-  // ============================
+  function normalizePhone(phone) {
+    return (phone || '').replace(/\s+/g, '');
+  }
+
   const dateInput = document.getElementById('date');
   const timeInput = document.getElementById('time');
   const nameInput = document.getElementById('name');
+  const phoneInput = document.getElementById('phone');
   const durationInput = document.getElementById('durationHours');
+  const slotInfo = document.getElementById('slotInfo');
+  const professionalId = document.getElementById('professional_id').value;
+  const locationScope = "{% if request.user.is_authenticated %}user_{{ request.user.id }}{% else %}anon{% endif %}";
+  const scopedUserLatKey = `userLat:${locationScope}`;
+  const scopedUserLngKey = `userLng:${locationScope}`;
+  const legacyUserLatKey = 'userLat';
+  const legacyUserLngKey = 'userLng';
+  const serverLat = parseFloat("{{ user_lat|default_if_none:'' }}");
+  const serverLng = parseFloat("{{ user_lng|default_if_none:'' }}");
+  const BOOKING_START_HOUR = 6;
+  const BOOKING_END_HOUR = 20;
+
+  function resolveBookingLocation() {
+    const scopedLat = parseFloat(localStorage.getItem(scopedUserLatKey));
+    const scopedLng = parseFloat(localStorage.getItem(scopedUserLngKey));
+    if (Number.isFinite(scopedLat) && Number.isFinite(scopedLng)) {
+      return { lat: scopedLat, lng: scopedLng };
+    }
+
+    const legacyLat = parseFloat(localStorage.getItem(legacyUserLatKey));
+    const legacyLng = parseFloat(localStorage.getItem(legacyUserLngKey));
+    if (Number.isFinite(legacyLat) && Number.isFinite(legacyLng)) {
+      return { lat: legacyLat, lng: legacyLng };
+    }
+
+    if (Number.isFinite(serverLat) && Number.isFinite(serverLng)) {
+      return { lat: serverLat, lng: serverLng };
+    }
+
+    return { lat: null, lng: null };
+  }
 
   function setDateMinConstraint() {
     const today = getTodayStr();
@@ -75,41 +116,95 @@
     }
   }
 
-  // NOTE: No HTML5 min/step attributes — all constraints enforced via JS
+  function resetSlotDropdown(message) {
+    timeInput.innerHTML = `<option value="">${message}</option>`;
+    timeInput.disabled = true;
+  }
 
-  function updateMinTime() {
-    const now = new Date();
+  function setSlotLoadingState() {
+    resetSlotDropdown('Loading available slots...');
+    slotInfo.textContent = '';
+  }
+
+  function renderSlots(slots) {
+    if (!Array.isArray(slots) || slots.length === 0) {
+      resetSlotDropdown('No available time slots for this date');
+      slotInfo.textContent = 'Try a different date or shorter duration.';
+      return;
+    }
+
+    const options = ['<option value="">Select available time slot</option>'];
+    slots.forEach((slot) => {
+      options.push(`<option value="${slot.value}">${slot.label}</option>`);
+    });
+    timeInput.innerHTML = options.join('');
+    timeInput.disabled = false;
+    slotInfo.textContent = `${slots.length} slot(s) available for selected date.`;
+  }
+
+  async function fetchAvailableSlots() {
     const selectedDate = dateInput.value;
-    if (!selectedDate) return;
+    const durationRaw = durationInput.value.trim();
 
-    if (selectedDate === getTodayStr()) {
-      const minTime = new Date(now.getTime() + 30 * 60 * 1000);
-      const minTimeString = pad(minTime.getHours()) + ':' + pad(minTime.getMinutes());
-      timeInput.setAttribute('min', minTimeString);
+    if (!selectedDate) {
+      resetSlotDropdown('Select booking date first');
+      slotInfo.textContent = '';
+      return;
+    }
 
-      // Clear previously selected time if it's now invalid
-      if (timeInput.value && timeInput.value < minTimeString) {
-        timeInput.value = '';
-        clearError('time');
+    const duration = parseFloat(durationRaw || '1');
+    if (Number.isNaN(duration) || duration < 0.5 || duration > 24) {
+      resetSlotDropdown('Enter valid duration first');
+      slotInfo.textContent = '';
+      return;
+    }
+
+    setSlotLoadingState();
+    try {
+      const url = `/bookings/available-slots/${professionalId}/?date=${encodeURIComponent(selectedDate)}&duration_hours=${encodeURIComponent(duration)}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        resetSlotDropdown('Could not load slots');
+        slotInfo.textContent = data.error || 'Unable to fetch available slots right now.';
+        return;
       }
-    } else {
-      // Future date — no time restriction
-      timeInput.removeAttribute('min');
+
+      renderSlots(data.slots);
+    } catch (error) {
+      console.error('Slot fetch error:', error);
+      resetSlotDropdown('Could not load slots');
+      slotInfo.textContent = 'Network error while fetching available slots.';
     }
   }
 
   dateInput.addEventListener('change', function () {
     setDateMinConstraint();
-    updateMinTime();
-    // Validate date field on change
     validateField('date');
+    fetchAvailableSlots();
+  });
+
+  durationInput.addEventListener('change', function () {
+    validateField('duration');
+    fetchAvailableSlots();
+  });
+
+  durationInput.addEventListener('input', function () {
+    clearError('duration');
+    if (dateInput.value) {
+      fetchAvailableSlots();
+    }
   });
 
   setDateMinConstraint();
-  updateMinTime();
+  resetSlotDropdown('Select date and duration first');
 
   // Clear error on user interaction
-  [nameInput, dateInput, timeInput, durationInput].forEach((input) => {
+  [nameInput, phoneInput, dateInput, timeInput].forEach((input) => {
     if (input) {
       input.addEventListener('input', () => {
         const fieldId = input === durationInput ? 'duration' : input.id;
@@ -135,6 +230,12 @@
         if (val.replace(/[^A-Za-z]/g, '').length < 3) return showFieldError('name', 'Name must contain at least 3 letters');
         return true;
       }
+      case 'phone': {
+        const val = normalizePhone(phoneInput.value);
+        if (!val) return showFieldError('phone', 'Phone number is required');
+        if (!/^98\d{8}$/.test(val)) return showFieldError('phone', 'Phone number must be 10 digits and start with 98');
+        return true;
+      }
       case 'date': {
         const val = dateInput.value;
         if (!val) return showFieldError('date', 'Booking date is required');
@@ -145,17 +246,9 @@
         const val = timeInput.value;
         if (!val) return showFieldError('time', 'Booking time is required');
 
-        // If date is today, time must be ≥ 30 min from now
-        if (dateInput.value === getTodayStr()) {
-          const now = new Date();
-          const minTime = new Date(now.getTime() + 30 * 60 * 1000);
-          const [h, m] = val.split(':').map(Number);
-          const selected = new Date();
-          selected.setHours(h, m, 0, 0);
-          if (selected < minTime) {
-            const minStr = pad(minTime.getHours()) + ':' + pad(minTime.getMinutes());
-            return showFieldError('time', `Time must be at least 30 min from now. Earliest: ${minStr}`);
-          }
+        const [h, m] = val.split(':').map(Number);
+        if (h < BOOKING_START_HOUR || h >= BOOKING_END_HOUR) {
+          return showFieldError('time', 'Booking time must be between 6:00 AM and 8:00 PM');
         }
         return true;
       }
@@ -187,7 +280,7 @@
   }
 
   function clearAllErrors() {
-    ['name', 'date', 'time', 'duration'].forEach(clearError);
+    ['name', 'phone', 'date', 'time', 'duration'].forEach(clearError);
   }
 
   // ============================
@@ -199,11 +292,12 @@
 
     // Validate all fields
     const nameOk = validateField('name');
+    const phoneOk = validateField('phone');
     const dateOk = validateField('date');
     const timeOk = validateField('time');
     const durationOk = validateField('duration');
 
-    if (nameOk && dateOk && timeOk && durationOk) {
+    if (nameOk && phoneOk && dateOk && timeOk && durationOk) {
       submitBooking();
     } else {
       // Scroll to first error field
@@ -217,17 +311,16 @@
   // ============================
   function submitBooking() {
     const name = nameInput.value.trim();
+    const phone = normalizePhone(phoneInput.value);
     const date = dateInput.value;
     const time = timeInput.value;
     const durationHours = durationInput.value.trim();
-    const professionalId = document.getElementById('professional_id').value;
 
-    const lat = localStorage.getItem('userLat');
-    const lng = localStorage.getItem('userLng');
-    const userLat = lat ? parseFloat(lat) : null;
-    const userLng = lng ? parseFloat(lng) : null;
+    const location = resolveBookingLocation();
+    const userLat = location.lat;
+    const userLng = location.lng;
 
-    if (!userLat || !userLng) {
+    if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) {
       alert('Waiting for your location...');
       return;
     }
@@ -236,12 +329,9 @@
     const localDate = new Date(`${date}T${time}:00`);
     const bookingTime = localDate.toISOString();
 
-    // Client-side: must be ≥ 30 min from now
-    const now = new Date();
-    const minTimeFromNow = new Date(now.getTime() + 30 * 60 * 1000);
-    if (localDate < minTimeFromNow) {
-      const minStr = minTimeFromNow.toLocaleString();
-      alert(`Bookings must be at least 30 minutes in advance.\nEarliest available: ${minStr}`);
+    const selectedHour = localDate.getHours();
+    if (selectedHour < BOOKING_START_HOUR || selectedHour >= BOOKING_END_HOUR) {
+      alert('Booking time must be between 6:00 AM and 8:00 PM.');
       return;
     }
 
@@ -253,6 +343,7 @@
       },
       body: JSON.stringify({
         name: name,
+        phone: phone,
         professional_id: professionalId,
         booking_time: bookingTime,
         duration_hours: durationHours,

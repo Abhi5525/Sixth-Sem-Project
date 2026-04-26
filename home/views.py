@@ -13,6 +13,7 @@ from django.conf import settings
 from django.http import JsonResponse   
 from django.contrib import messages
 from django.db.models import Q
+from django.db.models import Avg, Count
 from geopy.distance import great_circle
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -51,8 +52,17 @@ def save_user_location(request):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON payload'}, status=400)
 
-    request.session['userLat'] = data.get("latitude")
-    request.session['userLng'] = data.get("longitude")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Invalid coordinates'}, status=400)
+
+    request.session['userLat'] = latitude
+    request.session['userLng'] = longitude
     return JsonResponse({
         'success': True,
         'lat': request.session['userLat'],
@@ -68,6 +78,16 @@ def home(request):
     # First, check if user location exists in session
     user_lat = request.session.get("userLat")
     user_lon = request.session.get("userLng")
+
+    # For professionals, fall back to their saved profile location when session location is missing.
+    if (user_lat is None or user_lon is None) and request.user.is_authenticated and getattr(request.user, 'is_professional', False):
+        try:
+            pro_profile = ManpowerProfile.objects.get(user=request.user)
+            if pro_profile.latitude is not None and pro_profile.longitude is not None:
+                user_lat = pro_profile.latitude
+                user_lon = pro_profile.longitude
+        except ManpowerProfile.DoesNotExist:
+            pass
     
     # Get today's bookings for logged-in users
     todays_bookings = []
@@ -81,7 +101,8 @@ def home(request):
                 todays_bookings = Booking.objects.filter(
                     professional=pro_profile,
                     booking_time__date=today,
-                    is_confirmed=True
+                    is_confirmed=True,
+                    status__in=['upcoming', 'ongoing']
                 ).order_by('booking_time')
                 # Pass verification status to template
                 professional_status = {
@@ -95,13 +116,17 @@ def home(request):
             todays_bookings = Booking.objects.filter(
                 client=request.user,
                 booking_time__date=today,
-                is_confirmed=True
+                is_confirmed=True,
+                status__in=['upcoming', 'ongoing']
             ).order_by('booking_time')
     
     # Only show APPROVED professionals
-    manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True, verification_status='APPROVED')
+    manpower_qs = ManpowerProfile.objects.select_related('user').filter(is_available=True, verification_status='APPROVED').annotate(
+        live_average_rating=Avg('reviews_received__rating'),
+        live_total_reviews=Count('reviews_received', distinct=True),
+    )
     if search_terms:
-        search_q = Q(user__full_name__icontains=query) | Q(skill__icontains=query)
+        search_q = Q(skill__icontains=query)
         for term in search_terms:
             search_q |= Q(skills__name__icontains=term) | Q(skills__category__icontains=term)
         manpower_qs = manpower_qs.filter(search_q).distinct()
@@ -110,23 +135,24 @@ def home(request):
     user_has_location = False
 
     # If we have a user location, compute distances and sort
-    if user_lat and user_lon:
+    if user_lat is not None and user_lon is not None:
         try:
             user_lat = float(user_lat)
             user_lon = float(user_lon)
             manpower_within_distance = []
             for manpower in manpower_qs:
-                if manpower.latitude and manpower.longitude:
+                if manpower.latitude is not None and manpower.longitude is not None:
                     distance = great_circle((user_lat, user_lon), (float(manpower.latitude), float(manpower.longitude))).km
                     manpower.distance = distance
                 else:
-                    manpower.distance = float('inf')
+                    manpower.distance = None
                 manpower_within_distance.append(manpower)
 
-            manpower_within_distance.sort(key=lambda x: x.distance)
+            manpower_within_distance.sort(key=lambda x: (x.distance is None, x.distance or 0.0))
             manpower_list = manpower_within_distance
             user_has_location = True
-            if manpower_within_distance and manpower_within_distance[0].distance > 10:
+            nearest_with_distance = next((m for m in manpower_within_distance if m.distance is not None), None)
+            if nearest_with_distance and nearest_with_distance.distance > 10:
                 messages.info(request, "Here's the closest professionals to your location beyond 10 km.")
             if not manpower_within_distance:
                 messages.info(request, "No professionals found matching your search criteria.")
@@ -154,6 +180,8 @@ def home(request):
         'manpower_list': manpower_page,
         'is_professional': request.user.is_authenticated and getattr(request.user, "is_professional", False),
         'user_has_location': user_has_location,
+        'user_lat': user_lat,
+        'user_lon': user_lon,
         'page_obj': manpower_page,
         'is_paginated': manpower_page.has_other_pages(),
         'todays_bookings': todays_bookings,
@@ -164,11 +192,29 @@ def home(request):
 @login_required
 def update_professional_location(request):
     if request.method == "POST" and request.user.is_professional:
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Invalid JSON payload"}, status=400)
+
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (TypeError, ValueError):
+            return JsonResponse({"success": False, "error": "Invalid coordinates"}, status=400)
+
         profile = get_object_or_404(ManpowerProfile, user=request.user)
-        profile.latitude = data.get("latitude")
-        profile.longitude = data.get("longitude")
+        profile.latitude = latitude
+        profile.longitude = longitude
         profile.save()
+
+        # Keep session location in sync so distance calculations work immediately.
+        request.session['userLat'] = latitude
+        request.session['userLng'] = longitude
+
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
 

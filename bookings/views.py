@@ -17,13 +17,106 @@ from django.conf import settings
 from django.http import JsonResponse
 from users.models import ManpowerProfile 
 from django.core.exceptions import ValidationError
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_datetime, parse_date
 from decimal import Decimal
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone as dt_timezone
 
 logger = logging.getLogger(__name__)
 
 BOOKING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s\-']{2,99}$")
+BOOKING_PHONE_PATTERN = re.compile(r"^98\d{8}$")
+BOOKING_START_HOUR = 6
+BOOKING_END_HOUR = 20
+BOOKING_SLOT_INTERVAL_MINUTES = 30
+
+
+def _round_up_to_slot(dt_obj, interval_minutes=BOOKING_SLOT_INTERVAL_MINUTES):
+    dt_obj = dt_obj.replace(second=0, microsecond=0)
+    remainder = dt_obj.minute % interval_minutes
+    if remainder == 0:
+        return dt_obj
+    return dt_obj + timedelta(minutes=(interval_minutes - remainder))
+
+
+def _calculate_available_slots(professional, selected_date, duration_hours):
+    current_tz = timezone.get_current_timezone()
+    selected_day_start_local = timezone.make_aware(datetime.combine(selected_date, datetime.min.time()), current_tz)
+    selected_day_end_local = selected_day_start_local + timedelta(days=1)
+
+    open_start_local = selected_day_start_local.replace(hour=BOOKING_START_HOUR, minute=0, second=0, microsecond=0)
+    open_end_local = selected_day_start_local.replace(hour=BOOKING_END_HOUR, minute=0, second=0, microsecond=0)
+
+    latest_start_local = open_end_local - timedelta(hours=duration_hours)
+    if latest_start_local < open_start_local:
+        return []
+
+    min_start_local = open_start_local
+    now_local = timezone.localtime(timezone.now())
+    if selected_date == now_local.date():
+        min_start_local = max(min_start_local, now_local + timedelta(minutes=30))
+    min_start_local = _round_up_to_slot(min_start_local)
+
+    if min_start_local > latest_start_local:
+        return []
+
+    selected_day_start_utc = selected_day_start_local.astimezone(dt_timezone.utc)
+    selected_day_end_utc = selected_day_end_local.astimezone(dt_timezone.utc)
+
+    busy_bookings = Booking.objects.filter(
+        professional=professional,
+        booking_time__lt=selected_day_end_utc,
+        end_time__gt=selected_day_start_utc,
+    )
+
+    busy_ranges = []
+    for booking in busy_bookings:
+        booking_start_local = timezone.localtime(booking.booking_time, current_tz)
+        booking_end_local = timezone.localtime(booking.end_time, current_tz)
+        # Keep one slot-gap after each booking before next booking can start.
+        booking_end_with_gap = booking_end_local + timedelta(minutes=BOOKING_SLOT_INTERVAL_MINUTES)
+        busy_ranges.append((booking_start_local, booking_end_with_gap))
+
+    available_slots = []
+    cursor = min_start_local
+    while cursor <= latest_start_local:
+        slot_end = cursor + timedelta(hours=duration_hours)
+        is_overlapping = any(cursor < busy_end and slot_end > busy_start for busy_start, busy_end in busy_ranges)
+        if not is_overlapping:
+            available_slots.append({
+                'value': cursor.strftime('%H:%M'),
+                'label': cursor.strftime('%I:%M %p')
+            })
+        cursor += timedelta(minutes=BOOKING_SLOT_INTERVAL_MINUTES)
+
+    return available_slots
+
+
+@login_required
+def available_slots(request, professional_id):
+    professional = get_object_or_404(
+        ManpowerProfile,
+        id=professional_id,
+        verification_status='APPROVED',
+        user__is_professional=True
+    )
+
+    selected_date_str = request.GET.get('date')
+    duration_raw = request.GET.get('duration_hours') or '1'
+
+    selected_date = parse_date(selected_date_str or '')
+    if not selected_date:
+        return JsonResponse({'success': False, 'error': 'Invalid date'}, status=400)
+
+    try:
+        duration_hours = float(duration_raw)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Invalid duration'}, status=400)
+
+    if duration_hours < 0.5 or duration_hours > 24:
+        return JsonResponse({'success': False, 'error': 'Duration must be between 0.5 and 24 hours'}, status=400)
+
+    slots = _calculate_available_slots(professional, selected_date, duration_hours)
+    return JsonResponse({'success': True, 'slots': slots})
 
 @login_required
 def booking_form(request, professional_id):
@@ -38,10 +131,15 @@ def booking_form(request, professional_id):
     prof_lat = professional.latitude or 27.7
     prof_lng = professional.longitude or 85.3
 
+    # Keep booking page aware of last session location for fallback.
+    session_user_lat = request.session.get('userLat')
+    session_user_lng = request.session.get('userLng')
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             name = (data.get('name') or '').strip()
+            phone = (data.get('phone') or '').strip()
 
             if not BOOKING_NAME_PATTERN.fullmatch(name):
                 return JsonResponse({
@@ -54,6 +152,12 @@ def booking_form(request, professional_id):
                     'success': False,
                     'error': 'Name must contain at least 3 letters.'
                 }, status=400)
+
+            if not BOOKING_PHONE_PATTERN.fullmatch(phone):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Phone number must be 10 digits and start with 98.'
+                }, status=400)
             
             # Parse booking time
             booking_time_str = data.get('booking_time')
@@ -63,7 +167,15 @@ def booking_form(request, professional_id):
             
             # Make timezone-aware UTC
             if not timezone.is_aware(booking_time):
-                booking_time = timezone.make_aware(booking_time, timezone=timezone.utc)
+                booking_time = timezone.make_aware(booking_time, timezone=dt_timezone.utc)
+
+            # Enforce booking window in local timezone: 6:00 AM to 7:59 PM.
+            local_booking_time = timezone.localtime(booking_time)
+            if local_booking_time.hour < BOOKING_START_HOUR or local_booking_time.hour >= BOOKING_END_HOUR:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Bookings are allowed only between 6:00 AM and 8:00 PM.'
+                }, status=400)
             
             # Parse duration
             duration_hours_raw = data.get('duration_hours') or 1
@@ -75,6 +187,11 @@ def booking_form(request, professional_id):
             # ... rest of your code ...
             user_lat_raw = data.get('latitude')
             user_lng_raw = data.get('longitude')
+
+            # Fallback to session coordinates when client storage is missing/stale.
+            if user_lat_raw in (None, '') or user_lng_raw in (None, ''):
+                user_lat_raw = request.session.get('userLat')
+                user_lng_raw = request.session.get('userLng')
 
             if not user_lat_raw or not user_lng_raw:
                 return JsonResponse({'success': False, 'error': 'Location missing'}, status=400)
@@ -93,6 +210,7 @@ def booking_form(request, professional_id):
             booking = Booking(
                 client=request.user,
                 client_name=name,
+                client_phone=phone,
                 professional=professional,
                 booking_time=booking_time,
                 duration_hours=duration_hours,
@@ -119,24 +237,15 @@ def booking_form(request, professional_id):
     return render(request, 'bookings/booking_form.html', {
         'professional': professional,
         'prof_lat': prof_lat,
-        'prof_lng': prof_lng
+        'prof_lng': prof_lng,
+        'user_lat': session_user_lat,
+        'user_lng': session_user_lng,
+        'default_client_name': request.user.full_name or '',
+        'default_client_phone': request.user.phone_number or '',
     })
 
 
 
-
-def generate_signature(payment_data, secret_key):
-    """
-    Generates eSewa signature based on signed_field_names
-    """
-    signed_fields = payment_data['signed_field_names'].split(',')
-    message = ','.join(f"{field}={payment_data[field]}" for field in signed_fields)
-    signature = base64.b64encode(
-        hmac.new(secret_key.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).digest()
-    ).decode('utf-8')
-    return signature
-
-logger = logging.getLogger(__name__)
 
 # ---------------------------
 # Utility: generate eSewa signature
@@ -154,7 +263,7 @@ def generate_signature(payment_data, secret_key):
 # ---------------------------
 @login_required
 def checkout(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
+    booking = get_object_or_404(Booking, id=booking_id, client=request.user)
     payment = get_object_or_404(Payment, booking=booking)
 
     # Amounts

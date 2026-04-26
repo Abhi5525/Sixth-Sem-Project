@@ -129,10 +129,6 @@
                   value=""
                 />
               </div>
-              <small class="text-muted d-block mt-2">
-                <i class="fas fa-info-circle me-1"></i>
-                Shows professionals with price around this value. Leave empty to show all.
-              </small>
               <div class="price-display mt-3" id="priceDisplay" style="display: none;">
                 <span class="badge bg-primary">Around ₹<span id="priceValue">0</span>/hour</span>
               </div>
@@ -161,15 +157,6 @@
             </div>
           </div>
 
-          <hr class="my-4">
-
-          <!-- Filter Stats -->
-          <div class="filter-info p-2 bg-light rounded">
-            <small class="text-muted">
-              <i class="fas fa-info-circle me-2"></i>
-              <span id="filterStats">Showing all professionals</span>
-            </small>
-          </div>
         </div>
 
         <!-- Footer -->
@@ -195,6 +182,10 @@
   {% endfor %}
 </div>
 {% endif %}
+<div id="distanceNotice" class="alert alert-info alert-dismissible fade show d-none" role="alert">
+  <span id="distanceNoticeText"></span>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="professionalsList">
       {% for manpower in manpower_list %}
       <div class="col">
@@ -221,9 +212,13 @@
               </div>
             </div>
             <p class="card-text">
-              <i class="fas fa-star text-warning"></i> {{ manpower.average_rating|floatformat:1 }} ({{ manpower.total_reviews }} reviews)<br />
+              <i class="fas fa-star text-warning"></i> {{ manpower.live_average_rating|default:0|floatformat:1 }} ({{ manpower.live_total_reviews|default:0 }} reviews)<br />
               {% if user.is_authenticated %}
-              <i class="fas fa-map-marker-alt"></i> {{manpower.distance|floatformat:2}} km away<br />
+              <span class="distance-label" data-prof-lat="{{ manpower.latitude|default_if_none:'' }}" data-prof-lng="{{ manpower.longitude|default_if_none:'' }}">
+                {% if user_has_location and manpower.distance != None %}
+                <i class="fas fa-map-marker-alt"></i> {{manpower.distance|floatformat:2}} km away
+                {% endif %}
+              </span><br />
               {% endif %}
                 <span class="fw-bold text-success" style="font-family: Arial, sans-serif;">Rs {{manpower.rate}}</span> / hour
 
@@ -238,7 +233,7 @@
 </span>
 
 {% if not manpower.is_available %}
-<small class="d-block text-muted">{{ manpower.availability_message }}</small>
+<small class="availability-message d-block text-warning fw-semibold mt-1">{{ manpower.availability_message }}</small>
 
 {% endif %}
 {% comment %} </div> {% endcomment %}
@@ -411,99 +406,34 @@
   
   <!-- Map Modal -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered map-modal-dialog" style="max-width: 720px; width: calc(100% - 1rem);">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
       
-      <!-- Modern minimalist header -->
-      <div class="modal-header bg-gradient-primary border-0 pb-0 position-relative" style="
-          background: linear-gradient(135deg, #364ba7ff 0%, #3f81aaff 100%);
-          padding: 2rem 1.5rem 1.5rem;">
+      <!-- Compact header -->
+      <div class="modal-header border-0" style="padding: 1rem 1.25rem;">
         <div class="w-100">
-          <div class="d-flex align-items-center mb-2">
-            <div class="bg-white p-2 rounded-circle shadow-sm me-3">
-              <i class="bi bi-geo-alt-fill text-primary" style="font-size: 1.25rem;"></i>
-            </div>
-            <h5 class="modal-title text-white mb-0 fw-bold fs-4" id="mapModalLabel">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-geo-alt-fill text-primary me-2" style="font-size: 1.1rem;"></i>
+            <h5 class="modal-title mb-0 fw-semibold" id="mapModalLabel">
               Pin Your Location
             </h5>
           </div>
-          <p class="text-white-75 mb-0 small opacity-90">
-            Click directly on the map to set your precise location
-          </p>
         </div>
-        <button type="button" class="btn-close btn-close-white position-absolute" 
-                style="top: 1.5rem; right: 1.5rem;" 
-                data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <!-- Body with modern card design -->
       <div class="modal-body p-0">
-        <!-- Map section with slight inset effect -->
         <div class="position-relative">
-          <div id="map" style="height: 380px; width: 100%;"></div>
-          
-          <!-- Interactive hint overlay -->
-          <div class="position-absolute top-0 end-0 m-3">
-            <div class="bg-white rounded-pill px-3 py-2 shadow-sm d-flex align-items-center">
-              <i class="bi bi-hand-index text-primary me-2"></i>
-              <span class="small fw-medium">Click to place pin</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Location details panel -->
-        <div class="p-4 border-top bg-light-subtle">
-          <div class="row g-3">
-            <div class="col-md-8">
-              <div class="d-flex align-items-start">
-                <div class="me-3 mt-1">
-                  <i class="bi bi-info-circle text-primary"></i>
-                </div>
-                <div>
-                  <h6 class="fw-semibold mb-1">Selected Location Details</h6>
-                  <p class="text-muted small mb-2">
-                    Your address will appear here once you click on the map
-                  </p>
-                  
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="bg-white rounded border p-3 h-100 d-flex flex-column">
-                <h6 class="fw-semibold mb-3 text-center">Accuracy Tips</h6>
-                <ul class="small text-muted mb-0 flex-grow-1">
-                  <li class="mb-2">Zoom in for precision</li>
-                  <li class="mb-2">Click on buildings/landmarks</li>
-                  <li>Drag map to navigate</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <div id="map" style="height: 260px; width: 100%;"></div>
         </div>
       </div>
 
       <!-- Modern action footer -->
-      <div class="modal-footer border-0 pt-0">
-        <div class="w-100 d-flex justify-content-between align-items-center">
-          <div class="small text-muted">
-            <i class="bi bi-shield-check me-1"></i>
-            <span>Your location data is secure</span>
-          </div>
-          <div>
-            <button type="button" class="btn btn-outline-secondary me-2 px-4" data-bs-dismiss="modal">
-              Cancel
-            </button>
-            {% if request.user.is_authenticated and request.user.is_professional %}
-            <button class="btn btn-primary px-4 shadow-sm" id="saveLocationBtn" style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border: none;">
-              <i class="bi bi-check-lg me-2"></i>
-              Confirm Location
-            </button>
-            {% endif %}
-          </div>
+      <div class="modal-footer border-0 pt-2 pb-3 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary me-2 px-4" data-bs-dismiss="modal">
+          close
+        </button>
         </div>
-      </div>
     </div>
   </div>
 </div>
@@ -582,7 +512,7 @@
           <div class="info-label ">
             <i class="fas fa-info-circle me-2"></i>About
           </div>
-            <div class="info-value" id="modalAbout" style="font-family: 'Arial;"></div>
+            <div class="info-value" id="modalAbout" style="font-family: Arial, sans-serif;"></div>
           </div>
       </div>
   <button id="rateReviewBtn" class="btn btn-outline-primary ">
@@ -626,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Hide the message if it exists
                             const messageElement = element.nextElementSibling;
-                            if (messageElement && messageElement.classList.contains('text-muted')) {
+                            if (messageElement && messageElement.classList.contains('availability-message')) {
                                 messageElement.style.display = 'none';
                             }
                         } else {
@@ -636,10 +566,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Show/update the message
                             let messageElement = element.nextElementSibling;
-                            if (!messageElement || !messageElement.classList.contains('text-muted')) {
+                            if (!messageElement || !messageElement.classList.contains('availability-message')) {
                                 // Create message element if it doesn't exist
                                 messageElement = document.createElement('small');
-                                messageElement.className = 'd-block text-warning fw-semibold mt-1';
+                              messageElement.className = 'availability-message d-block text-warning fw-semibold mt-1';
                                 element.parentNode.insertBefore(messageElement, element.nextSibling);
                             }
                             messageElement.textContent = pro.message;
@@ -661,11 +591,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
   function fetchProfile(id) {
-    alert("Fetching profile for ID:", id);
+    // Set immediately from clicked card so booking redirect never reuses a stale ID.
+    selectedProfessionalId = Number(id);
     fetch(`/api/manpower/${id}/`)
       .then(res => res.json())
       .then(pro => {
-        selectedProfessionalId = pro.id; // Use ManpowerProfile ID, NOT user_id
+        selectedProfessionalId = Number(pro.id); // Keep as ManpowerProfile ID.
         document.getElementById("modalName").textContent = pro.name;
         document.getElementById("modalTrade").textContent = pro.trade;
         const rating = (pro.average_rating || 0).toFixed(1); // Shows 1 decimal: 4.5
@@ -683,7 +614,9 @@ document.getElementById("modalRating").textContent = `${rating} (${reviewCount} 
         window.location.href = `/review-page/${pro.id}/`;
       };
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+      });
   }
 
 // Function to generate stars
@@ -715,9 +648,137 @@ function generateStars(rating) {
     return `<span style="color: #ffc107; font-size: 1.1rem;">${stars}</span>`;
 }
 
-let userLat = parseFloat(localStorage.getItem("userLat")) || 27.7172;
-let userLng = parseFloat(localStorage.getItem("userLng")) || 85.3240;
-let hasManualLocation = localStorage.getItem("userLat") !== null;
+const serverLat = parseFloat("{{ user_lat|default_if_none:'' }}");
+const serverLng = parseFloat("{{ user_lon|default_if_none:'' }}");
+const locationScope = "{% if request.user.is_authenticated %}user_{{ request.user.id }}{% else %}anon{% endif %}";
+const userLatKey = `userLat:${locationScope}`;
+const userLngKey = `userLng:${locationScope}`;
+const legacyUserLatKey = "userLat";
+const legacyUserLngKey = "userLng";
+
+function getStoredLocation() {
+  return {
+    lat: parseFloat(localStorage.getItem(userLatKey)),
+    lng: parseFloat(localStorage.getItem(userLngKey)),
+  };
+}
+
+function setStoredLocation(lat, lng) {
+  localStorage.setItem(userLatKey, lat);
+  localStorage.setItem(userLngKey, lng);
+}
+
+const stored = getStoredLocation();
+const storedLat = stored.lat;
+const storedLng = stored.lng;
+
+// Migrate older shared keys once so existing users keep their last known location.
+if (!Number.isFinite(storedLat) || !Number.isFinite(storedLng)) {
+  const legacyLat = parseFloat(localStorage.getItem(legacyUserLatKey));
+  const legacyLng = parseFloat(localStorage.getItem(legacyUserLngKey));
+  if (Number.isFinite(legacyLat) && Number.isFinite(legacyLng)) {
+    setStoredLocation(legacyLat, legacyLng);
+  }
+}
+
+let userLat = Number.isFinite(storedLat)
+  ? storedLat
+  : (Number.isFinite(serverLat) ? serverLat : 27.7172);
+let userLng = Number.isFinite(storedLng)
+  ? storedLng
+  : (Number.isFinite(serverLng) ? serverLng : 85.3240);
+
+if (!Number.isFinite(storedLat) && Number.isFinite(serverLat) && Number.isFinite(serverLng)) {
+  setStoredLocation(serverLat, serverLng);
+}
+
+let hasManualLocation =
+  localStorage.getItem(userLatKey) !== null ||
+  (Number.isFinite(serverLat) && Number.isFinite(serverLng));
+const DISTANCE_NOTICE_THRESHOLD_KM = 10;
+
+function calculateDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRadians = (deg) => deg * (Math.PI / 180);
+  const earthRadiusKm = 6371;
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function updateDistanceDisplay(currentLat, currentLng) {
+  const labels = document.querySelectorAll('.distance-label');
+  let nearestDistanceKm = Number.POSITIVE_INFINITY;
+  labels.forEach((label) => {
+    const profLat = parseFloat(label.dataset.profLat);
+    const profLng = parseFloat(label.dataset.profLng);
+
+    if (!Number.isFinite(currentLat) || !Number.isFinite(currentLng) || !Number.isFinite(profLat) || !Number.isFinite(profLng)) {
+      label.innerHTML = '';
+      return;
+    }
+
+    const distanceKm = calculateDistanceKm(currentLat, currentLng, profLat, profLng);
+    nearestDistanceKm = Math.min(nearestDistanceKm, distanceKm);
+    label.dataset.distanceKm = distanceKm;
+    label.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${distanceKm.toFixed(2)} km away`;
+  });
+
+  updateDistanceNotice(Number.isFinite(nearestDistanceKm) ? nearestDistanceKm : null);
+  sortProfessionalsByDistance(currentLat, currentLng);
+}
+
+function updateDistanceNotice(nearestDistanceKm) {
+  const notice = document.getElementById('distanceNotice');
+  const noticeText = document.getElementById('distanceNoticeText');
+  if (!notice || !noticeText) return;
+
+  if (Number.isFinite(nearestDistanceKm) && nearestDistanceKm > DISTANCE_NOTICE_THRESHOLD_KM) {
+    noticeText.textContent = `Here's the closest professionals to your location beyond ${DISTANCE_NOTICE_THRESHOLD_KM} km.`;
+    notice.classList.remove('d-none');
+    return;
+  }
+
+  notice.classList.add('d-none');
+  noticeText.textContent = '';
+}
+
+function sortProfessionalsByDistance(currentLat, currentLng) {
+  const list = document.getElementById('professionalsList');
+  if (!list) return;
+
+  const columns = Array.from(list.querySelectorAll(':scope > .col'));
+  const withDistance = columns.map((col, index) => {
+    const label = col.querySelector('.distance-label');
+    const profLat = parseFloat(label?.dataset.profLat);
+    const profLng = parseFloat(label?.dataset.profLng);
+
+    let distance = Number.POSITIVE_INFINITY;
+    if (
+      Number.isFinite(currentLat) &&
+      Number.isFinite(currentLng) &&
+      Number.isFinite(profLat) &&
+      Number.isFinite(profLng)
+    ) {
+      distance = calculateDistanceKm(currentLat, currentLng, profLat, profLng);
+    }
+
+    return { col, distance, index };
+  });
+
+  withDistance.sort((a, b) => {
+    if (a.distance === b.distance) {
+      return a.index - b.index;
+    }
+    return a.distance - b.distance;
+  });
+
+  withDistance.forEach((item) => list.appendChild(item.col));
+}
 
 // Only use browser geolocation if user hasn't manually set a location
 if (navigator.geolocation && !hasManualLocation) {
@@ -725,26 +786,8 @@ if (navigator.geolocation && !hasManualLocation) {
         pos => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
-            localStorage.setItem("userLat", userLat);
-            localStorage.setItem("userLng", userLng);
-            
-            // Send location to backend session
-            fetch("{% url 'home_module:save_user_location' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie('csrftoken')
-                },
-                body: JSON.stringify({ latitude: userLat, longitude: userLng })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page to recalculate distances
-                    window.location.reload();
-                }
-            })
-            .catch(err => console.error("Error saving location:", err));
+      // Keep both roles on one path so backend updates stay consistent.
+      storeLocation(userLat, userLng);
             
             // If map & marker already exist, move them
             if (marker && map) {
@@ -762,10 +805,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const mapModal = document.getElementById("mapModal");
     mapModal.addEventListener("shown.bs.modal", function () {
         // Update coordinates from localStorage before displaying map
-        const savedLat = parseFloat(localStorage.getItem("userLat"));
-        const savedLng = parseFloat(localStorage.getItem("userLng"));
+      const saved = getStoredLocation();
+      const savedLat = saved.lat;
+      const savedLng = saved.lng;
         
-        if (savedLat && savedLng) {
+        if (Number.isFinite(savedLat) && Number.isFinite(savedLng)) {
             userLat = savedLat;
             userLng = savedLng;
         }
@@ -785,7 +829,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 const pos = marker.getLatLng();
                 userLat = pos.lat;
                 userLng = pos.lng;
-                storeLocation(userLat, userLng);
+              storeLocation(userLat, userLng);
             });
 
             // Update on click
@@ -793,7 +837,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 marker.setLatLng(e.latlng);
                 userLat = e.latlng.lat;
                 userLng = e.latlng.lng;
-                storeLocation(userLat, userLng);
+              storeLocation(userLat, userLng);
             });
         } else {
             // Update existing map and marker to saved location
@@ -812,6 +856,10 @@ function storeLocation(lat, lng) {
     console.log("=== storeLocation called ===");
     console.log("Coordinates:", lat, lng);
     console.log("isProfessional value:", isProfessional);
+
+    // Keep frontend location source in sync for both user types.
+    setStoredLocation(lat, lng);
+    updateDistanceDisplay(lat, lng);
     
     if (isProfessional) {
         console.log("✓ PROFESSIONAL PATH - Sending to backend");
@@ -827,14 +875,15 @@ function storeLocation(lat, lng) {
         .then(data => {
             console.log("✓ Backend response:", data);
             if (data.success) {
-                alert("Location updated successfully!");
+            updateDistanceDisplay(lat, lng);
             }
         })
-        .catch(err => console.error("✗ Backend error:", err));
+        .catch(err => {
+          console.error("✗ Backend error:", err);
+          updateDistanceDisplay(lat, lng);
+        });
     } else {
         console.log("✓ CUSTOMER PATH - Storing in localStorage and session");
-        localStorage.setItem("userLat", lat);
-        localStorage.setItem("userLng", lng);
         console.log("✓ Stored in localStorage:", lat, lng);
         
         fetch("{% url 'home_module:save_user_location' %}", {
@@ -852,64 +901,28 @@ function storeLocation(lat, lng) {
         .then(data => {
             console.log("✓ Session updated:", data);
             if (data.success) {
-                // Show success message and reload to update distances
-                alert("Location updated! Refreshing to show updated distances...");
-                window.location.reload();
-            }
-        })
-        .catch(err => console.error("✗ Session update failed:", err));
-    }
-    
-    // Verify it was stored
-    console.log("✓ Verify - userLat from localStorage:", localStorage.getItem("userLat"));
-    console.log("✓ Verify - userLng from localStorage:", localStorage.getItem("userLng"));
-}
-
-// Save button (only exists for professionals)
-document.getElementById("saveLocationBtn")?.addEventListener("click", function() {
-    const btn = this;
-    const originalText = btn.innerHTML;
-    
-    // Show loading state
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
-    
-    // Call storeLocation and handle response
-    if (isProfessional) {
-        fetch(updateUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie('csrftoken')
-            },
-            body: JSON.stringify({ latitude: userLat, longitude: userLng })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Saved!';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('mapModal'));
-                    if (modal) modal.hide();
-                    alert("Location updated successfully!");
-                }, 1000);
-            } else {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                alert("Failed to save location. Please try again.");
+            updateDistanceDisplay(lat, lng);
             }
         })
         .catch(err => {
-            console.error("Error saving location:", err);
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            alert("Error saving location. Please try again.");
+          console.error("✗ Session update failed:", err);
+          updateDistanceDisplay(lat, lng);
         });
     }
-});
+    
+    // Verify it was stored
+    console.log("✓ Verify - userLat from localStorage:", localStorage.getItem(userLatKey));
+    console.log("✓ Verify - userLng from localStorage:", localStorage.getItem(userLngKey));
+}
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const saved = getStoredLocation();
+      const savedLat = Number.isFinite(saved.lat) ? saved.lat : userLat;
+      const savedLng = Number.isFinite(saved.lng) ? saved.lng : userLng;
+      if (Number.isFinite(savedLat) && Number.isFinite(savedLng)) {
+        updateDistanceDisplay(savedLat, savedLng);
+      }
+    });
 // Helper for CSRF
 function getCookie(name) {
     let cookieValue = null;
@@ -1045,10 +1058,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Update filter stats
-        if (visibleCount === 0) {
+        if (filterStats) {
+          if (visibleCount === 0) {
             filterStats.textContent = 'No professionals match your filters';
-        } else {
+          } else {
             filterStats.textContent = `Showing ${visibleCount} professional${visibleCount !== 1 ? 's' : ''}`;
+          }
         }
         
         // Show or hide "no results" message

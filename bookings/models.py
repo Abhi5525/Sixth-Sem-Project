@@ -4,12 +4,17 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import uuid
-from datetime import timedelta
+import re
+from datetime import timedelta, timezone as dt_timezone
 from users.models import CustomUser , ManpowerProfile # Import CustomUser from users app
+
+BOOKING_PHONE_PATTERN = re.compile(r"^98\d{8}$")
+BOOKING_GAP_MINUTES = 30
 
 class Booking(models.Model):
     client = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='client_bookings')
     client_name = models.CharField(max_length=100, blank=True)  # New field
+    client_phone = models.CharField(max_length=10, blank=True)
     professional = models.ForeignKey(ManpowerProfile, on_delete=models.CASCADE, related_name='professional_bookings')
     booking_time = models.DateTimeField()  # Start time of the service
     duration_hours = models.FloatField()  # Duration in hours
@@ -58,27 +63,41 @@ class Booking(models.Model):
         # Check 3: Duration validation
         if self.duration_hours < 0.5 or self.duration_hours > 24:
             raise ValidationError("Duration must be between 0.5 and 24 hours.")
+
+        # Check 3.1: Client phone validation
+        if not self.client_phone:
+            raise ValidationError("Phone number is required.")
+        normalized_phone = str(self.client_phone).strip()
+        if not BOOKING_PHONE_PATTERN.fullmatch(normalized_phone):
+            raise ValidationError("Phone number must be 10 digits and start with 98.")
+        self.client_phone = normalized_phone
         
         # Check 3: Overlapping bookings with timezone awareness
         if self.professional and self.booking_time:
             # Ensure times are timezone-aware
             if not timezone.is_aware(self.booking_time):
-                self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
+                self.booking_time = timezone.make_aware(self.booking_time, timezone=dt_timezone.utc)
             
             # Calculate end time
             end_time = self.booking_time + timedelta(hours=self.duration_hours)
             
-            # Check for overlapping bookings (using UTC times)
-            overlapping_bookings = Booking.objects.filter(
+            # Check for conflicts, including a 30-minute gap after each existing booking.
+            existing_bookings = Booking.objects.filter(
                 professional=self.professional,
-                booking_time__lt=end_time,
-                end_time__gt=self.booking_time
             ).exclude(pk=self.pk)
-            
-            if overlapping_bookings.exists():
-                raise ValidationError(
-                    f"{self.professional.user.full_name} is already booked for this time slot."
-                )
+
+            for existing in existing_bookings:
+                existing_end = existing.end_time
+                if existing_end is None and existing.booking_time and existing.duration_hours:
+                    existing_end = existing.booking_time + timedelta(hours=existing.duration_hours)
+                if existing_end is None:
+                    continue
+
+                buffered_end = existing_end + timedelta(minutes=BOOKING_GAP_MINUTES)
+                if self.booking_time < buffered_end and end_time > existing.booking_time:
+                    raise ValidationError(
+                        f"{self.professional.user.full_name} is already booked for this time slot."
+                    )
         
         # Check 4: Minimum 30 minutes advance booking
         if self.booking_time:
@@ -87,7 +106,7 @@ class Booking(models.Model):
             
             # Ensure booking_time is timezone-aware
             if not timezone.is_aware(self.booking_time):
-                self.booking_time = timezone.make_aware(self.booking_time, timezone=timezone.utc)
+                self.booking_time = timezone.make_aware(self.booking_time, timezone=dt_timezone.utc)
             
             # Calculate minimum allowed booking time (30 minutes from now)
             min_booking_time = now_utc + timedelta(hours=0.5)

@@ -8,6 +8,8 @@ class ManpowerSerializer(serializers.ModelSerializer):
     rate = serializers.SerializerMethodField()
     profile_picture = serializers.SerializerMethodField()
     about = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = ManpowerProfile
@@ -24,3 +26,13 @@ class ManpowerSerializer(serializers.ModelSerializer):
 
     def get_about(self, obj):
         return f"{obj.about_yourself}" if obj.about_yourself else "I am a professional manpower registered to Mistri Nepal."
+
+    def get_total_reviews(self, obj):
+        return obj.reviews_received.count()
+
+    def get_average_rating(self, obj):
+        reviews = obj.reviews_received.all()
+        total_reviews = reviews.count()
+        if total_reviews == 0:
+            return 0
+        return round(sum(review.rating for review in reviews) / total_reviews, 1)

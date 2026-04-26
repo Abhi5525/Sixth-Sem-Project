@@ -6,6 +6,7 @@ urlpatterns = [
    
     path('', views.bookings, name = 'bookings'),
     path('booking-form/<int:professional_id>/', views.booking_form, name='booking_form'),
+    path('available-slots/<int:professional_id>/', views.available_slots, name='available_slots'),
 
     path('checkout/<int:booking_id>/', views.checkout, name='checkout'),
     path('esewa-callback/', views.esewa_callback, name='esewa_callback'),

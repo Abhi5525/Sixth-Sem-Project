@@ -432,6 +432,69 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.querySelector('.toggle-availability-btn');
+    if (!toggleButton) {
+      return;
+    }
+
+    function getCsrfToken() {
+      const name = 'csrftoken=';
+      const decodedCookie = decodeURIComponent(document.cookie || '');
+      const cookies = decodedCookie.split(';');
+      for (let i = 0; i < cookies.length; i += 1) {
+        const cookie = cookies[i].trim();
+        if (cookie.indexOf(name) === 0) {
+          return cookie.substring(name.length, cookie.length);
+        }
+      }
+      return '';
+    }
+
+    function updateButtonState(isAvailable) {
+      if (isAvailable) {
+        toggleButton.classList.remove('btn-success');
+        toggleButton.classList.add('btn-danger');
+        toggleButton.innerHTML = '<i class="fas fa-pause-circle me-2"></i>Set Unavailable';
+      } else {
+        toggleButton.classList.remove('btn-danger');
+        toggleButton.classList.add('btn-success');
+        toggleButton.innerHTML = '<i class="fas fa-check-circle me-2"></i>Set Available';
+      }
+    }
+
+    toggleButton.addEventListener('click', function() {
+      const profileId = toggleButton.dataset.id;
+      if (!profileId) {
+        return;
+      }
+
+      toggleButton.disabled = true;
+      fetch(`/users/profile/toggle-availability/${profileId}/`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCsrfToken(),
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateButtonState(data.is_available);
+          } else {
+            alert(data.message || 'Could not change availability.');
+          }
+        })
+        .catch(() => {
+          alert('Error changing availability. Please try again.');
+        })
+        .finally(() => {
+          toggleButton.disabled = false;
+        });
+    });
+  });
 </script>
 
 {% endblock %}

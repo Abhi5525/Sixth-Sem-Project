@@ -25,6 +25,10 @@
               <span class="detail-value">{{ booking.client_name }}</span>
             </div>
             <div class="detail-item">
+              <span class="detail-label">Client Phone:</span>
+              <span class="detail-value">{{ booking.client_phone }}</span>
+            </div>
+            <div class="detail-item">
               <span class="detail-label">Booking Start:</span>
               <span class="detail-value">{{ booking.booking_time|localtime|date:'M d, Y H:i' }}</span>
             </div>

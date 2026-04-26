@@ -15,6 +15,18 @@ def update_professional_rating(sender, instance, **kwargs):
     professional.save(update_fields=["average_rating", "total_reviews"])
 
 
+@receiver(post_delete, sender=RatingReview)
+def update_professional_rating_on_delete(sender, instance, **kwargs):
+    professional = instance.professional
+    reviews = RatingReview.objects.filter(professional=professional)
+
+    professional.total_reviews = reviews.count()
+    professional.average_rating = (
+        sum(r.rating for r in reviews) / professional.total_reviews if professional.total_reviews > 0 else 0
+    )
+    professional.save(update_fields=["average_rating", "total_reviews"])
+
+
 @receiver(post_save, sender=ManpowerProfile)
 def sync_professional_flag_on_status_change(sender, instance, created, **kwargs):
     """

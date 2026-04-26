@@ -825,16 +825,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ============================
-    // Geolocation
-    // ============================
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            document.getElementById('latitude').value = pos.coords.latitude;
-            document.getElementById('longitude').value = pos.coords.longitude;
-        });
-    }
-
-    // ============================
     // Real-time Email Validation
     // ============================
     emailField?.addEventListener('blur', function () {
@@ -906,9 +896,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Request geolocation when entering Step 2 (Location)
-    const oldNextBtn = nextBtn.addEventListener;
-    
     // Request geolocation when page loads
     captureGeolocation();
 
